@@ -141,3 +141,5 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 #padtest.show { display: block; }
 
 .panel:empty { display: none; }
+.mi.cant .right { opacity: 0.55; }
+.letter { font-style: italic; line-height: 1.5; display: block !important; }

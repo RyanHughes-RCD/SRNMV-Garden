@@ -26,7 +26,8 @@ export function sleepiness(schedule, hour) {
 }
 
 // Weights for what to do next when idle.
-export function idleWeights(cfg, { energy, hour, jobsAvailable }) {
+// furn: which cat furniture exists nearby ({ bed, post, tree, bowls, cushion, yarn, fire })
+export function idleWeights(cfg, { energy, hour, jobsAvailable, furn = {} }) {
   const t = traits(cfg);
   const sleepy = sleepiness(t.schedule, hour);
   const night = hour < 6 || hour >= 21;
@@ -38,6 +39,11 @@ export function idleWeights(cfg, { energy, hour, jobsAvailable }) {
     visit: 0.14 * t.lovesPlayer,
     sit: 0.2,
     cabin: night ? 0.25 : 0.08,
+    scratch: furn.post ? 0.1 * (0.5 + t.curiosity * 0.5) : 0,
+    perch: furn.tree ? (night ? 0.04 : 0.12) : 0,
+    snack: furn.bowls ? 0.35 * Math.max(0, 0.7 - energy) : 0,
+    sunbathe: furn.cushion && hour >= 10 && hour < 17 ? 0.18 * t.napFrequency : 0,
+    play: furn.yarn ? 0.08 * t.zoomies * (0.4 + energy) : 0,
   };
 }
 export const napSeconds = (cfg, B, sleepy = 1) => B.cats.baseNapSec * traits(cfg).napDuration * (0.6 + Math.random() * 0.8) * Math.min(2.5, sleepy);

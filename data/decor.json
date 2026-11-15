@@ -1,19 +1,725 @@
 {
-  "decor": {
-    "path_stone": { "name": "Stone Path",  "ground": true,  "cost": { "stone": 2 },                   "sprite": "path_stone" },
-    "path_wood":  { "name": "Wood Path",   "ground": true,  "cost": { "wood": 2 },                    "sprite": "path_wood" },
-    "fence":      { "name": "Fence",       "blocks": true,  "cost": { "wood": 3 },                    "sprite": "decor_fence" },
-    "lantern":    { "name": "Lantern",     "blocks": true,  "cost": { "coins": 40, "stone": 2 },      "sprite": "decor_lantern", "light": 46 },
-    "bench":      { "name": "Bench",       "blocks": true,  "cost": { "wood": 8 },                    "sprite": "decor_bench" },
-    "flowerpot":  { "name": "Flower Pot",  "blocks": true,  "cost": { "coins": 25, "stone": 2 },      "sprite": "decor_flowerpot" },
-    "birdbath":   { "name": "Birdbath",    "blocks": true,  "cost": { "coins": 60, "stone": 8 },      "sprite": "decor_birdbath" },
-    "scarecrow":  { "name": "Scarecrow",   "blocks": true,  "cost": { "coins": 50, "wood": 6, "fiber": 6 }, "sprite": "decor_scarecrow" },
-    "gnome":      { "name": "Garden Gnome","blocks": true,  "cost": { "coins": 150 },                 "sprite": "decor_gnome" }
+ "_help": "cat = build-menu section. blocks = can't walk through (default true). ground = replaces the floor tile (paths). overlay = a floor decoration drawn on grass. size = [w, h] in tiles. connect = joins neighbours of the same group. light = night glow radius. cats = what cats do with it. growBonus / catWorkBonus / spawn / interact = gameplay effects (see README).",
+ "categories": [
+  "Paths & floors",
+  "Fences & hedges",
+  "Garden",
+  "For the cats",
+  "Lights",
+  "Cozy",
+  "Resources",
+  "Big projects"
+ ],
+ "decor": {
+  "path_stone": {
+   "name": "Stone Path",
+   "cat": "Paths & floors",
+   "ground": true,
+   "cost": {
+    "stone": 2
+   },
+   "sprite": "path_stone"
   },
-  "cabin": {
-    "roof":   { "name": "Roof color",   "cost": { "coins": 60 },  "options": ["red", "blue", "green", "plum", "slate", "gold"] },
-    "wall":   { "name": "Wall wood",    "cost": { "wood": 20 },   "options": ["oak", "birch", "walnut", "driftwood", "cherry"] },
-    "door":   { "name": "Door style",   "cost": { "coins": 40, "wood": 5 }, "options": [0, 1, 2, 3], "labels": ["Plank", "Garden Green", "Round Red", "Lavender Panel"] },
-    "windowBoxes": { "name": "Window boxes", "cost": { "coins": 30, "wood": 4, "fiber": 4 }, "options": [false, true], "labels": ["Off", "On"] }
+  "path_wood": {
+   "name": "Wood Path",
+   "cat": "Paths & floors",
+   "ground": true,
+   "cost": {
+    "wood": 2
+   },
+   "sprite": "path_wood"
+  },
+  "stepping_stones": {
+   "name": "Stepping Stones",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "stone": 1
+   },
+   "sprite": "decor_steppingstones"
+  },
+  "flowerbed_pink": {
+   "name": "Pink Flower Bed",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "fiber": 4,
+    "stone": 1
+   },
+   "sprite": "decor_flowerbed_pink"
+  },
+  "flowerbed_yellow": {
+   "name": "Yellow Flower Bed",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "fiber": 4,
+    "stone": 1
+   },
+   "sprite": "decor_flowerbed_yellow"
+  },
+  "flowerbed_blue": {
+   "name": "Blue Flower Bed",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "fiber": 4,
+    "stone": 1
+   },
+   "sprite": "decor_flowerbed_blue"
+  },
+  "flowerbed_white": {
+   "name": "White Flower Bed",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "fiber": 4,
+    "stone": 1
+   },
+   "sprite": "decor_flowerbed_white"
+  },
+  "picnic": {
+   "name": "Picnic Blanket",
+   "cat": "Paths & floors",
+   "ground": true,
+   "overlay": true,
+   "cost": {
+    "coins": 20,
+    "fiber": 8
+   },
+   "sprite": "decor_picnic"
+  },
+  "fence": {
+   "name": "Fence",
+   "cat": "Fences & hedges",
+   "connect": "fence",
+   "cost": {
+    "wood": 3
+   },
+   "sprite": "decor_fence",
+   "desc": "Joins up with fences and gates next to it"
+  },
+  "fence_gate": {
+   "name": "Fence Gate",
+   "cat": "Fences & hedges",
+   "connect": "fence",
+   "blocks": false,
+   "cost": {
+    "wood": 4
+   },
+   "sprite": "decor_fence_gate",
+   "desc": "You and the cats can walk through"
+  },
+  "hedge": {
+   "name": "Hedge",
+   "cat": "Fences & hedges",
+   "connect": "hedge",
+   "cost": {
+    "wood": 2,
+    "fiber": 3
+   },
+   "sprite": "decor_hedge",
+   "desc": "Joins up into rows"
+  },
+  "arch": {
+   "name": "Garden Arch",
+   "cat": "Fences & hedges",
+   "blocks": false,
+   "cost": {
+    "wood": 15,
+    "fiber": 6
+   },
+   "sprite": "decor_arch",
+   "desc": "Walk underneath it"
+  },
+  "flowerpot": {
+   "name": "Flower Pot",
+   "cat": "Garden",
+   "cost": {
+    "coins": 25,
+    "stone": 2
+   },
+   "sprite": "decor_flowerpot"
+  },
+  "rock_garden": {
+   "name": "Rock Garden",
+   "cat": "Garden",
+   "cost": {
+    "stone": 10
+   },
+   "sprite": "decor_rockgarden"
+  },
+  "birdbath": {
+   "name": "Birdbath",
+   "cat": "Garden",
+   "cost": {
+    "coins": 60,
+    "stone": 8
+   },
+   "sprite": "decor_birdbath"
+  },
+  "bird_feeder": {
+   "name": "Bird Feeder",
+   "cat": "Garden",
+   "birds": true,
+   "cost": {
+    "coins": 30,
+    "wood": 4
+   },
+   "sprite": "decor_birdfeeder",
+   "desc": "Birds visit and sing more"
+  },
+  "scarecrow": {
+   "name": "Scarecrow",
+   "cat": "Garden",
+   "cost": {
+    "coins": 50,
+    "wood": 6,
+    "fiber": 6
+   },
+   "sprite": "decor_scarecrow"
+  },
+  "gnome": {
+   "name": "Garden Gnome",
+   "cat": "Garden",
+   "cost": {
+    "coins": 150
+   },
+   "sprite": "decor_gnome"
+  },
+  "beehive": {
+   "name": "Beehive",
+   "cat": "Garden",
+   "bees": true,
+   "growBonus": {
+    "radius": 4,
+    "mult": 1.15
+   },
+   "cost": {
+    "coins": 120,
+    "wood": 10
+   },
+   "sprite": "decor_beehive",
+   "desc": "Crops within 4 tiles grow 15% faster"
+  },
+  "pond": {
+   "name": "Small Pond",
+   "cat": "Garden",
+   "size": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": 60,
+    "stone": 12
+   },
+   "sprite": "decor_pond",
+   "desc": "2×2 · lily pads and sparkles"
+  },
+  "wishing_well": {
+   "name": "Wishing Well",
+   "cat": "Garden",
+   "interact": "wish",
+   "cost": {
+    "coins": 300,
+    "stone": 25
+   },
+   "sprite": "decor_well",
+   "desc": "Make a wish once a day for a little gift"
+  },
+  "cat_bed": {
+   "name": "Cat Bed",
+   "cat": "For the cats",
+   "cats": "bed",
+   "blocks": false,
+   "cost": {
+    "coins": 30,
+    "fiber": 6
+   },
+   "sprite": "decor_catbed",
+   "desc": "Cats nap here and rest faster"
+  },
+  "scratch_post": {
+   "name": "Scratching Post",
+   "cat": "For the cats",
+   "cats": "post",
+   "cost": {
+    "wood": 12,
+    "fiber": 4
+   },
+   "sprite": "decor_scratchpost",
+   "desc": "Cats stop by for a good scratch"
+  },
+  "cat_tree": {
+   "name": "Cat Tree",
+   "cat": "For the cats",
+   "cats": "tree",
+   "cost": {
+    "coins": 80,
+    "wood": 20,
+    "fiber": 8
+   },
+   "sprite": "decor_cattree",
+   "desc": "Cats perch on top and watch the garden"
+  },
+  "cat_bowls": {
+   "name": "Food & Water Bowls",
+   "cat": "For the cats",
+   "cats": "bowls",
+   "cost": {
+    "coins": 40,
+    "stone": 3
+   },
+   "sprite": "decor_catbowls",
+   "desc": "A snack restores some energy"
+  },
+  "sun_cushion": {
+   "name": "Sunny Cushion",
+   "cat": "For the cats",
+   "cats": "cushion",
+   "blocks": false,
+   "cost": {
+    "coins": 25,
+    "fiber": 4
+   },
+   "sprite": "decor_cushion",
+   "desc": "Afternoon sunbathing spot"
+  },
+  "yarn_ball": {
+   "name": "Yarn Ball",
+   "cat": "For the cats",
+   "cats": "yarn",
+   "blocks": false,
+   "cost": {
+    "coins": 15,
+    "fiber": 3
+   },
+   "sprite": "decor_yarn",
+   "desc": "Sets off playtime and zoomies"
+  },
+  "cat_house": {
+   "name": "Cat House",
+   "cat": "For the cats",
+   "cats": "house",
+   "size": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": 120,
+    "wood": 25,
+    "fiber": 6
+   },
+   "sprite": "cathouse",
+   "interact": "cathouse",
+   "desc": "2×2 · a home for one cat to nap in. Press A on it to pick its owner and decorate it"
+  },
+  "lantern": {
+   "name": "Lantern",
+   "cat": "Lights",
+   "light": 46,
+   "cost": {
+    "coins": 40,
+    "stone": 2
+   },
+   "sprite": "decor_lantern"
+  },
+  "string_lights": {
+   "name": "String Lights",
+   "cat": "Lights",
+   "light": 38,
+   "cost": {
+    "coins": 60,
+    "wood": 4
+   },
+   "sprite": "decor_stringlights",
+   "desc": "Twinkles at night"
+  },
+  "campfire": {
+   "name": "Campfire",
+   "cat": "Lights",
+   "light": 64,
+   "fire": true,
+   "cost": {
+    "wood": 30,
+    "stone": 6
+   },
+   "sprite": "decor_campfire",
+   "desc": "Crackles; cats gather here at night"
+  },
+  "bench": {
+   "name": "Bench",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 8
+   },
+   "sprite": "decor_bench"
+  },
+  "hammock": {
+   "name": "Hammock",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "coins": 40,
+    "wood": 6,
+    "fiber": 10
+   },
+   "sprite": "decor_hammock",
+   "desc": "2×1"
+  },
+  "signpost": {
+   "name": "Signpost",
+   "cat": "Cozy",
+   "interact": "sign",
+   "cost": {
+    "wood": 5
+   },
+   "sprite": "decor_signpost",
+   "desc": "Press A on it to write a name"
+  },
+  "mailbox": {
+   "name": "Mailbox",
+   "cat": "Cozy",
+   "interact": "mail",
+   "cost": {
+    "coins": 50,
+    "wood": 5
+   },
+   "sprite": "decor_mailbox",
+   "desc": "Letters arrive now and then"
+  },
+  "wheelbarrow": {
+   "name": "Wheelbarrow",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 12
+   },
+   "sprite": "decor_wheelbarrow"
+  },
+  "can_stand": {
+   "name": "Watering Can Stand",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 10,
+    "stone": 2
+   },
+   "sprite": "decor_canstand"
+  },
+  "produce_crate": {
+   "name": "Crate of Produce",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 15
+   },
+   "sprite": "decor_producecrate"
+  },
+  "quarry": {
+   "name": "Quarry Rock",
+   "cat": "Resources",
+   "spawn": {
+    "debris": {
+     "rock": 6,
+     "boulder": 1
+    },
+    "everySec": 1500,
+    "max": 3
+   },
+   "cost": {
+    "coins": 40,
+    "wood": 10
+   },
+   "sprite": "decor_quarry",
+   "desc": "A new rock appears beside it every ~25 min (cats clear them for stone)"
+  },
+  "meadow": {
+   "name": "Wild Meadow",
+   "cat": "Resources",
+   "spawn": {
+    "debris": {
+     "weeds": 3,
+     "bush": 1
+    },
+    "everySec": 1200,
+    "max": 4
+   },
+   "cost": {
+    "coins": 30,
+    "wood": 6
+   },
+   "sprite": "decor_meadow",
+   "desc": "Weeds and bushes regrow beside it every ~20 min (fiber)"
+  },
+  "greenhouse": {
+   "name": "Greenhouse",
+   "cat": "Big projects",
+   "size": [
+    3,
+    2
+   ],
+   "growBonus": {
+    "radius": 6,
+    "mult": 1.25
+   },
+   "cost": {
+    "coins": 1500,
+    "wood": 60,
+    "stone": 30
+   },
+   "sprite": "decor_greenhouse",
+   "desc": "3×2 · crops within 6 tiles grow 25% faster"
+  },
+  "shed": {
+   "name": "Garden Shed",
+   "cat": "Big projects",
+   "size": [
+    2,
+    2
+   ],
+   "catWorkBonus": 0.1,
+   "cost": {
+    "coins": 800,
+    "wood": 80,
+    "stone": 10
+   },
+   "sprite": "decor_shed",
+   "desc": "2×2 · tidy tools: cats work 10% faster"
   }
+ },
+ "cabin": {
+  "roof": {
+   "name": "Roof colour",
+   "cost": {
+    "coins": 60
+   },
+   "options": [
+    "red",
+    "blue",
+    "green",
+    "plum",
+    "slate",
+    "gold",
+    "teal",
+    "rose",
+    "moss"
+   ]
+  },
+  "wall": {
+   "name": "Wall wood",
+   "cost": {
+    "wood": 20
+   },
+   "options": [
+    "oak",
+    "birch",
+    "walnut",
+    "driftwood",
+    "cherry"
+   ]
+  },
+  "door": {
+   "name": "Door style",
+   "cost": {
+    "coins": 40,
+    "wood": 5
+   },
+   "options": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "labels": [
+    "Plank",
+    "Garden Green",
+    "Round Red",
+    "Lavender Panel",
+    "Sky Arch",
+    "Sunny Yellow"
+   ]
+  },
+  "chimney": {
+   "name": "Chimney",
+   "cost": {
+    "coins": 50,
+    "stone": 6
+   },
+   "options": [
+    "stone",
+    "brick",
+    "tin"
+   ],
+   "labels": [
+    "Stone",
+    "Red Brick",
+    "Tin Pipe"
+   ]
+  },
+  "curtains": {
+   "name": "Curtains",
+   "cost": {
+    "coins": 30,
+    "fiber": 6
+   },
+   "options": [
+    "none",
+    "rose",
+    "sky",
+    "sage",
+    "cream"
+   ],
+   "labels": [
+    "None",
+    "Rose",
+    "Sky",
+    "Sage",
+    "Cream"
+   ],
+   "colors": {
+    "rose": [
+     "#e88fb0",
+     "#f7c6d3"
+    ],
+    "sky": [
+     "#4a6fa5",
+     "#7fb3d5"
+    ],
+    "sage": [
+     "#3f6e46",
+     "#8cc65a"
+    ],
+    "cream": [
+     "#e0b98a",
+     "#f6e7c8"
+    ]
+   }
+  },
+  "windowBoxes": {
+   "name": "Window boxes",
+   "cost": {
+    "coins": 30,
+    "wood": 4,
+    "fiber": 4
+   },
+   "options": [
+    false,
+    true
+   ],
+   "labels": [
+    "Off",
+    "On"
+   ]
+  },
+  "welcomeMat": {
+   "name": "Welcome mat",
+   "cost": {
+    "coins": 15,
+    "fiber": 5
+   },
+   "options": [
+    false,
+    true
+   ],
+   "labels": [
+    "Off",
+    "On"
+   ]
+  },
+  "porchSwing": {
+   "name": "Porch swing",
+   "cost": {
+    "coins": 80,
+    "wood": 12,
+    "fiber": 6
+   },
+   "options": [
+    false,
+    true
+   ],
+   "labels": [
+    "Off",
+    "On"
+   ]
+  },
+  "porch": {
+   "name": "Porch deck (big project)",
+   "cost": {
+    "coins": 600,
+    "wood": 50
+   },
+   "options": [
+    false,
+    true
+   ],
+   "labels": [
+    "Off",
+    "On"
+   ]
+  }
+ },
+ "letters": [
+  "Dear gardeners, the bees have been talking about your flowers. Keep it up! - A friendly neighbour",
+  "Spotted {cat} napping in the sun again. Very hard work, apparently.",
+  "The woods are quieter than usual today. It's a good day for planting.",
+  "A little note to say: your cabin looks extra cozy at night.",
+  "Rumour has it some seeds only show their true colours when they're fully grown...",
+  "{cat} left a pawprint on this letter. We think it means 'more treats'.",
+  "Did you know? Watered crops grow faster. The cats know. The cats always know.",
+  "The birds asked us to pass on a thank-you for the garden.",
+  "Somebody said the rare seed packs hide something wonderful. Worth saving up for!",
+  "Whatever you're growing over there, it smells lovely.",
+  "A reminder to take a break, stretch, and maybe pet {cat}.",
+  "A small gift for the garden, from the woods with love.",
+  "Moon's out tonight. Perfect for a walk around the clearing.",
+  "{cat} has been seen guarding the vegetables. Fiercely. From a nap.",
+  "Every great garden starts with a single cleared twig. Look how far you've come!",
+  "The old trees at the edge of the woods say hello."
+ ],
+ "catHouse": {
+  "roof": [
+   "red",
+   "blue",
+   "green",
+   "plum",
+   "slate",
+   "gold",
+   "teal",
+   "rose",
+   "moss"
+  ],
+  "wall": [
+   "oak",
+   "birch",
+   "walnut",
+   "driftwood",
+   "cherry"
+  ],
+  "door": [
+   "Round",
+   "Square",
+   "Heart",
+   "Kitty ears"
+  ],
+  "accent": [
+   "none",
+   "flowers",
+   "bow",
+   "fish"
+  ],
+  "accentLabels": [
+   "Nothing",
+   "Flower box",
+   "Ribbon bow",
+   "Fish sign"
+  ]
+ }
 }

@@ -353,9 +353,11 @@ for (const [type, fn] of Object.entries(debrisArt)) {
     if (style === 1) { d.rect(0, 2, 10, 13, C.green1); d.rect(1, 0, 8, 2, C.green1); d.rect(2, 3, 6, 4, C.lblue); d.line(5, 3, 5, 6, C.green1); d.set(7, 9, C.yellow); d.rect(1, 1, 8, 1, C.green); }
     if (style === 2) { d.ellipse(5, 7.5, 5, 7.5, C.red); d.rect(0, 7, 10, 8, C.red); d.ellipse(5, 6, 2, 2, C.pyellow); d.set(5, 6, C.yellow); d.set(8, 9, C.yellow); d.line(0, 14, 9, 14, C.dred); }
     if (style === 3) { d.rect(0, 0, 10, 15, C.lav); d.rect(1, 1, 8, 13, C.violet); d.rect(2, 2, 6, 5, C.lav); d.rect(2, 8, 6, 5, C.lav); d.set(7, 7, C.yellow); }
+    if (style === 4) { d.ellipse(5, 6, 5, 6, C.blue); d.rect(0, 6, 10, 9, C.blue); d.line(5, 1, 5, 14, C.dblue); d.ellipse(5, 5, 2.2, 2.2, C.pblue); d.set(7, 9, C.yellow); d.set(3, 9, C.yellow); }
+    if (style === 5) { d.rect(0, 0, 10, 15, C.yellow); d.rect(0, 0, 10, 1, C.orange); d.ellipse(5, 5, 2.6, 2.6, C.lblue).set(4, 4, C.pblue); d.line(1, 10, 8, 10, C.orange); d.set(8, 8, C.brown); }
     return d;
   };
-  for (let i = 0; i < 4; i++) add(`cabin_door_${i}`, 'cabin', door(i));
+  for (let i = 0; i < 6; i++) add(`cabin_door_${i}`, 'cabin', door(i));
 
   const box = new G(12, 5);
   box.rect(0, 2, 12, 3, C.brown).line(0, 2, 11, 2, C.tan);
@@ -381,11 +383,6 @@ for (const [type, fn] of Object.entries(debrisArt)) {
   shop.rect(3, 3, 3, 4, C.red).rect(7, 3, 3, 4, C.blue).rect(11, 3, 2, 4, C.yellow);
   shop.pts([[4, 4], [8, 4], [11, 4]], C.white).rect(1, 0, 14, 1, C.red).pts([[3, 0], [7, 0], [11, 0]], C.white);
   add('shop', 'decor', shop.outline());
-
-  const fence = new G(16, 16);
-  fence.rect(2, 4, 2, 11, C.tan).rect(12, 4, 2, 11, C.tan).rect(0, 7, 16, 2, C.ltan).rect(0, 11, 16, 2, C.ltan);
-  fence.pts([[2, 4], [12, 4]], C.ltan).line(0, 8, 15, 8, C.tan).line(0, 12, 15, 12, C.tan);
-  add('decor_fence', 'decor', fence.outline());
 
   const lantern = new G(16, 16);
   lantern.rect(7, 7, 2, 8, C.dgray).rect(5, 14, 6, 1, C.dgray).rect(5, 2, 6, 6, C.dgray).rect(6, 3, 4, 4, C.yellow).set(7, 4, C.pyellow).rect(6, 1, 4, 1, C.dgray);
@@ -417,6 +414,258 @@ for (const [type, fn] of Object.entries(debrisArt)) {
   add('decor_gnome', 'decor', gnome.outline());
 
   // ground-decor preview icons reuse the tile sprites (path_stone, path_wood)
+}
+
+/* ---------------------------------------------------- decoration suite */
+{
+  // fences: a post per tile; rails are drawn between neighbouring posts
+  const post = new G(16, 16);
+  post.rect(6, 3, 4, 12, C.tan).rect(6, 3, 4, 1, C.ltan).line(9, 4, 9, 14, C.brown).pts([[4, 7], [5, 7], [10, 7], [11, 7], [4, 11], [5, 11], [10, 11], [11, 11]], C.ltan);
+  add('decor_fence', 'decor', post.outline());
+  const railH = new G(16, 16);
+  railH.rect(0, 6, 16, 2, C.ltan).line(0, 7, 15, 7, C.tan).rect(0, 10, 16, 2, C.ltan).line(0, 11, 15, 11, C.tan);
+  railH.line(0, 5, 15, 5, C.out).line(0, 8, 15, 8, C.out).line(0, 9, 15, 9, C.out).line(0, 12, 15, 12, C.out);
+  add('decor_fence_rail_h', 'decor', railH);
+  const railV = new G(16, 16);
+  railV.rect(7, 0, 2, 16, C.ltan).line(8, 0, 8, 15, C.tan).line(6, 0, 6, 15, C.out).line(9, 0, 9, 15, C.out);
+  add('decor_fence_rail_v', 'decor', railV);
+  const gate = new G(16, 16);
+  gate.rect(1, 3, 3, 12, C.tan).rect(12, 3, 3, 12, C.tan).rect(1, 3, 3, 1, C.ltan).rect(12, 3, 3, 1, C.ltan);
+  gate.rect(4, 6, 8, 2, C.vlgray).rect(4, 11, 8, 2, C.vlgray).line(4, 12, 11, 7, C.cream).pts([[6, 9], [9, 9]], C.vlgray);
+  add('decor_fence_gate', 'decor', gate.outline());
+
+  // hedges join up the same way
+  const hedge = new G(16, 16);
+  hedge.ellipse(8, 9, 7, 6, C.green1).ellipse(7, 8, 5.5, 4.5, C.green).pts([[5, 5], [8, 4], [10, 6], [4, 8]], C.lgreen).pts([[11, 12], [6, 13], [9, 13]], C.dgreen);
+  add('decor_hedge', 'decor', hedge.outline());
+  const hedgeH = new G(16, 16);
+  hedgeH.rect(0, 4, 16, 10, C.green1).rect(0, 5, 16, 4, C.green).pts([[3, 5], [9, 6], [13, 5]], C.lgreen).pts([[4, 12], [11, 12]], C.dgreen).line(0, 3, 15, 3, C.out).line(0, 14, 15, 14, C.out);
+  add('decor_hedge_h', 'decor', hedgeH);
+  const hedgeV = new G(16, 16);
+  hedgeV.rect(2, 0, 12, 16, C.green1).rect(3, 0, 8, 16, C.green).pts([[5, 3], [8, 9], [6, 13]], C.lgreen).line(1, 0, 1, 15, C.out).line(14, 0, 14, 15, C.out);
+  add('decor_hedge_v', 'decor', hedgeV);
+
+  const arch = new G(16, 32);
+  arch.rect(1, 10, 2, 22, C.tan).rect(13, 10, 2, 22, C.tan);
+  for (let a = 0; a <= 20; a++) { const t = Math.PI * a / 20; arch.set(8 - Math.cos(t) * 6.5, 10 - Math.sin(t) * 8, C.tan).set(8 - Math.cos(t) * 5.5, 10 - Math.sin(t) * 7, C.ltan); }
+  arch.pts([[1, 14], [2, 18], [1, 23], [14, 12], [13, 17], [14, 25], [4, 4], [8, 2], [12, 4], [2, 8], [14, 8]], C.green).pts([[2, 15], [13, 13], [8, 2], [3, 6], [13, 20]], C.pink).pts([[1, 22], [14, 6]], C.yellow);
+  add('decor_arch', 'decor', arch.outline());
+
+  const rocks = new G(16, 16);
+  rocks.ellipse(5, 11, 4, 3, C.gray).ellipse(4.5, 10.5, 2.8, 2, C.lgray).ellipse(11, 12, 3.5, 2.6, C.gray).ellipse(10.5, 11.5, 2.4, 1.6, C.vlgray).ellipse(9, 6, 2.5, 2, C.lgray);
+  rocks.pts([[2, 14], [7, 7], [13, 8], [14, 14]], C.green).pts([[7, 6], [13, 7]], C.yellow).set(3, 7, C.lav);
+  add('decor_rockgarden', 'decor', rocks.outline());
+
+  const feeder = new G(16, 24);
+  feeder.rect(7, 10, 2, 14, C.brown).rect(3, 6, 10, 5, C.tan).rect(4, 7, 8, 3, C.ltan).rect(5, 8, 6, 2, C.yellow).pts([[6, 8], [9, 9]], C.orange);
+  for (let y = 0; y < 5; y++) feeder.rect(8 - y - 1, 1 + y, y * 2 + 2, 1, C.red);
+  feeder.rect(2, 10, 12, 1, C.brown);
+  add('decor_birdfeeder', 'decor', feeder.outline());
+
+  const hive = new G(16, 16);
+  hive.rect(2, 13, 12, 2, C.brown);
+  for (let k = 0; k < 4; k++) hive.ellipse(8, 11 - k * 2.4, 6 - k * 1.1, 2, k % 2 ? C.yellow : C.orange);
+  hive.ellipse(8, 3, 2, 1.2, C.orange).ellipse(8, 11, 1.4, 1.2, C.out).pts([[4, 9], [11, 6]], C.pyellow);
+  add('decor_beehive', 'decor', hive.outline());
+
+  const pond = [0, 1].map(f => {
+    const g = new G(32, 32);
+    g.ellipse(16, 17, 15.5, 13.5, C.gray).ellipse(16, 17, 14, 12, C.lgray).ellipse(16, 17, 12.5, 10.5, C.blue).ellipse(15, 15, 10, 8, C.lblue);
+    for (let k = 0; k < 10; k++) { const t = k / 10 * Math.PI * 2; g.set(16 + Math.cos(t) * 14.5, 17 + Math.sin(t) * 12.5, k % 2 ? C.dgray : C.vlgray); }
+    g.ellipse(10, 20, 3, 2, C.green).set(10, 20, C.blue).ellipse(21, 13, 2.5, 1.8, C.green).ellipse(19, 22, 2.2, 1.6, C.green1);
+    g.pts([[21, 12], [22, 12]], C.pink).set(21, 11, C.ppink);
+    const sp = f ? [[13, 12], [24, 18], [8, 15]] : [[17, 10], [12, 18], [22, 21]];
+    g.pts(sp, C.pblue).pts(sp.map(([x, y]) => [x + 1, y]), C.white);
+    return g.outline();
+  });
+  add('decor_pond', 'decor', pond, 2);
+
+  const well = new G(16, 24);
+  well.ellipse(8, 18, 7, 4.5, C.gray).rect(1, 14, 14, 6, C.gray).ellipse(8, 14, 7, 2.5, C.dgray).ellipse(8, 14, 5.5, 1.6, C.dblue);
+  for (let x = 2; x < 15; x += 3) well.line(x, 15, x, 19, C.lgray);
+  well.line(1, 17, 14, 17, C.lgray);
+  well.rect(2, 4, 1, 11, C.brown).rect(13, 4, 1, 11, C.brown).line(3, 7, 12, 7, C.brown).line(8, 7, 8, 11, C.cream).rect(7, 11, 3, 2, C.tan);
+  for (let y = 0; y < 4; y++) well.rect(7 - y * 2, y, 2 + y * 4, 1, C.red);
+  well.rect(0, 4, 16, 1, C.dred);
+  add('decor_well', 'decor', well.outline());
+
+  // for the cats
+  const bed = new G(16, 16);
+  bed.ellipse(8, 11, 7.5, 4.5, C.pink).ellipse(8, 10.5, 5.5, 2.8, C.ppink).ellipse(8, 11, 4, 1.8, C.cream).pts([[2, 12], [14, 12], [5, 14], [11, 14]], C.red);
+  add('decor_catbed', 'decor', bed.outline());
+  const scratch = new G(16, 24);
+  scratch.rect(2, 20, 12, 3, C.tan).rect(2, 20, 12, 1, C.ltan).rect(6, 5, 4, 15, C.ltan);
+  for (let y = 6; y < 20; y += 2) scratch.line(6, y, 9, y + 1, C.tan);
+  scratch.rect(3, 2, 10, 3, C.pink).rect(3, 2, 10, 1, C.ppink).line(11, 5, 11, 9, C.cream).ellipse(11, 10, 1.3, 1.3, C.red);
+  add('decor_scratchpost', 'decor', scratch.outline());
+  const ctree = new G(16, 32);
+  ctree.rect(1, 28, 14, 3, C.tan).rect(6, 6, 4, 22, C.ltan);
+  for (let y = 7; y < 28; y += 2) ctree.line(6, y, 9, y + 1, C.tan);
+  ctree.rect(1, 18, 8, 3, C.pink).rect(1, 18, 8, 1, C.ppink).rect(8, 11, 7, 3, C.pink).rect(8, 11, 7, 1, C.ppink).ellipse(8, 4, 6, 3, C.pink).ellipse(8, 3.5, 4, 1.5, C.cream);
+  ctree.line(3, 21, 3, 24, C.cream).ellipse(3, 25, 1.3, 1.3, C.yellow);
+  add('decor_cattree', 'decor', ctree.outline());
+  const bowls = new G(16, 16);
+  bowls.ellipse(4.5, 11, 3.5, 2.2, C.blue).ellipse(4.5, 10, 2.5, 1.2, C.brown).pts([[3, 10], [5, 9]], C.tan);
+  bowls.ellipse(11.5, 11, 3.5, 2.2, C.red).ellipse(11.5, 10, 2.5, 1.2, C.lblue).set(11, 10, C.white).line(2, 13, 6, 13, C.dblue).line(9, 13, 13, 13, C.dred);
+  add('decor_catbowls', 'decor', bowls.outline());
+  const cushion = new G(16, 16);
+  cushion.rect(2, 6, 12, 8, C.yellow).rect(3, 6, 10, 2, C.pyellow).pts([[2, 6], [13, 6], [2, 13], [13, 13]], C.orange).ellipse(8, 10, 2, 2, C.orange).set(8, 10, C.pyellow);
+  add('decor_cushion', 'decor', cushion.outline());
+  const yarn = new G(16, 16);
+  yarn.ellipse(8, 11, 4.2, 4, C.pink).line(5, 9, 11, 13, C.ppink).line(5, 12, 10, 8, C.ppink).line(7, 8, 11, 11, C.red).line(12, 13, 15, 14, C.pink).set(6, 9, C.ppink);
+  add('decor_yarn', 'decor', yarn.outline());
+
+  // lights
+  const strl = [0, 1].map(f => {
+    const g = new G(16, 24);
+    g.rect(1, 3, 1, 21, C.brown).rect(14, 3, 1, 21, C.brown);
+    const pts = []; for (let x = 1; x <= 14; x++) { const y = 4 + Math.round(Math.sin((x - 1) / 13 * Math.PI) * 4); g.set(x, y, C.dgray); if (x % 3 === 0) pts.push([x, y + 1]); }
+    pts.forEach(([x, y], k) => g.set(x, y, (k + f) % 2 ? C.yellow : [C.pink, C.lblue, C.lgreen, C.orange][k % 4]).set(x, y + 1, f && k % 2 ? C.pyellow : C.dgray));
+    return g;
+  });
+  add('decor_stringlights', 'decor', strl, 3);
+  const fire = [0, 1, 2].map(f => {
+    const g = new G(16, 16);
+    g.line(3, 13, 12, 10, C.brown).line(3, 10, 12, 13, C.dbrown);
+    const h = [7, 9, 8][f], sway = [0, 1, -1][f];
+    for (let y = 0; y < h; y++) { const w = Math.max(1, Math.round(3.5 * (1 - y / h))); g.rect(8 - w + Math.round(sway * y / h), 11 - y, w * 2, 1, y < 2 ? C.orange : y < h - 3 ? C.yellow : C.pyellow); }
+    g.set(8 + sway, 11 - h, C.coral);
+    for (let k = 0; k < 8; k++) { const t = k / 8 * Math.PI * 2; g.ellipse(8 + Math.cos(t) * 6, 12 + Math.sin(t) * 2.6, 1.4, 1.1, k % 2 ? C.gray : C.lgray); }
+    return g.outline();
+  });
+  add('decor_campfire', 'decor', fire, 6);
+
+  // cozy bits
+  const ham = new G(32, 16);
+  ham.rect(2, 2, 2, 14, C.brown).rect(28, 2, 2, 14, C.brown);
+  for (let x = 4; x <= 27; x++) { const y = 5 + Math.round(Math.sin((x - 4) / 23 * Math.PI) * 5); ham.rect(x, y, 1, 3, x % 4 < 2 ? C.cream : C.lav); }
+  ham.line(4, 4, 7, 6, C.ltan).line(27, 4, 24, 6, C.ltan);
+  add('decor_hammock', 'decor', ham.outline());
+  const sign = new G(16, 16);
+  sign.rect(7, 7, 2, 9, C.brown).rect(2, 2, 12, 6, C.ltan).rect(2, 2, 12, 1, C.cream).line(4, 4, 11, 4, C.brown).line(4, 6, 9, 6, C.brown).pts([[2, 7], [13, 7]], C.tan);
+  add('decor_signpost', 'decor', sign.outline());
+  const mbox = [0, 1].map(f => {
+    const g = new G(16, 16);
+    g.rect(7, 9, 2, 7, C.brown).ellipse(7, 5, 5, 2.5, C.blue).rect(2, 5, 10, 4, C.blue).rect(2, 8, 10, 1, C.dblue).ellipse(3, 6.5, 1, 2, C.dblue);
+    if (f) g.rect(12, 1, 1, 6, C.dgray).rect(13, 1, 2, 2, C.red); else g.rect(12, 5, 1, 2, C.dgray).rect(12, 7, 3, 1, C.red);
+    return g.outline();
+  });
+  add('decor_mailbox', 'decor', mbox);
+  const barrow = new G(16, 16);
+  barrow.ellipse(4, 12, 2.5, 2.5, C.dgray).set(4, 12, C.lgray).rect(4, 6, 9, 5, C.gray).rect(5, 6, 7, 1, C.lgray).line(12, 10, 15, 13, C.brown).rect(6, 5, 5, 1, C.brown).pts([[6, 4], [8, 4], [10, 4]], C.dbrown).line(10, 11, 11, 14, C.dgray);
+  add('decor_wheelbarrow', 'decor', barrow.outline());
+  const stand = new G(16, 16);
+  stand.rect(2, 9, 12, 2, C.tan).rect(3, 11, 1, 4, C.brown).rect(12, 11, 1, 4, C.brown).rect(4, 4, 6, 5, C.lblue).rect(4, 4, 6, 1, C.pblue).line(10, 6, 13, 3, C.lblue).rect(5, 2, 4, 1, C.blue).ellipse(12, 8, 1.5, 1, C.gray);
+  add('decor_canstand', 'decor', stand.outline());
+  const pcrate = new G(16, 16);
+  pcrate.rect(2, 7, 12, 8, C.tan).line(2, 10, 13, 10, C.brown).line(2, 14, 13, 14, C.brown).rect(2, 7, 12, 1, C.ltan);
+  for (const [x, c] of [[4, C.red], [7, C.orange], [10, C.yellow], [12, C.green], [5, C.violet], [9, C.red]]) pcrate.ellipse(x, x % 2 ? 5 : 6, 1.6, 1.6, c);
+  add('decor_producecrate', 'decor', pcrate.outline());
+
+  // renewable resources
+  const quarry = new G(16, 16);
+  quarry.rect(1, 5, 14, 10, C.gray).rect(2, 5, 12, 2, C.lgray).line(3, 9, 7, 9, C.dgray).line(8, 12, 12, 12, C.dgray).line(10, 7, 10, 10, C.dgray).pts([[4, 6], [11, 6]], C.vlgray);
+  quarry.line(12, 1, 15, 4, C.brown).pts([[11, 1], [12, 0], [13, 1]], C.lgray);
+  add('decor_quarry', 'decor', quarry.outline());
+  const meadow = new G(16, 16);
+  for (const [x, h, c] of [[2, 8, C.green], [4, 11, C.lgreen], [6, 9, C.green1], [9, 12, C.lgreen], [11, 8, C.green], [13, 10, C.green1]]) meadow.line(x, 15, x + 1, 15 - h, c);
+  meadow.pts([[5, 5], [10, 3], [12, 6]], C.yellow).pts([[3, 7], [8, 5]], C.lav).rect(7, 9, 2, 6, C.tan).rect(6, 8, 4, 2, C.ltan);
+  add('decor_meadow', 'decor', meadow.outline());
+
+  // floor decorations (drawn on top of grass)
+  const steps = new G(16, 16);
+  steps.ellipse(5, 5, 3, 2.2, C.lgray).ellipse(11, 9, 3, 2.2, C.lgray).ellipse(5, 13, 3, 2.2, C.lgray).pts([[4, 4], [10, 8], [4, 12]], C.vlgray).pts([[6, 6], [12, 10], [6, 14]], C.gray);
+  add('decor_steppingstones', 'decor', steps.outline());
+  for (const [name, a, b] of [['pink', C.pink, C.ppink], ['yellow', C.yellow, C.pyellow], ['blue', C.lblue, C.pblue], ['white', C.white, C.vlgray]]) {
+    const fb = new G(16, 16);
+    fb.rect(1, 2, 14, 12, C.brown).rect(2, 3, 12, 10, C.dbrown);
+    for (const [x, y] of [[4, 5], [9, 4], [12, 8], [6, 10], [11, 12], [3, 12]]) { fb.pts([[x - 1, y + 1], [x + 1, y + 2]], C.green).pts([[x, y - 1], [x - 1, y], [x + 1, y], [x, y + 1]], a).set(x, y, b === C.vlgray ? C.yellow : b); }
+    add(`decor_flowerbed_${name}`, 'decor', fb.outline());
+  }
+  const picnic = new G(16, 16);
+  picnic.rect(1, 2, 14, 12, C.white);
+  for (let y = 2; y < 14; y++) for (let x = 1; x < 15; x++) if ((Math.floor(x / 2) + Math.floor(y / 2)) % 2) picnic.set(x, y, C.red);
+  picnic.rect(9, 7, 5, 4, C.tan).line(9, 7, 13, 7, C.ltan).line(10, 6, 12, 5, C.brown).set(11, 8, C.red).set(12, 8, C.yellow);
+  add('decor_picnic', 'decor', picnic.outline());
+
+  // big projects
+  const gh = new G(48, 48);
+  gh.rect(1, 16, 46, 31, C.vlgray);
+  for (let y = 0; y < 15; y++) { const inset = Math.max(0, 15 - y) * 1.4; gh.rect(Math.round(inset * 0.6) + 1, y + 2, 46 - Math.round(inset * 1.2), 1, y % 5 === 0 ? C.vlgray : C.pblue); }
+  for (let x = 2; x < 46; x += 6) { gh.line(x, 17, x, 46, C.white); }
+  for (let x = 3; x < 46; x += 6) for (let y = 18; y < 46; y += 1) if (!((x + y) % 7)) gh.set(x + 2, y, C.lblue);
+  gh.rect(1, 30, 46, 1, C.white);
+  for (let x = 4; x < 44; x += 3) { gh.set(x, 44 - (x % 4), C.green).set(x + 1, 43 - (x % 5), C.lgreen); if (x % 9 === 1) gh.set(x, 40, C.red); }
+  gh.rect(20, 34, 8, 13, C.lblue).line(24, 34, 24, 46, C.white).rect(20, 34, 8, 1, C.white);
+  add('decor_greenhouse', 'decor', gh.outline());
+  const shed = new G(32, 40);
+  shed.rect(2, 14, 28, 25, C.tan);
+  for (let x = 4; x < 30; x += 4) shed.line(x, 15, x, 38, C.brown);
+  for (let y = 0; y < 12; y++) shed.rect(Math.max(0, 10 - y), y + 3, 32 - Math.max(0, 10 - y) * 2, 1, y % 3 === 2 ? C.dred : C.brown);
+  shed.rect(11, 24, 10, 15, C.dbrown).line(16, 24, 16, 38, C.brown).set(19, 31, C.yellow).rect(23, 18, 5, 4, C.lblue).rect(23, 18, 5, 1, C.cream);
+  shed.rect(0, 14, 32, 1, C.dbrown);
+  add('decor_shed', 'decor', shed.outline());
+
+  // cat houses (2x2). Walls use palette 3/4/5 and roof 17/18/19, so they share the cabin's colour sets.
+  const ch = new G(32, 32);
+  ch.rect(3, 15, 26, 16, C.tan);
+  for (let y = 18; y < 31; y += 4) ch.line(3, y, 28, y, C.brown);
+  ch.line(3, 15, 28, 15, C.ltan).rect(2, 30, 28, 2, C.gray).pts([[5, 31], [11, 31], [19, 31], [25, 31]], C.lgray);
+  for (let y = 0; y < 14; y++) { const half = Math.min(15, 3 + y * 1.1); ch.rect(Math.round(16 - half), y + 2, Math.round(half * 2), 1, y % 3 === 2 ? C.dred : C.red); }
+  for (let y = 5; y < 15; y += 3) for (let x = 8 + (y % 2) * 2; x < 25; x += 5) ch.set(x, y, C.coral);
+  ch.rect(1, 15, 30, 1, C.dred);
+  ch.rect(22, 19, 4, 4, C.lblue).set(22, 19, C.pblue).line(24, 19, 24, 22, C.cream);
+  add('cathouse', 'decor', ch.outline(), 0, { swaps: ['roof', 'wall'] });
+  const doors = [
+    () => { const g = new G(12, 12); g.ellipse(6, 7, 5, 5, C.out).ellipse(6, 7, 4, 4, C.plum).rect(1, 7, 10, 5, C.plum).rect(0, 11, 12, 1, C.out); g.rect(2, 7, 1, 4, C.out).rect(9, 7, 1, 4, C.out); return g; },
+    () => { const g = new G(12, 12); g.rect(1, 2, 10, 10, C.out).rect(2, 3, 8, 9, C.plum).rect(0, 1, 12, 1, C.cream).rect(0, 1, 1, 11, C.cream).rect(11, 1, 1, 11, C.cream); return g; },
+    () => { const g = new G(12, 12); g.ellipse(4, 4, 3, 3, C.out).ellipse(8, 4, 3, 3, C.out); for (let y = 4; y < 12; y++) g.rect(Math.round(1 + (y - 4) * 0.6), y, Math.round(10 - (y - 4) * 1.2), 1, C.out); g.ellipse(4, 4.5, 2, 2, C.plum).ellipse(8, 4.5, 2, 2, C.plum).rect(3, 5, 6, 3, C.plum); return g; },
+    () => { const g = new G(12, 12); g.ellipse(6, 7, 5, 5, C.out).ellipse(6, 7, 4, 4, C.plum).rect(1, 7, 10, 5, C.plum).rect(0, 11, 12, 1, C.out); g.pts([[1, 3], [0, 1], [2, 2], [11, 3], [12, 1], [10, 2]], C.out).pts([[4, 9], [7, 9]], C.yellow); return g; },
+  ];
+  doors.forEach((f, k) => add(`cathouse_door_${k}`, 'decor', f()));
+  const flowers = new G(28, 5); flowers.rect(0, 3, 28, 2, C.brown); for (let x = 1; x < 28; x += 3) flowers.set(x, 2, C.green).set(x, 1, [C.pink, C.yellow, C.white, C.lav][x % 4]);
+  add('cathouse_flowers', 'decor', flowers);
+  const bow = new G(10, 6); bow.pts([[0, 0], [1, 1], [2, 2], [0, 4], [1, 3], [9, 0], [8, 1], [7, 2], [9, 4], [8, 3], [0, 1], [0, 2], [0, 3], [9, 1], [9, 2], [9, 3]], C.pink).rect(4, 1, 2, 3, C.red).pts([[3, 4], [2, 5], [6, 4], [7, 5]], C.pink);
+  add('cathouse_bow', 'decor', bow.outline());
+  const fish = new G(10, 7); fish.ellipse(4, 3.5, 3.5, 2.5, C.lblue).pts([[8, 1], [8, 5], [9, 0], [9, 6], [8, 3], [7, 3]], C.lblue).set(2, 3, C.out).set(3, 2, C.pblue);
+  add('cathouse_fish', 'decor', fish.outline());
+  const plate = new G(12, 5); plate.rect(0, 0, 12, 5, C.cream).rect(0, 0, 12, 1, C.white).line(2, 2, 9, 2, C.brown).set(5, 3, C.brown);
+  add('cathouse_plate', 'decor', plate.outline());
+
+  // ambient critter
+  const bird = [0, 1].map(f => {
+    const g = new G(8, 8);
+    const y = f ? 2 : 3;
+    g.ellipse(4, y + 2, 2.5, 2, C.brown).set(5, y + 2, C.orange).set(5, y + 3, C.orange).set(6, y, C.brown).set(6, y + 1, C.brown).set(7, y + 1, C.yellow).set(6, y, C.out).set(1, y + 1, C.dbrown);
+    if (!f) g.pts([[3, 7], [5, 7]], C.dgray);
+    return g;
+  });
+  add('fx_bird', 'fx', bird, 4);
+
+  // cabin add-ons
+  const brick = new G(8, 10);
+  brick.rect(1, 0, 6, 10, C.red).rect(0, 0, 8, 2, C.coral);
+  for (let y = 3; y < 10; y += 2) brick.line(1, y, 6, y, C.dred);
+  brick.pts([[3, 2], [5, 4], [3, 6], [5, 8]], C.dred);
+  add('cabin_chimney_brick', 'cabin', brick);
+  const tin = new G(8, 10);
+  tin.rect(2, 2, 4, 8, C.lgray).line(5, 2, 5, 9, C.gray).rect(1, 0, 6, 2, C.gray).rect(0, 1, 8, 1, C.dgray).set(3, 4, C.vlgray);
+  add('cabin_chimney_tin', 'cabin', tin);
+  const curt = new G(10, 10);
+  curt.rect(0, 0, 10, 2, C.pink).rect(0, 0, 10, 1, C.ppink).rect(0, 2, 2, 8, C.pink).rect(8, 2, 2, 8, C.pink).line(1, 2, 1, 9, C.ppink).line(8, 2, 8, 9, C.ppink).pts([[2, 2], [7, 2]], C.pink);
+  add('cabin_curtains', 'cabin', curt);
+  const swing = new G(14, 14);
+  swing.line(1, 0, 1, 8, C.cream).line(12, 0, 12, 8, C.cream).rect(0, 8, 14, 3, C.tan).rect(0, 8, 14, 1, C.ltan).rect(2, 6, 10, 2, C.pink).set(3, 6, C.ppink).rect(1, 11, 1, 2, C.brown).rect(12, 11, 1, 2, C.brown);
+  add('cabin_swing', 'cabin', swing.outline());
+  const mat = new G(12, 5);
+  mat.rect(0, 0, 12, 5, C.tan).rect(1, 1, 10, 3, C.ltan).pts([[3, 2], [5, 2], [7, 2], [9, 2]], C.red);
+  add('cabin_mat', 'cabin', mat.outline());
+  const porch = new G(52, 14);
+  porch.rect(0, 1, 52, 12, C.ltan);
+  for (let y = 3; y < 13; y += 3) porch.line(0, y, 51, y, C.tan);
+  for (let x = 6; x < 52; x += 11) porch.line(x, 1, x, 12, C.tan);
+  porch.rect(0, 12, 52, 2, C.brown).rect(0, 0, 2, 13, C.brown).rect(50, 0, 2, 13, C.brown);
+  add('cabin_porch', 'cabin', porch.outline());
 }
 
 /* ----------------------------------------------------------- the players */
@@ -777,7 +1026,7 @@ for (const [r, band] of Object.entries(RARITY_COL)) {
 
 /* ------------------------------------------------------------ swap sets */
 const swaps = {
-  roof: { indices: [17, 18, 19], options: { red: [17, 18, 19], blue: [13, 14, 15], green: [8, 9, 10], plum: [1, 23, 24], slate: [28, 29, 30], gold: [3, 20, 21] } },
+  roof: { indices: [17, 18, 19], options: { red: [17, 18, 19], blue: [13, 14, 15], green: [8, 9, 10], plum: [1, 23, 24], slate: [28, 29, 30], gold: [3, 20, 21], teal: [13, 15, 16], rose: [17, 26, 27], moss: [8, 9, 11] } },
   wall: { indices: [3, 4, 5], options: { oak: [3, 4, 5], birch: [4, 5, 6], walnut: [1, 2, 3], driftwood: [29, 30, 31], cherry: [17, 19, 20] } },
   // Colour slots: these palette indices get replaced by per-player / per-cat colours.
   player: { slots: { hair: 2, hairHi: 3, skin: 5, skinShade: 4, shirt: 14, shirtShade: 13, pants: 28, accent: 10 } },

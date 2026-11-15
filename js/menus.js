@@ -9,6 +9,7 @@ import { saveSettings, saveGame, exportSave, importSaveFile, deleteSave } from '
 import { applyVolumes, sfx } from './audio.js';
 import { enterPlace } from './modes.js';
 import { canAfford, pay, costHTML, costLabel } from './economy.js';
+import { decorState, catHouseLook, catHouseOf, drawCatHouse } from './decorations.js';
 import { switchPlayer, playerName, TOOLS } from './player.js';
 import { plotTiles } from './world.js';
 import { JOB_VERB } from './jobs.js';
@@ -133,10 +134,20 @@ export function buildMenu() {
   openMenu({
     title: 'Build & decorate', icon: 'decor_lantern', live: true,
     subtitle: () => `${iconHTML('item_wood', 'ico sm')}${G.state.mats.wood || 0} ${iconHTML('item_stone', 'ico sm')}${G.state.mats.stone || 0} ${iconHTML('item_fiber', 'ico sm')}${G.state.mats.fiber || 0} ${iconHTML('item_coin', 'ico sm')}${G.state.coins}`,
-    items: () => Object.entries(DATA.decor).map(([id, d]) => ({
-      label: d.name, icon: d.sprite, right: costHTML(d.cost), sub: d.light ? 'Glows at night' : d.ground ? 'Ground tile' : '',
-      onSelect: () => { closeAllMenus(); enterPlace(id); },
-    })),
+    items: () => {
+      const out = [], cats = DATA.decorCategories.length ? DATA.decorCategories : [...new Set(Object.values(DATA.decor).map(d => d.cat || 'Other'))];
+      for (const c of cats) {
+        const list = Object.entries(DATA.decor).filter(([, d]) => (d.cat || 'Other') === c);
+        if (!list.length) continue;
+        out.push({ header: true, label: c });
+        for (const [id, d] of list) out.push({
+          label: d.name, icon: d.sprite, right: costHTML(d.cost), cls: canAfford(d.cost) ? '' : 'cant',
+          sub: d.desc || (d.light ? 'Glows at night' : d.ground ? 'Floor tile' : ''),
+          onSelect: () => { closeAllMenus(); enterPlace(id); },
+        });
+      }
+      return out;
+    },
   });
 }
 export function cabinMenu() {
@@ -161,12 +172,61 @@ function cabinChoice(key, o) {
       if (key === 'door') icon = `cabin_door_${v}`;
       if (key === 'roof' || key === 'wall') { icon = 'cabin'; const sw = optionSwap(key, v); iconOpts = { swap: sw.swap, swapKey: sw.key }; }
       if (key === 'windowBoxes') icon = v ? 'cabin_windowbox' : null;
+      if (key === 'chimney') icon = v === 'stone' ? null : `cabin_chimney_${v}`;
+      if (key === 'curtains' && o.colors?.[v]) { icon = 'cabin_curtains'; iconOpts = { swap: { 26: o.colors[v][0], 27: o.colors[v][1] }, swapKey: 'curt:' + v }; }
+      if (key === 'welcomeMat') icon = v ? 'cabin_mat' : null;
+      if (key === 'porchSwing') icon = v ? 'cabin_swing' : null;
+      if (key === 'porch') icon = v ? 'cabin_porch' : null;
       return {
         label: cap(o.labels ? o.labels[i] : v), icon, iconOpts, cls: icon === 'cabin' ? 'big-ico' : '', right: cur ? '✓ current' : '',
         disabled: !cur && !canAfford(o.cost), why: `Need ${costLabel(o.cost)}`,
         onSelect: () => { if (cur) return; pay(o.cost); G.state.cabin[key] = v; sfx('build'); toast(`${o.name}: ${cap(o.labels ? o.labels[i] : v)}`); closeMenu(); },
       };
     }),
+  });
+}
+
+/* ------------------------------------------------------------ cat houses */
+function housePreview(a) {
+  const c = document.createElement('canvas'); c.width = 32; c.height = 32;
+  drawCatHouse(c.getContext('2d'), a, 0, 0);
+  return `<img class="ico huge" src="${c.toDataURL()}" alt="">`;
+}
+export function catHouseMenu(a) {
+  const CH = DATA.catHouse;
+  const cyc = (key, list) => {
+    const step = d => { const s = decorState(a), cur = catHouseLook(a)[key]; s[key] = list[(list.indexOf(cur) + d + list.length) % list.length]; };
+    return { onLeft: () => step(-1), onRight: () => step(1) };
+  };
+  openMenu({
+    icon: 'cathouse', cls: 'wide',
+    title: () => { const c = G.cats.find(k => k.id === decorState(a).owner); return c ? `${esc(c.cfg.name)}'s house` : 'Cat house'; },
+    subtitle: 'Decorating is free. Each cat naps at their own house. Use ◂ ▸ to change things.',
+    detail: () => `<div class="al-row" style="justify-content:center">${housePreview(a)}</div>`,
+    items: () => {
+      const L = catHouseLook(a), owner = G.cats.find(k => k.id === L.owner);
+      return [
+        { label: 'Belongs to', iconHTML: owner ? catPortrait(owner.cfg) : '', right: owner ? esc(owner.cfg.name) : 'Nobody yet', onSelect: () => ownerPicker(a) },
+        { label: 'Roof', right: cap(L.roof), ...cyc('roof', CH.roof) },
+        { label: 'Walls', right: cap(L.wall), ...cyc('wall', CH.wall) },
+        { label: 'Door', right: CH.door[L.door] || L.door, ...cyc('door', CH.door.map((_, i) => i)) },
+        { label: 'Decoration', right: CH.accentLabels[CH.accent.indexOf(L.accent)] || L.accent, ...cyc('accent', CH.accent) },
+      ];
+    },
+  });
+}
+function ownerPicker(a) {
+  const pick = id => {
+    const s = decorState(a);
+    if (id) { const old = catHouseOf(id); if (old && old.i !== a) { decorState(old.i).owner = null; toast(`${esc(G.cats.find(k => k.id === id)?.cfg.name)} moved house!`); } }
+    s.owner = id; closeMenu();
+  };
+  openMenu({
+    title: 'Whose house is it?', icon: 'cathouse',
+    items: () => [
+      ...G.cats.map(c => { const h = catHouseOf(c.id); return { label: esc(c.cfg.name), iconHTML: catPortrait(c.cfg), sub: h && h.i !== a ? 'Already has a house (they will move in here)' : h ? 'Lives here' : 'Needs a home', onSelect: () => pick(c.id) }; }),
+      { label: 'Nobody (empty)', onSelect: () => pick(null) },
+    ],
   });
 }
 

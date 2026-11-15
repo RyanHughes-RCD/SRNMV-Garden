@@ -16,6 +16,7 @@ import { clockLabel, phaseLabel, hourOfDay } from './daytime.js';
 import * as ui from './ui.js';
 import * as menus from './menus.js';
 import { tx, ty } from './world.js';
+import { updateDecor, updateMail, updateDecorFx, nearFire, birdBoost, decorState, readLetter, makeWish, markDirty } from './decorations.js';
 
 const $ = id => document.getElementById(id);
 const B = () => DATA.balance;
@@ -134,6 +135,8 @@ function simStep(dt) {
   farm.updateCrops(dt);
   updateJobs(dt);
   updateCats(dt);
+  updateDecor(dt);
+  updateMail();
 }
 
 /* ---------------------------------------------------------------- events */
@@ -167,6 +170,8 @@ function wireEvents() {
       if (e.worker === 'player' && e.drops) { const d = Object.entries(e.drops).map(([k, n]) => `+${n} ${k}`).join(' · '); if (d) ui.toast(d, `item_${Object.keys(e.drops)[0]}`, 1800); }
     }
   });
+  G.on('mail', () => { if (!G.offline) { sfx('coin'); ui.toast("You've got mail! Check the mailbox.", 'decor_mailbox', 5000); } });
+  G.on('built', ({ id, tile }) => { if (DATA.decor[id]?.interact === 'cathouse') menus.catHouseMenu(tile); });
   G.on('playerSwitched', cfg => ui.toast(`Now playing: ${ui.esc(cfg.name)}`, null, 2500));
   G.on('plotCreated', () => { G.hudWake = G.realTime; });
   addEventListener('gamepadconnected', e => { ui.toast(`Controller connected`, null, 3000); if (G.mode === 'title') titleScreen(); void e; });
@@ -174,7 +179,7 @@ function wireEvents() {
   // Workshop edits arrive live through localStorage
   addEventListener('storage', e => {
     if (!e.key || !e.key.startsWith('srnmv.override.')) return;
-    applyOverrides(); resetSpriteCache(); syncCats(); ui.resetHudCache();
+    applyOverrides(); resetSpriteCache(); syncCats(); ui.resetHudCache(); markDirty();
     ui.toast('Workshop changes applied', 'fx_sparkle');
   });
   document.addEventListener('visibilitychange', () => {
@@ -182,6 +187,21 @@ function wireEvents() {
   });
   addEventListener('pagehide', () => { if (!G.noSave) saveGame(); });
 }
+
+/* ------------------------------------------------- decoration actions */
+const decorHandlers = {
+  crate: () => menus.sellMenu(),
+  shop: () => menus.shopMenu(),
+  cabin: () => menus.cabinMenu(),
+  sign: a => ui.textInput('Write on the sign', decorState(a).text || '', t => { decorState(a).text = t; ui.toast(`The sign now says "${ui.esc(t)}"`, 'decor_signpost'); }),
+  letter: a => { const r = readLetter(a); sfx('confirm'); ui.showCard(`<h2>A letter!</h2><p class="letter">${ui.esc(r.text)}</p>${r.gift ? `<p>Tucked inside: <b>${r.gift}</b></p>` : ''}`, { cls: 'letter' }); },
+  wish: a => {
+    const g = makeWish(a); sfx('discover');
+    sparkle(tx(a) * TILE + 8, ty(a) * TILE + 4, 8);
+    ui.showCard(`<div class="disc">${iconHTML('decor_well', 'ico huge')}</div><h2>You made a wish...</h2><p>The well gives you <b>${g}</b>.</p><p class="muted">Come back tomorrow for another wish.</p>`, { cls: 'discover' });
+  },
+  catHouse: a => menus.catHouseMenu(a),
+};
 
 /* ------------------------------------------------------------ wake lock */
 let wakeLock = null;
@@ -224,12 +244,13 @@ function update(dt) {
     else if (G.mode === 'place') updatePlace();
     else if (G.mode === 'play') globalControls();
   }
-  updatePlayer(cardActive ? 0 : dt, { crate: menus.sellMenu, shop: menus.shopMenu, cabin: menus.cabinMenu });
+  updatePlayer(cardActive ? 0 : dt, decorHandlers);
+  updateDecorFx(dt);
   updateParticles(dt);
   updateCamera(dt);
   const p = G.state.player, c = G.state.cabin;
-  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE);
-  hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }
+  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE || nearFire(p.x, p.y));
+  hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); G.birdBoost = birdBoost(); }
   autosaveT += dt; if (autosaveT > B().tv.autosaveSec) { autosaveT = 0; if (!G.noSave) saveGame(); }
   updatePadOverlay();
 }
@@ -301,7 +322,7 @@ function updateHUD() {
       let extra = '';
       if (crop) {
         const wet = crop.wetUntil > st.simTime;
-        extra = `<small>${crop.stage >= 3 ? '' : `Stage ${crop.stage + 1}/4 · next in ~${fmtTime(farm.timeToNextStage(crop))}${wet ? ' · watered' : ''} · `}"${farm.stageHint(crop)}"</small>`;
+        extra = `<small>${crop.stage >= 3 ? '' : `Stage ${crop.stage + 1}/4 · next in ~${fmtTime(farm.timeToNextStage(crop, a.tile))}${wet ? ' · watered' : ''} · `}"${farm.stageHint(crop)}"</small>`;
       }
       if (a.kind === 'work') { const prog = st.jobs.find(j => j.type === a.type && j.tile === a.tile); tip = `Ⓐ hold: ${a.label}${prog ? ` (${Math.floor(prog.progress / prog.work * 100)}%)` : ''}${extra}`; }
       else if (a.kind === 'inspect' || a.kind === 'info') tip = `${a.label}${extra}`;

@@ -2,6 +2,7 @@
 import { G, randInt, rand, pickWeighted } from './game.js';
 import { DATA, RARITY_ORDER } from './data.js';
 import { plotAt } from './world.js';
+import { growBonusAt } from './decorations.js';
 
 /* Seed keys:  'c:<cropId>' known seeds · 'u:<group>' unidentified packets · 'same' replant what was harvested */
 export const UNKNOWN_GROUPS = ['mystery', ...RARITY_ORDER];
@@ -57,23 +58,23 @@ export const isDiscovered = id => !!G.state.discovered[id];
 export const cropName = id => (isDiscovered(id) ? DATA.cropById[id]?.name : '???');
 export const stageSeconds = c => (DATA.cropById[c.id]?.growMinutes ?? 30) * 60 / 3;
 
-export function growthRate(c) {
+export function growthRate(c, tile) {
   const st = G.state, def = DATA.cropById[c.id];
-  return 1 + (c.wetUntil > st.simTime ? DATA.balance.farm.waterGrowthBonus * (def?.waterMult ?? 1) : 0);
+  return (tile != null ? growBonusAt(tile) : 1) * (1 + (c.wetUntil > st.simTime ? DATA.balance.farm.waterGrowthBonus * (def?.waterMult ?? 1) : 0));
 }
 export function updateCrops(dt) {
   const st = G.state;
   for (const k in st.crops) {
     const c = st.crops[k];
     if (c.stage >= 3) continue;
-    c.g += dt * growthRate(c);
+    c.g += dt * growthRate(c, +k);
     const ns = Math.min(3, Math.floor(c.g / stageSeconds(c)));
     if (ns > c.stage) { c.stage = ns; G.emit('stage', { tile: +k, crop: c }); }
   }
 }
-export function timeToNextStage(c) {
+export function timeToNextStage(c, tile) {
   if (c.stage >= 3) return 0;
-  return ((c.stage + 1) * stageSeconds(c) - c.g) / growthRate(c);
+  return ((c.stage + 1) * stageSeconds(c) - c.g) / growthRate(c, tile);
 }
 
 export function harvest(tile) {

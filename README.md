@@ -72,6 +72,29 @@ The game autosaves every 30 seconds. While you're away (tab closed, TV off), it 
 
 ---
 
+## Decorating
+
+*Menu → Build & decorate* lists everything by section. Pick an item and a ghost of it follows a cursor: **A** places (you can keep placing), **X** picks something up for a full refund, **LB/RB** switch items, **B** finishes. Bigger items (pond, hammock, cat houses, shed, greenhouse) show their full footprint.
+
+| Section | Items |
+|---|---|
+| Paths & floors | Stone/wood paths, stepping stones, flower beds (pink, yellow, blue, white), picnic blanket |
+| Fences & hedges | Fences and hedges that join up with their neighbours, a walk-through gate, a garden arch |
+| Garden | Flower pot, rock garden, birdbath, bird feeder (birds visit and sing more), scarecrow, gnome, beehive (+15% growth nearby), 2×2 pond, wishing well (a gift once a day) |
+| For the cats | Cat bed, scratching post, cat tree (they perch on top), food & water bowls (a snack restores energy), sunny cushion (afternoon sunbathing), yarn ball (playtime), **cat houses** |
+| Lights | Lantern, string lights, campfire (crackles; cats gather there at night) |
+| Cozy | Bench, hammock, signpost (write a name on it), mailbox (letters, sometimes with a gift), wheelbarrow, watering can stand, crate of produce |
+| Resources | **Quarry Rock** grows a new rock beside it every ~25 min, and **Wild Meadow** regrows weeds and bushes every ~20 min. The cats clear them automatically, so stone and fiber never run out |
+| Big projects | Greenhouse (crops within 6 tiles grow 25% faster), garden shed (cats work 10% faster) |
+
+The clearing also slowly grows back a little wild debris (weeds, twigs, the odd bush or rock) on its own.
+
+**Cat houses (2×2):** build one, then choose which cat it belongs to and decorate it: roof colour, wall wood, door shape (round, square, heart, kitty ears) and a flower box, bow or fish sign. Decorating is free. Each cat naps at their own house; without one they use a cat bed, or nap wherever they are.
+
+**The cabin** (walk up and press A) now also has a chimney style, curtains, a welcome mat, a porch swing and a porch deck, plus more roof colours and two new doors.
+
+All costs and effects are in `data/decor.json`. Regrowth, mail and wishing-well timings are in `data/balance.json` (`regrow`, `mailbox`, `wishingWell`).
+
 ## Editing sprites and cats (the Workshop)
 
 Open `workshop.html` on the same site (*Settings → Sprite & Cat Workshop* in game, or the URL directly). Use a mouse there.

@@ -9,6 +9,7 @@ import { drawCats } from './cats.js';
 import { drawPlayer, playerLight } from './player.js';
 import { drawModeOverlay } from './modes.js';
 import { jobsAtTile } from './jobs.js';
+import { drawDecor, overlaySprite, lightsFrom } from './decorations.js';
 
 let canvas, ctx, lightCanvas, lctx;
 export function initRender(c) {
@@ -48,7 +49,9 @@ function groundSprite(i, x, y) {
   if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}`; }
   if (g === 'f') return `forest_${Math.floor(hash2(x, y, 5) * 3)}`;
   if (g === 't') { const c = G.state.crops[i]; return c && c.wetUntil > G.state.simTime ? 'soil_wet' : 'soil'; }
-  return g; // path_stone, path_wood
+  const dd = DATA.decor[g];
+  if (dd?.ground) return dd.overlay ? `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}` : dd.sprite;
+  return g;
 }
 
 const drawList = [];
@@ -68,6 +71,8 @@ export function renderWorld(t) {
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const i = y * st.map.w + x;
     drawSprite(ctx, groundSprite(i, x, y), 0, x * TILE, y * TILE);
+    const ov = overlaySprite(st.map.ground[i]);
+    if (ov) drawSprite(ctx, ov, 0, x * TILE, y * TILE);
   }
   // pending till jobs + plot outlines
   ctx.fillStyle = 'rgba(138,90,59,0.28)';
@@ -77,6 +82,7 @@ export function renderWorld(t) {
     ctx.strokeRect(p.x * TILE + 0.5, p.y * TILE + 0.5, p.w * TILE - 1, p.h * TILE - 1);
     ctx.setLineDash([]);
   }
+  drawCabinGround();
   for (const j of st.jobs) if (j.type === 'till') ctx.fillRect(tx(j.tile) * TILE + 1, ty(j.tile) * TILE + 1, 14, 14);
 
   // y-sorted drawables
@@ -95,7 +101,6 @@ export function renderWorld(t) {
     }
     if (o) {
       if (o.startsWith('d:')) { const name = debrisSprite(o.slice(2), x, y); pushDraw(y * TILE + 12, () => drawSprite(ctx, name, 0, x * TILE, y * TILE)); }
-      else if (o.startsWith('x:')) { const d = DATA.decor[o.slice(2)]; pushDraw(y * TILE + 13, () => drawSprite(ctx, d?.sprite || 'decor_' + o.slice(2), 0, x * TILE, y * TILE)); }
       else if (o === 'crate' || o === 'shop') pushDraw(y * TILE + 13, () => drawSprite(ctx, o, 0, x * TILE, y * TILE));
     }
     const crop = st.crops[i];
@@ -104,6 +109,7 @@ export function renderWorld(t) {
   // cabin
   const cb = st.cabin;
   pushDraw((cb.y + 2) * TILE - 1, () => drawCabin(t));
+  drawDecor(pushDraw, ctx, t, x0, y0, x1, y1);
   drawCats(pushDraw, ctx, t);
   drawPlayer(pushDraw, ctx, t);
   drawList.sort((a, b) => a.y - b.y);
@@ -157,13 +163,26 @@ function drawCrop(crop, x, y, t) {
   if (crop.wetUntil > st.simTime && crop.stage < 3 && Math.random() < 0.002) emit({ x: x * TILE + 8, y: y * TILE + 12, vy: -4, life: 0.6, color: '#b7e0ef', size: 1 });
 }
 
+// Things on the ground in front of the cabin (under people and cats)
+function drawCabinGround() {
+  const cb = G.state.cabin, sx = cb.x * TILE, fy = (cb.y + 2) * TILE;
+  if (cb.porch) drawSprite(ctx, 'cabin_porch', 0, sx - 2, fy - 3);
+  if (cb.welcomeMat) drawSprite(ctx, 'cabin_mat', 0, sx + 18, fy + 1);
+}
+
 function drawCabin(t) {
   const cb = G.state.cabin;
   const sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   const sw = cabinSwap();
   drawSprite(ctx, 'cabin', 0, sx, sy, { swap: sw.swap, swapKey: sw.key });
   drawSprite(ctx, `cabin_door_${cb.door}`, 0, sx + 19, sy + 30);
+  if (cb.curtains && cb.curtains !== 'none') {
+    const cols = DATA.cabinOptions.curtains?.colors?.[cb.curtains];
+    if (cols) { const swap = { 26: cols[0], 27: cols[1] }, key = 'curt:' + cb.curtains; drawSprite(ctx, 'cabin_curtains', 0, sx + 6, sy + 27, { swap, swapKey: key }); drawSprite(ctx, 'cabin_curtains', 0, sx + 33, sy + 27, { swap, swapKey: key }); }
+  }
   if (cb.windowBoxes) { drawSprite(ctx, 'cabin_windowbox', 0, sx + 5, sy + 37); drawSprite(ctx, 'cabin_windowbox', 0, sx + 32, sy + 37); }
+  if (cb.chimney && cb.chimney !== 'stone') drawSprite(ctx, `cabin_chimney_${cb.chimney}`, 0, sx + 33, sy);
+  if (cb.porchSwing) drawSprite(ctx, 'cabin_swing', 0, sx + 2, sy + 42);
   // chimney smoke (evening, night, early morning)
   const h = hourOfDay();
   if ((h > 17 || h < 9) && Math.random() < 0.04) emit({ x: sx + 34 + Math.random() * 3, y: sy - 4, vx: 3 + Math.random() * 3, vy: -9, life: 3.2, sprite: 'fx_smoke' });
@@ -183,10 +202,7 @@ export function lightSources() {
   const st = G.state, out = [];
   const cb = st.cabin, sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   out.push({ x: sx + 11, y: sy + 33, r: 34, win: [sx + 7, sy + 28, 8, 8] }, { x: sx + 38, y: sy + 33, r: 34, win: [sx + 34, sy + 28, 8, 8] });
-  for (let i = 0; i < st.map.obj.length; i++) {
-    const o = st.map.obj[i];
-    if (o && o.startsWith('x:')) { const d = DATA.decor[o.slice(2)]; if (d?.light) out.push({ x: tx(i) * TILE + 8, y: ty(i) * TILE + 5, r: d.light }); }
-  }
+  out.push(...lightsFrom());
   const pl = playerLight(); if (pl) out.push(pl);
   return out;
 }
@@ -202,13 +218,14 @@ function renderLighting(t, ox, oy) {
     lctx.fillRect(0, 0, vw, vh);
     lctx.globalCompositeOperation = 'destination-out';
     const flick = 1 + Math.sin(t * 7) * 0.03 + Math.sin(t * 13) * 0.02;
-    for (const s of lightsCache) cut(s.x - ox, s.y - oy, s.r * flick, 0.95);
+    const fireFlick = 1 + Math.sin(t * 11) * 0.06 + Math.sin(t * 17) * 0.04;
+    for (const s of lightsCache) cut(s.x - ox, s.y - oy, s.r * (s.fire ? fireFlick : flick), 0.95);
     lctx.globalCompositeOperation = 'source-over';
     ctx.drawImage(lightCanvas, 0, 0);
     const a = Math.min(1, L.dark * 1.6);
     ctx.globalCompositeOperation = 'lighter';
     for (const s of lightsCache) {
-      glow(s.x - ox, s.y - oy, s.r * 0.6 * flick, 0.18 * a);
+      glow(s.x - ox, s.y - oy, s.r * 0.6 * (s.fire ? fireFlick : flick), (s.fire ? 0.3 : 0.18) * a, s.fire ? '255,150,60' : undefined);
       if (s.win) { ctx.fillStyle = `rgba(255,205,110,${(0.55 * a).toFixed(3)})`; ctx.fillRect(s.win[0] - ox, s.win[1] - oy, s.win[2], s.win[3]); }
     }
     ctx.globalCompositeOperation = 'source-over';

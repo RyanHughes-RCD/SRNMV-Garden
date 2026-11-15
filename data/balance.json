@@ -87,5 +87,22 @@
       8
     ],
     "_mix": "Relative chance of each tree look: round, pine, birch, wide cloud, tall cloud, spruce, old oak"
+  },
+  "regrow": {
+    "_comment": "The clearing slowly grows a little wild debris back so stone and fiber never run out.",
+    "everySec": 900,
+    "maxWild": 12,
+    "debris": {
+      "weeds": 5,
+      "twig": 3,
+      "bush": 2,
+      "rock": 2
+    }
+  },
+  "wishingWell": {
+    "everySec": 72000
+  },
+  "mailbox": {
+    "everySec": 21600
   }
 }

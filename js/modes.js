@@ -9,6 +9,7 @@ import { facingTile } from './player.js';
 import { sfx } from './audio.js';
 import { poof } from './particles.js';
 import { toast, setModePanel, confirmDialog } from './ui.js';
+import { placeProblem as decorProblem, placeDecor, removeDecorAt, sizeOf } from './decorations.js';
 import { canAfford, pay, refund, costLabel } from './economy.js';
 import { selectedSeedKey } from './player.js';
 
@@ -122,42 +123,28 @@ function commitCancel(r) {
 }
 
 /* -------------------------------------------------------------- build */
-export function placeProblem(id, t) {
-  const d = DATA.decor[id];
-  if (!d) return 'Unknown item';
-  if (!inBounds(tx(t), ty(t))) return 'Out of bounds';
-  const g = ground(t), o = obj(t);
-  if (g === 'f') return 'Too deep in the forest';
-  if (o) return 'Something is already there';
-  if (d.ground) { if (g === 't') return 'Not on tilled soil'; if (g === id) return 'Already a path'; return null; }
-  if (plotAt(t)) return 'Not inside a plot';
-  const p = G.state.player;
-  if (Math.floor(p.x / TILE) === tx(t) && Math.floor((p.y - 3) / TILE) === ty(t)) return 'You are standing there';
-  const c = G.state.cabin; if (tx(t) === c.x + 1 && ty(t) === c.y + 2) return 'Keep the door clear';
-  return null;
-}
+export const placeProblem = (id, t) => decorProblem(id, t);
 export function updatePlace() {
   moveCursor();
   const ids = Object.keys(DATA.decor);
   if (input.pressed('seedPrev') || input.pressed('seedNext')) { const i = ids.indexOf(M.decor); M.decor = ids[(i + (input.pressed('seedNext') ? 1 : ids.length - 1)) % ids.length]; sfx('move'); panel(); }
   if (input.pressed('cancel') || input.pressed('pause') || input.pressed('designate')) { sfx('cancel'); exit(); return; }
   const t = idx(M.cx, M.cy);
-  if (input.pressed('tool')) { // pick up
-    const dId = decorAt(t);
-    const pathId = ['path_stone', 'path_wood'].includes(ground(t)) ? ground(t) : null;
-    if (dId) { G.state.map.obj[t] = null; refund(DATA.decor[dId]?.cost); poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('cancel'); toast(`Picked up ${DATA.decor[dId]?.name}`); }
-    else if (pathId && !(tx(t) === G.state.cabin.x + 1 && ty(t) > G.state.cabin.y + 1 && ty(t) <= G.state.cabin.y + 3)) { G.state.map.ground[t] = 'g'; refund(DATA.decor[pathId]?.cost); sfx('cancel'); }
+  if (input.pressed('tool')) { // pick up (full refund)
+    const id = removeDecorAt(t);
+    if (id) { refund(DATA.decor[id]?.cost); poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('cancel'); toast(`Picked up ${DATA.decor[id]?.name}`); }
     else sfx('error');
     panel(); return;
   }
   if (input.pressed('confirm')) {
-    const why = placeProblem(M.decor, t);
+    const why = decorProblem(M.decor, t);
     const d = DATA.decor[M.decor];
     if (why) { sfx('error'); toast(why); return; }
     if (!canAfford(d.cost)) { sfx('error'); toast(`Need ${costLabel(d.cost)}`); return; }
     pay(d.cost);
-    if (d.ground) G.state.map.ground[t] = M.decor; else G.state.map.obj[t] = 'x:' + M.decor;
-    poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('build');
+    placeDecor(M.decor, t);
+    const [w, h] = sizeOf(M.decor);
+    poof(M.cx * TILE + w * 8, M.cy * TILE + h * 16 - 4); sfx('build');
     G.emit('built', { id: M.decor, tile: t });
     panel();
   }
@@ -180,13 +167,15 @@ export function drawModeOverlay(ctx, t) {
     ctx.strokeRect(r.x * TILE + 0.5, r.y * TILE + 0.5, r.w * TILE - 1, r.h * TILE - 1);
     if (tab === 'clear' || tab === 'chop') for (const ti of tilesIn(r)) if (tab === 'chop' ? choppable(ti) : debrisAt(ti)) { ctx.fillStyle = `rgba(247,205,93,${0.35 * blink})`; ctx.fillRect(tx(ti) * TILE + 2, ty(ti) * TILE + 2, 12, 12); }
   } else {
-    const d = DATA.decor[M.decor], ti = idx(M.cx, M.cy);
-    const ok = !placeProblem(M.decor, ti) && canAfford(d.cost);
+    const d = DATA.decor[M.decor], ti = idx(M.cx, M.cy), [w, h] = sizeOf(M.decor);
+    const ok = !decorProblem(M.decor, ti) && canAfford(d.cost);
+    const sd = DATA.sprites.sprites[d.sprite], sw = sd?.w ?? 16, sh = sd?.h ?? 16;
     ctx.globalAlpha = 0.65;
-    drawSprite(ctx, d.sprite, 0, M.cx * TILE, M.cy * TILE);
+    if (d.overlay) drawSprite(ctx, `grass_0`, 0, M.cx * TILE, M.cy * TILE);
+    drawSprite(ctx, d.sprite, 0, M.cx * TILE + Math.round((w * TILE - sw) / 2), (M.cy + h) * TILE - sh);
     ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? `rgba(140,198,90,${blink})` : `rgba(229,115,90,${blink})`;
-    ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, 15, 15);
+    ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, w * TILE - 1, h * TILE - 1);
   }
   // cursor corners
   const x = M.cx * TILE, y = M.cy * TILE;
@@ -202,7 +191,7 @@ function panel() {
     setModePanel(`<div class="mp-title">Plan mode</div><div class="tabs"><span class="btn">LB</span>${tabs}<span class="btn">RB</span></div><div class="mp-help">${tab.help}</div><div class="mp-keys">${step} · Ⓨ/Ⓑ exit</div>`);
   } else if (G.mode === 'place') {
     const d = DATA.decor[M.decor];
-    setModePanel(`<div class="mp-title">Build: ${d.name}</div><div class="mp-help">Cost: ${costLabel(d.cost)}</div><div class="mp-keys">Ⓐ place · Ⓧ pick up · LB/RB change item · Ⓑ done</div>`);
+    setModePanel(`<div class="mp-title">Build: ${d.name}</div><div class="mp-help">Cost: ${costLabel(d.cost)}${d.desc ? ' · ' + d.desc : ''}</div><div class="mp-keys">Ⓐ place · Ⓧ pick up · LB/RB change item · Ⓑ done</div>`);
   }
 }
 export { panel as refreshModePanel };

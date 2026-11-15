@@ -20,7 +20,12 @@ export function choppable(i) {
   const m = DATA.balance.trees?.permanentBorder ?? 3, x = tx(i), y = ty(i);
   return x >= m && y >= m && x < W() - m && y < H() - m;
 }
-export function decorAt(i) { const o = obj(i); return o && o.startsWith('x:') ? o.slice(2) : null; }
+// Decoration id covering tile i (multi-tile ones store 'p:<anchor>' on their other tiles)
+export function decorAt(i) {
+  let o = obj(i);
+  if (o && o.startsWith('p:')) o = obj(+o.slice(2));
+  return o && o.startsWith('x:') ? o.slice(2) : null;
+}
 
 export function blocks(i) {
   if (i < 0 || i >= G.state.map.ground.length) return true;
@@ -28,7 +33,7 @@ export function blocks(i) {
   const o = G.state.map.obj[i];
   if (!o) return false;
   if (o.startsWith('d:')) return !!DATA.debris[o.slice(2)]?.blocks;
-  if (o.startsWith('x:')) return !!DATA.decor[o.slice(2)]?.blocks;
+  if (o.startsWith('x:') || o.startsWith('p:')) { const d = DATA.decor[decorAt(i)]; return !!d && !d.ground && d.blocks !== false; }
   return true; // cabin, crate, shop
 }
 export function blocksXY(x, y) { return !inBounds(x, y) || blocks(idx(x, y)); }

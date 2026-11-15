@@ -7,6 +7,7 @@ import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj, choppable } f
 import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
+import { decorAction } from './decorations.js';
 import { isNight } from './daytime.js';
 import { emit, poof, burst } from './particles.js';
 import { sfx } from './audio.js';
@@ -67,6 +68,8 @@ export function resolveAction(ignoreCats = false) {
     if (o === 'crate') return { kind: 'crate', label: 'Shipping crate: sell crops' };
     if (o === 'shop') return { kind: 'shop', label: 'Seed shop' };
     if (o === 'cabin') return { kind: 'cabin', label: 'Customize the cabin' };
+    const da = decorAction(t);
+    if (da) return da;
   }
   const crop = st.crops[t];
   if (crop && crop.stage >= 3) return { kind: 'harvest', tile: t, crop, label: `Harvest ${farm.cropName(crop.id)}` };
@@ -122,6 +125,7 @@ export function updatePlayer(dt, handlers) {
       case 'crate': handlers.crate(); return;
       case 'shop': handlers.shop(); return;
       case 'cabin': handlers.cabin(); return;
+      case 'decor': act.run(handlers); return;
       case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
     }
   }

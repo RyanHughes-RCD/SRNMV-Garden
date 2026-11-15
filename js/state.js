@@ -13,6 +13,8 @@ const MIGRATIONS = [
   s => s,
 ];
 
+export const CABIN_DEFAULTS = { roof: 'red', wall: 'oak', door: 0, windowBoxes: false, chimney: 'stone', curtains: 'none', welcomeMat: false, porchSwing: false, porch: false };
+
 export function defaultSettings() {
   return {
     timeMode: 'real', // real clock or 'fast'
@@ -81,7 +83,7 @@ export function newGame() {
     inv: { crops: {}, seeds: {}, unknown },
     discovered: {},
     map: { w, h, ground, obj },
-    cabin: { x: cx, y: cy, roof: 'red', wall: 'oak', door: 0, windowBoxes: false },
+    cabin: { x: cx, y: cy, ...CABIN_DEFAULTS },
     props: { crate, shop },
     plots: [],
     nextPlotId: 1,
@@ -90,6 +92,7 @@ export function newGame() {
     jobs: [],
     nextJobId: 1,
     cats: {},        // catId -> { x, y, energy, done:{type:n} }
+    decorState: {},
     stats: { harvested: 0, cleared: 0, tilled: 0, planted: 0, watered: 0, sold: 0, earned: 0 },
   };
 }
@@ -121,6 +124,9 @@ function validate(s) {
   s.inv.crops ||= {}; s.inv.seeds ||= {}; s.inv.unknown ||= {};
   s.mats ||= { wood: 0, stone: 0, fiber: 0 };
   s.stats ||= {};
+  s.decorState ||= {};
+  s.cabin = { ...CABIN_DEFAULTS, ...s.cabin };
+  for (let i = 0; i < s.map.obj.length; i++) { const o = s.map.obj[i]; if (o && o.startsWith('x:') && !DATA.decor[o.slice(2)]) s.map.obj[i] = null; }
   // drop crops/jobs that reference data that no longer exists
   for (const [k, c] of Object.entries(s.crops)) if (!DATA.cropById[c.id]) delete s.crops[k];
   for (const k of Object.keys(s.inv.seeds)) if (!DATA.cropById[k]) delete s.inv.seeds[k];

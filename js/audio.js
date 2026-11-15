@@ -100,7 +100,7 @@ export function updateAmbience(dt, nearCabin) {
   const night = h < 5.5 || h >= 20.5, day = h >= 6 && h < 19.5;
   windGain.gain.setTargetAtTime(0.035 + 0.025 * Math.sin(now / 9) + 0.015 * Math.sin(now / 3.7), now, 1.5);
   if (day && now > nextBird) {
-    nextBird = now + 2.5 + Math.random() * 7;
+    nextBird = now + (2.5 + Math.random() * 7) / (G.birdBoost || 1);
     const base = 1800 + Math.random() * 1600, notes = 2 + Math.floor(Math.random() * 4), vol = 0.025 + Math.random() * 0.03;
     for (let i = 0; i < notes; i++) tone(base * (1 + (Math.random() - 0.5) * 0.25), 0.09, { vol, at: i * (0.1 + Math.random() * 0.05), slide: base * (1.2 + Math.random() * 0.4), bus: ambBus });
   }

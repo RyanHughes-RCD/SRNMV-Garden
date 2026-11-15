@@ -35,6 +35,9 @@ export function applyOverrides() {
   DATA.cropById = Object.fromEntries(DATA.crops.map(c => [c.id, c]));
   DATA.debris = b.debris.debris;
   DATA.decor = b.decor.decor;
+  DATA.decorCategories = b.decor.categories || [];
+  DATA.letters = b.decor.letters || [];
+  DATA.catHouse = b.decor.catHouse || {};
   DATA.cabinOptions = b.decor.cabin;
   DATA.sprites = mergeSprites(b.sprites, readLS(OVERRIDE_KEYS.sprites));
   const cats = readLS(OVERRIDE_KEYS.cats);

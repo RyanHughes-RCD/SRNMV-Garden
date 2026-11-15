@@ -34,6 +34,12 @@ const MINUTES = +(process.argv[3] || 3);
     st.plots.push({ id: 103, name: 'Soak C', x: cx - 3, y: st.cabin.y + 9, w: 8, h: 5, seed: 'same' });
     for (const c of window.__game.state ? (await import('./js/data.js')).DATA.crops : []) st.inv.seeds[c.id] = 20;
     st.plots[0].seed = 'c:carrot'; st.plots[1].seed = 'c:tomato'; st.plots[2].seed = 'c:moonbloom';
+    const D = await import('./js/decorations.js');
+    const w = st.map.w, cy = st.cabin.y;
+    for (const [id, dx, dy] of [['quarry', -10, 0], ['meadow', 10, 0], ['mailbox', -3, 2], ['wishing_well', 3, 2], ['cat_bed', -6, 2], ['cat_tree', 6, 2], ['campfire', 0, -3], ['beehive', -12, 6], ['cat_house', 12, 6]]) {
+      const t = (cy + dy) * w + cx + dx; for (const f of D.footprint(t, id)) { st.map.ground[f] = 'g'; st.map.obj[f] = null; } D.markDirty();
+      if (!D.placeProblem(id, t)) D.placeDecor(id, t);
+    }
     G.timeScale = 1000;
   });
 

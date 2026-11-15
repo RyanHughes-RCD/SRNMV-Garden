@@ -8,6 +8,7 @@ import * as brain from './catbrain.js';
 import { hourOfDay, isNight } from './daytime.js';
 import { emit, floatIcon } from './particles.js';
 import { sfx } from './audio.js';
+import { catFurniture, nearestCatSpot, catHouseOf, catHouseDoorstep, catWorkMult } from './decorations.js';
 
 const tileOf = c => idx(Math.floor(c.x / TILE), Math.floor((c.y - 2) / TILE));
 
@@ -45,6 +46,7 @@ function goIdle(cat, sec, anim = 'sit', activity) {
 }
 
 function walkTo(cat, tile, onArrive, activity) {
+  cat.perch = null;
   const start = tileOf(cat);
   const path = findPath(start, tile);
   if (!path) return false;
@@ -91,8 +93,10 @@ function decide(cat) {
   const st = G.state, B = DATA.balance, cfg = cat.cfg;
   const hour = hourOfDay();
   if (cat.energy < 0.15) return nap(cat, hour);
+  cat.perch = null; cat.napBonus = 1; cat.zoomCenter = null;
   const jobsAvailable = st.jobs.some(j => !j.reservedBy && brain.affinity(cfg, j.type) > 0);
-  const w = brain.idleWeights(cfg, { energy: cat.energy, hour, jobsAvailable });
+  const here = tileOf(cat);
+  const w = brain.idleWeights(cfg, { energy: cat.energy, hour, jobsAvailable, furn: catFurniture(here) });
   if (!G.state || G.offline) w.visit = 0;
   const choice = pickWeighted(Object.entries(w));
   if (choice === 'work' && pickJob(cat)) return;
@@ -114,7 +118,35 @@ function decide(cat) {
       if (t != null && walkTo(cat, t, () => { goIdle(cat, randRange(6, 14), 'sit', `Hanging out with ${who}`); setEmote(cat, 'icon_heart', 1.5); }, `Following ${who}`)) return;
       break;
     }
+    case 'scratch': case 'perch': case 'snack': {
+      const role = { scratch: 'post', perch: 'tree', snack: 'bowls' }[choice], spot = nearestCatSpot(role, here);
+      if (!spot) break;
+      const nb = workSpots(spot.i).find(t => t !== spot.i) ?? workSpots(spot.i)[0];
+      const label = { scratch: 'Off to the scratching post', perch: 'Climbing the cat tree', snack: 'Snack time!' }[choice];
+      if (nb != null && walkTo(cat, nb, () => {
+        cat.dir = tx(spot.i) * TILE + 8 > cat.x ? 'right' : 'left';
+        if (choice === 'scratch') { goIdle(cat, randRange(5, 8), 'work', 'Scratching the post'); setEmote(cat, 'icon_note', 1.5); }
+        if (choice === 'perch') { goIdle(cat, randRange(30, 70), 'sit', 'Perched on the cat tree'); cat.perch = { x: tx(spot.i) * TILE + 8, y: ty(spot.i) * TILE - 9, sortY: (ty(spot.i) + 1) * TILE + 1 }; }
+        if (choice === 'snack') { goIdle(cat, 5, 'sit', 'Having a snack'); cat.energy = Math.min(1, cat.energy + 0.25); setEmote(cat, 'icon_heart', 1.5); }
+      }, label)) return;
+      break;
+    }
+    case 'sunbathe': {
+      const spot = nearestCatSpot('cushion', here);
+      if (spot && walkTo(cat, spot.i, () => startNap(cat, 1.3, 'Sunbathing on the cushion', randRange(40, 90)), 'Heading for a sunny spot')) return;
+      break;
+    }
+    case 'play': {
+      const spot = nearestCatSpot('yarn', here);
+      if (spot) { cat.zoomLeft = 4 + Math.floor(rand() * 3); cat.zoomCenter = spot.i; setEmote(cat, 'icon_exclaim', 1); return zoom(cat); }
+      break;
+    }
     case 'cabin': {
+      const fire = isNight() ? nearestCatSpot('fire', here) : null;
+      if (fire) {
+        const ft = randomWalkableNear(fire.i, 1);
+        if (ft != null && walkTo(cat, ft, () => goIdle(cat, randRange(40, 90), 'sleep', 'Warming up by the campfire'), 'Heading to the campfire')) return;
+      }
       const t = randomWalkableNear(cabinDoorFront(), 1);
       const warm = isNight();
       if (t != null && walkTo(cat, t, () => goIdle(cat, randRange(30, 80), warm ? 'sleep' : 'sit', warm ? 'Warming up by the cabin' : 'Sitting on the porch'), 'Heading home')) return;
@@ -124,19 +156,35 @@ function decide(cat) {
   goIdle(cat, randRange(4, 12), 'sit', rand() < 0.3 ? 'Grooming' : 'Sitting pretty');
 }
 
+// Cats prefer to nap at their own house, then in a cat bed, then wherever they are.
 function nap(cat, hour) {
-  const B = DATA.balance, t = brain.traits(cat.cfg);
-  const sleepy = brain.sleepiness(t.schedule, hour);
   release(cat);
-  cat.state = 'nap'; cat.anim = 'sleep'; cat.path = null;
-  cat.timer = brain.napSeconds(cat.cfg, B, sleepy);
-  cat.activity = isNight() ? 'Asleep' : 'Napping';
+  const home = catHouseOf(cat.id), here = tileOf(cat);
+  if (home) {
+    const step = catHouseDoorstep(home.i);
+    if (step === here) return startNap(cat, 1.5, isNight() ? 'Asleep at home' : 'Napping at home');
+    if (!blocks(step) && walkTo(cat, step, () => startNap(cat, 1.5, isNight() ? 'Asleep at home' : 'Napping at home'), 'Heading home for a nap')) return;
+  }
+  const bed = nearestCatSpot('bed', here);
+  if (bed) {
+    if (bed.i === here) return startNap(cat, 1.5, 'Curled up in the cat bed');
+    if (walkTo(cat, bed.i, () => startNap(cat, 1.5, 'Curled up in the cat bed'), 'Off to the cat bed')) return;
+  }
+  void hour;
+  startNap(cat, 1, isNight() ? 'Asleep' : 'Napping');
+}
+function startNap(cat, bonus = 1, activity = 'Napping', seconds) {
+  const B = DATA.balance, t = brain.traits(cat.cfg);
+  release(cat);
+  cat.state = 'nap'; cat.anim = 'sleep'; cat.path = null; cat.napBonus = bonus;
+  cat.timer = seconds ?? brain.napSeconds(cat.cfg, B, brain.sleepiness(t.schedule, hourOfDay()));
+  cat.activity = activity;
 }
 
 function zoom(cat) {
   if (cat.zoomLeft-- <= 0) { goIdle(cat, randRange(3, 6), 'sit', 'Catching their breath'); return; }
-  const t = randomWalkableNear(tileOf(cat), 5);
-  if (t == null || !walkTo(cat, t, () => zoom(cat), 'Zoomies!')) goIdle(cat, 2);
+  const t = randomWalkableNear(cat.zoomCenter ?? tileOf(cat), cat.zoomCenter != null ? 2 : 5);
+  if (t == null || !walkTo(cat, t, () => zoom(cat), cat.zoomCenter != null ? 'Playing with the yarn' : 'Zoomies!')) goIdle(cat, 2);
   cat.state = cat.state === 'walk' ? 'zoom' : cat.state;
 }
 
@@ -178,7 +226,7 @@ export function updateCats(dt) {
       case 'work': {
         const j = cat.job;
         if (!jobAlive(j) || !isJobValid(j)) { goIdle(cat, randRange(1, 3)); break; }
-        const done = workJob(j, brain.workRate(cat.cfg, j.type, B, buff) * dt, cat.id);
+        const done = workJob(j, brain.workRate(cat.cfg, j.type, B, buff * catWorkMult()) * dt, cat.id);
         cat.energy = Math.max(0, cat.energy - brain.energyDrain(cat.cfg, B) * dt);
         if (!G.offline && rand() < dt * 2) {
           if (j.type === 'water') emit({ x: tx(j.tile) * TILE + 8 + randRange(-4, 4), y: ty(j.tile) * TILE + 4, vy: 20, g: 60, life: 0.4, color: '#7fb3d5' });
@@ -202,7 +250,7 @@ export function updateCats(dt) {
       }
       case 'nap': {
         cat.timer -= dt;
-        cat.energy = Math.min(1, cat.energy + B.cats.energyRegenPerNapSec * dt);
+        cat.energy = Math.min(1, cat.energy + B.cats.energyRegenPerNapSec * (cat.napBonus || 1) * dt);
         if (!G.offline && rand() < dt * 0.25) floatIcon(cat.x + 2, cat.y - 10, 'icon_zzz');
         if (cat.timer <= 0) goIdle(cat, randRange(1, 3), 'sit', 'Waking up');
         break;
@@ -221,6 +269,7 @@ export function catNear(px, py, r = 13) {
   return best;
 }
 export function petCat(cat) {
+  cat.perch = null;
   const st = G.state, B = DATA.balance;
   if (G.realTime - cat.petAt < 0.6) return;
   cat.petAt = G.realTime;
@@ -247,11 +296,12 @@ function spriteName(cat) {
 }
 export function drawCats(push, ctx, t) {
   for (const cat of G.cats) {
-    push(cat.y, () => {
+    const at = cat.perch || cat;
+    push(cat.perch ? cat.perch.sortY : cat.y, () => {
       const { name, flip } = spriteName(cat);
       const fps = cat.state === 'zoom' ? 16 : undefined;
-      drawSprite(ctx, name, animFrame(name, cat.t, fps), cat.x - 8, cat.y - 15, { flip, swap: cat.swap.swap, swapKey: cat.swap.key });
-      if (cat.emote) drawSprite(ctx, cat.emote, 0, cat.x - 4, cat.y - 25 + Math.round(Math.sin(G.realTime * 5)));
+      drawSprite(ctx, name, animFrame(name, cat.t, fps), at.x - 8, at.y - 15, { flip, swap: cat.swap.swap, swapKey: cat.swap.key });
+      if (cat.emote) drawSprite(ctx, cat.emote, 0, at.x - 4, at.y - 25 + Math.round(Math.sin(G.realTime * 5)));
     });
   }
 }
