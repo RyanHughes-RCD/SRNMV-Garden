@@ -470,7 +470,7 @@ function drawSpritePreviews() {
   const isGround = ['tiles'].includes(d.cat) && d.w === 16 && d.h === 16;
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
     const inPatch = isGround && x >= 3 && x <= 5 && y >= 1 && y <= 3;
-    ctx.drawImage(inPatch ? frameCanvas(W.name, f, sw.swap, sw.key) : frameCanvas(`grass_${(x * 7 + y * 3) % 4}`, 0), x * T, y * T);
+    ctx.drawImage(inPatch ? frameCanvas(W.name, f, sw.swap, sw.key) : frameCanvas(`grass_${(x * 7 + y * 3) % 12}`, 0), x * T, y * T);
   }
   if (d.crop) for (let x = 2; x <= 6; x++) ctx.drawImage(frameCanvas('soil', 0), x * T, 2 * T);
   if (!isGround) {

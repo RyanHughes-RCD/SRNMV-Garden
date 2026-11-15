@@ -36,9 +36,16 @@ export function clampCamera() {
   cam.y = mh <= G.view.h ? (mh - G.view.h) / 2 : clamp(cam.y, 0, mh - G.view.h);
 }
 
+// How many grass_N textures exist (12 by default; add more in the Workshop data and they're used automatically).
+let grassCount = 0, grassFor = null;
+function grassLooks() {
+  if (grassFor !== DATA.sprites) { grassFor = DATA.sprites; grassCount = 0; while (hasSprite(`grass_${grassCount}`)) grassCount++; grassCount ||= 1; }
+  return grassCount;
+}
+
 function groundSprite(i, x, y) {
   const g = G.state.map.ground[i];
-  if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * 4)}`; }
+  if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}`; }
   if (g === 'f') return `forest_${Math.floor(hash2(x, y, 5) * 3)}`;
   if (g === 't') { const c = G.state.crops[i]; return c && c.wetUntil > G.state.simTime ? 'soil_wet' : 'soil'; }
   return g; // path_stone, path_wood

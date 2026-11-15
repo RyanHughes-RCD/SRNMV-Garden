@@ -105,6 +105,45 @@ function grass(seed, flowers = false) {
   return g;
 }
 for (let i = 0; i < 4; i++) add(`grass_${i}`, 'tiles', grass(11 + i * 7));
+// Eight more grass textures in the same greens, so open ground doesn't look tiled.
+function grassTexture(kind) {
+  const g = new G(16, 16).fill(C.green), r = rng(500 + kind * 31);
+  const R = n => Math.floor(r() * n);
+  switch (kind) {
+    case 4: // clover patches
+      for (let k = 0; k < 3; k++) { const x = 2 + R(12), y = 2 + R(12); g.pts([[x, y - 1], [x - 1, y], [x + 1, y], [x - 1, y - 1], [x + 1, y - 1]], C.lgreen).set(x, y, C.green1).set(x, y + 1, C.green1); }
+      for (let k = 0; k < 4; k++) g.set(R(16), R(16), C.green1);
+      break;
+    case 5: // long blades
+      for (let k = 0; k < 9; k++) { const x = R(16), y = 3 + R(12), h = 2 + R(3), c = k % 3 ? C.lgreen : C.green1; for (let j = 0; j < h; j++) g.set(x + (j === h - 1 && r() < 0.5 ? 1 : 0), y - j, c); }
+      break;
+    case 6: // short and calm
+      for (let k = 0; k < 6; k++) g.set(R(16), R(16), k % 2 ? C.lgreen : C.green1);
+      break;
+    case 7: // shady dapples
+      for (const [px, py] of [[4, 4], [11, 7], [5, 12]]) g.ellipse(px + R(2), py + R(2), 1.4 + r() * 0.8, 1 + r() * 0.5, C.green1);
+      for (let k = 0; k < 5; k++) g.set(R(16), R(16), C.lgreen);
+      break;
+    case 8: // sunlit patches
+      for (const [px, py] of [[4, 4], [11, 7], [5, 12]]) g.ellipse(px + R(2), py + R(2), 1.4 + r() * 0.8, 1 + r() * 0.5, C.lgreen);
+      for (let k = 0; k < 3; k++) g.set(R(16), R(16), C.pgreen);
+      for (let k = 0; k < 4; k++) g.set(R(16), R(16), C.green1);
+      break;
+    case 9: // a few pebbles in the grass
+      for (let k = 0; k < 3; k++) { const x = 2 + R(12), y = 2 + R(12); g.set(x, y, C.lgray).set(x + 1, y, C.gray).set(x, y + 1, C.gray); }
+      for (let k = 0; k < 6; k++) { const x = R(16), y = R(16); g.set(x, y, C.lgreen).set(x + 1, y - 1, C.lgreen); }
+      break;
+    case 10: // little v-shaped tufts
+      for (let k = 0; k < 7; k++) { const x = 1 + R(14), y = 2 + R(13); g.pts([[x - 1, y - 1], [x, y], [x + 1, y - 1]], k % 3 ? C.lgreen : C.green1); }
+      break;
+    case 11: // scattered fallen leaves
+      for (let k = 0; k < 4; k++) { const x = 1 + R(13), y = 1 + R(14), c = k % 2 ? C.lgreen : C.green1; g.pts([[x, y], [x + 1, y], [x + 1, y - 1], [x + 2, y - 1]], c); }
+      for (let k = 0; k < 4; k++) g.set(R(16), R(16), C.lgreen);
+      break;
+  }
+  return g;
+}
+for (let i = 4; i < 12; i++) add(`grass_${i}`, 'tiles', grassTexture(i));
 add('grass_flowers', 'tiles', grass(99, true));
 
 function soil(wet) {
