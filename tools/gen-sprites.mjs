@@ -140,21 +140,45 @@ for (let i = 0; i < 3; i++) add(`forest_${i}`, 'tiles', forest(200 + i));
 
 function tree(kind) {
   const g = new G(24, 32);
-  g.rect(10, 22, 4, 9, C.brown); g.set(10, 30, C.dbrown); g.set(14, 30, C.brown); g.set(9, 30, C.brown); g.line(11, 23, 11, 29, C.tan);
-  if (kind === 0) {
-    g.ellipse(12, 13, 10.5, 10, C.green1);
-    g.ellipse(11, 11, 8, 7.5, C.green);
-    g.ellipse(9, 8, 4, 3, C.lgreen);
-    g.pts([[15, 6], [17, 10], [6, 14], [14, 16], [18, 15], [8, 18]], C.lgreen);
-    g.pts([[16, 19], [7, 20], [19, 12], [12, 21]], C.dgreen);
-  } else {
+  const trunk = (col = C.brown, hi = C.tan, dark = C.dbrown, w = 4) => { g.rect(12 - w / 2, 22, w, 9, col); g.set(12 - w / 2, 30, dark); g.set(12 + w / 2, 30, col); g.set(11 - w / 2, 30, col); g.line(11, 23, 11, 29, hi); };
+  const blob = (base, mid, hi, dark, spots = [[15, 6], [17, 10], [6, 14], [14, 16], [18, 15], [8, 18]], shade = [[16, 19], [7, 20], [19, 12], [12, 21]]) => {
+    g.ellipse(12, 13, 10.5, 10, base); g.ellipse(11, 11, 8, 7.5, mid); g.ellipse(9, 8, 4, 3, hi);
+    g.pts(spots, hi); g.pts(shade, dark);
+  };
+  if (kind === 0) { trunk(); blob(C.green1, C.green, C.lgreen, C.dgreen); }
+  else if (kind === 1) { trunk();
     for (let t = 0; t < 4; t++) { const y = 4 + t * 5, half = 3 + t * 2.4; for (let j = 0; j < 7; j++) { const hw = Math.round(half * (j + 1) / 7); g.rect(12 - hw, y + j, hw * 2, 1, j < 2 ? C.green : C.green1); } }
     g.pts([[11, 5], [10, 11], [9, 16], [8, 21], [13, 9], [12, 14]], C.lgreen);
+  } else if (kind === 2) { // birch: pale trunk with dark marks, light airy leaves
+    g.rect(10, 12, 4, 19, C.vlgray).line(10, 12, 10, 30, C.lgray);
+    g.pts([[11, 15], [12, 15], [12, 19], [13, 19], [11, 23], [11, 27], [12, 27]], C.dgray);
+    g.ellipse(12, 10, 8.5, 8, C.green).ellipse(11, 8, 6, 5.5, C.lgreen).ellipse(9, 6, 3, 2.2, C.pgreen);
+    g.ellipse(6, 14, 3.5, 3, C.green).ellipse(18, 13, 3.5, 3, C.green).pts([[14, 5], [16, 9], [6, 12], [12, 14]], C.pgreen).pts([[15, 16], [8, 16]], C.green1);
+  } else if (kind === 3) { // autumn maple
+    trunk(C.brown, C.tan, C.dbrown);
+    blob(C.coral, C.orange, C.yellow, C.red, [[15, 6], [17, 10], [6, 14], [14, 16], [18, 15], [8, 18]], [[16, 19], [7, 20], [19, 12], [12, 21], [5, 11]]);
+    g.pts([[3, 30], [20, 29], [17, 31]], C.orange).pts([[5, 31], [19, 31]], C.coral); // fallen leaves
+  } else if (kind === 4) { // cherry blossom
+    trunk(C.plum, C.dbrown, C.out);
+    g.line(12, 22, 7, 16, C.plum).line(12, 22, 17, 15, C.plum);
+    g.ellipse(12, 12, 10.5, 9, C.pink).ellipse(11, 10, 8, 6.5, C.ppink).ellipse(9, 7, 3.5, 2.5, C.white);
+    g.pts([[15, 6], [17, 10], [6, 13], [14, 15], [19, 13]], C.white).pts([[16, 18], [6, 18], [19, 10], [11, 19]], C.pink).pts([[4, 15], [20, 16]], C.violet);
+    g.pts([[4, 30], [8, 31], [18, 30], [21, 31]], C.ppink); // petals on the ground
+  } else if (kind === 5) { // tall dark spruce
+    g.rect(11, 25, 2, 6, C.dbrown).set(10, 30, C.dbrown).set(13, 30, C.dbrown);
+    for (let t = 0; t < 6; t++) { const y = 1 + t * 4, half = 2 + t * 1.8; for (let j = 0; j < 5; j++) { const hw = Math.max(1, Math.round(half * (j + 1) / 5)); g.rect(12 - hw, y + j, hw * 2, 1, j < 1 ? C.green1 : C.dgreen); } }
+    g.pts([[11, 3], [10, 8], [9, 13], [8, 18], [7, 23], [13, 6], [14, 15]], C.green1).pts([[12, 0], [12, 1]], C.green1);
+  } else if (kind === 6) { // old mossy oak: wide, low, with a hollow
+    g.rect(9, 20, 6, 11, C.brown).line(9, 20, 9, 30, C.dbrown).line(10, 21, 10, 29, C.tan).ellipse(12.5, 25, 1.2, 1.8, C.out);
+    g.pts([[7, 30], [8, 29], [16, 30], [15, 29], [6, 31], [17, 31]], C.brown).pts([[9, 27], [10, 28], [14, 23]], C.green);
+    g.ellipse(12, 12, 11.5, 9, C.dgreen).ellipse(11, 10, 9.5, 7.5, C.green1).ellipse(9, 8, 5, 3.5, C.green);
+    g.ellipse(4, 14, 3.5, 3, C.green1).ellipse(20, 14, 3.5, 3, C.green1);
+    g.pts([[6, 7], [15, 5], [17, 9], [13, 13], [7, 12]], C.green).pts([[16, 17], [6, 17], [11, 18]], C.dgreen);
   }
   return g.outline();
 }
-add('tree_0', 'tiles', tree(0));
-add('tree_1', 'tiles', tree(1));
+const TREE_KINDS = 7;
+for (let k = 0; k < TREE_KINDS; k++) add(`tree_${k}`, 'tiles', tree(k));
 
 /* ----------------------------------------------------------------- debris */
 // Each debris type has 5 looks: debris_<type> plus debris_<type>_1 .. _4.

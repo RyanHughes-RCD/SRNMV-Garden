@@ -81,7 +81,7 @@ export function renderWorld(t) {
       const h = hash2(x, y, 11);
       const edge = st.map.ground[i + 1] !== 'f' || st.map.ground[i - 1] !== 'f' || st.map.ground[i + st.map.w] !== 'f' || st.map.ground[i - st.map.w] !== 'f';
       if (edge || h > 0.55) {
-        const tree = h > 0.8 ? 'tree_1' : 'tree_0';
+        const tree = treeSprite(x, y);
         const jx = Math.round((hash2(x, y, 13) - 0.5) * 6);
         pushDraw(y * TILE + 15, () => drawSprite(ctx, tree, 0, x * TILE - 4 + jx, y * TILE - 16));
       }
@@ -121,6 +121,17 @@ export function renderWorld(t) {
 
   renderLighting(t, ox, oy);
   ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
+}
+
+// Forest mix: mostly leafy and pine, with birches, maples, cherries, spruces and old oaks scattered in.
+// Weights live in balance.json (trees.mix) so you can change the feel of the woods.
+const DEFAULT_TREE_MIX = [40, 22, 10, 6, 4, 10, 5];
+export function treeSprite(x, y) {
+  const mix = DATA.balance.trees?.mix || DEFAULT_TREE_MIX;
+  let total = 0; for (const w of mix) total += w;
+  let r = hash2(x, y, 23) * total;
+  for (let k = 0; k < mix.length; k++) { r -= mix[k]; if (r < 0) return hasSprite(`tree_${k}`) ? `tree_${k}` : 'tree_0'; }
+  return 'tree_0';
 }
 
 // Each debris type has several looks; pick one per tile (stable, so it never flickers).
