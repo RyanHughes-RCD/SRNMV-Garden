@@ -2,7 +2,7 @@
 import { G, TILE } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
-import { idx, tx, ty, inBounds, debrisAt, decorAt, plotAt, ground, obj, blocks } from './world.js';
+import { idx, tx, ty, inBounds, debrisAt, decorAt, plotAt, ground, obj, blocks, choppable, workSpots } from './world.js';
 import { addJob, getJob, removeJob, jobsAtTile } from './jobs.js';
 import { drawSprite } from './sprites.js';
 import { facingTile } from './player.js';
@@ -14,6 +14,7 @@ import { selectedSeedKey } from './player.js';
 
 export const PLAN_TABS = [
   { id: 'clear', name: 'Clear', help: 'Mark debris for clearing. The cats will pick it up.' },
+  { id: 'chop', name: 'Chop trees', help: 'Mark trees to chop down and grow the clearing. Each one leaves a stump.' },
   { id: 'plot', name: 'New plot', help: 'Choose two corners to make a garden plot.' },
   { id: 'removePlot', name: 'Remove plot', help: 'Pick a plot to remove (crops stay planted).' },
   { id: 'cancel', name: 'Cancel jobs', help: 'Select an area to cancel queued jobs.' },
@@ -84,13 +85,14 @@ export function updatePlan() {
   const r = rect();
   M.start = null;
   if (tab === 'clear') commitClear(r);
+  else if (tab === 'chop') commitClear(r, true);
   else if (tab === 'plot') commitPlot(r);
   else if (tab === 'cancel') commitCancel(r);
   panel();
 }
-function commitClear(r) {
-  const tiles = tilesIn(r).filter(t => debrisAt(t));
-  if (!tiles.length) { sfx('error'); toast('No debris there'); return; }
+function commitClear(r, trees = false) {
+  const tiles = tilesIn(r).filter(t => (trees ? choppable(t) : debrisAt(t)));
+  if (!tiles.length) { sfx('error'); toast(trees ? 'No trees there that can be chopped' : 'No debris there'); return; }
   const allMarked = tiles.every(t => getJob('clear', t)?.marked);
   let n = 0;
   for (const t of tiles) {
@@ -98,7 +100,9 @@ function commitClear(r) {
     else if (addJob('clear', t, { marked: true })) n++;
   }
   sfx('confirm');
-  toast(allMarked ? `Unmarked ${n} for clearing` : `Marked ${n} for clearing`, 'icon_mark');
+  const what = trees ? `tree${n === 1 ? '' : 's'} for chopping` : 'for clearing';
+  if (trees && !allMarked && !tiles.some(t => workSpots(t).length)) { sfx('confirm'); toast(`Marked ${n} trees. The cats can only reach trees on the clearing's edge, so chop a path to them.`, 'tool_axe', 6000); return; }
+  toast(allMarked ? `Unmarked ${n} ${what}` : `Marked ${n} ${what}`, trees ? 'tool_axe' : 'icon_mark');
 }
 function commitPlot(r) {
   const why = plotProblem(r);
@@ -174,7 +178,7 @@ export function drawModeOverlay(ctx, t) {
     ctx.fillRect(r.x * TILE, r.y * TILE, r.w * TILE, r.h * TILE);
     ctx.strokeStyle = `rgba(${col},${blink})`; ctx.lineWidth = 1;
     ctx.strokeRect(r.x * TILE + 0.5, r.y * TILE + 0.5, r.w * TILE - 1, r.h * TILE - 1);
-    if (tab === 'clear') for (const ti of tilesIn(r)) if (debrisAt(ti)) { ctx.fillStyle = `rgba(247,205,93,${0.35 * blink})`; ctx.fillRect(tx(ti) * TILE + 2, ty(ti) * TILE + 2, 12, 12); }
+    if (tab === 'clear' || tab === 'chop') for (const ti of tilesIn(r)) if (tab === 'chop' ? choppable(ti) : debrisAt(ti)) { ctx.fillStyle = `rgba(247,205,93,${0.35 * blink})`; ctx.fillRect(tx(ti) * TILE + 2, ty(ti) * TILE + 2, 12, 12); }
   } else {
     const d = DATA.decor[M.decor], ti = idx(M.cx, M.cy);
     const ok = !placeProblem(M.decor, ti) && canAfford(d.cost);

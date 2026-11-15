@@ -35,15 +35,15 @@ export function newGame() {
   const seed = (Date.now() ^ (Math.random() * 1e9)) >>> 0;
   const ground = new Array(w * h).fill('g');
   const obj = new Array(w * h).fill(null);
-  const fd = B.map.forestDepth;
-  // forest ring with a wobbly inner edge
+  // a small oval clearing with a wobbly edge in the middle of the woods; chop trees to grow it
+  const mx = w / 2, my = h / 2, RX = B.map.clearingRadiusX, RY = B.map.clearingRadiusY, wob = B.map.edgeWobble ?? 0.2;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const d = Math.min(x, y, w - 1 - x, h - 1 - y);
-    const wobble = Math.floor(hash2(Math.floor(x / 3), Math.floor(y / 3), seed) * 2.2);
-    if (d < fd + wobble) ground[y * w + x] = 'f';
+    const dx = (x + 0.5 - mx) / RX, dy = (y + 0.5 - my) / RY;
+    const noise = (hash2(Math.floor(x / 2), Math.floor(y / 2), seed) - 0.5) * 2 * wob;
+    if (Math.hypot(dx, dy) > 1 + noise) ground[y * w + x] = 'f';
   }
-  // cabin and props
-  const cx = Math.floor(w / 2) - 1, cy = fd + 4;
+  // cabin and props, a little north of the middle
+  const cx = Math.floor(mx) - 2, cy = Math.floor(my) - 4;
   for (let y = cy; y < cy + 2; y++) for (let x = cx; x < cx + 3; x++) obj[y * w + x] = 'cabin';
   // clear the forest above the cabin roof so it doesn't clip into trees
   for (let y = cy - 2; y < cy + 4; y++) for (let x = cx - 3; x < cx + 6; x++) ground[y * w + x] = 'g';

@@ -1,7 +1,7 @@
 // The shared job queue. The player designates, the player or the cats do the work.
 import { G, randInt } from './game.js';
 import { DATA } from './data.js';
-import { debrisAt, plotAt, plotTiles, ground, obj, tx, ty } from './world.js';
+import { debrisAt, plotAt, plotTiles, ground, obj, tx, ty, choppable } from './world.js';
 import * as farm from './farm.js';
 
 export const JOB_TYPES = ['clear', 'till', 'plant', 'water'];
@@ -19,14 +19,14 @@ export const jobAlive = j => !!j && byKey.get(key(j.type, j.tile)) === j;
 
 export function workAmount(type, tile) {
   const B = DATA.balance;
-  if (type === 'clear') return DATA.debris[debrisAt(tile)]?.work ?? 3;
+  if (type === 'clear') return debrisAt(tile) ? DATA.debris[debrisAt(tile)]?.work ?? 3 : B.trees?.work ?? 12;
   return B.work[type] ?? 2;
 }
 
 export function isJobValid(j) {
   const st = G.state;
   switch (j.type) {
-    case 'clear': return !!debrisAt(j.tile);
+    case 'clear': return !!debrisAt(j.tile) || choppable(j.tile);
     case 'till': return ground(j.tile) === 'g' && !obj(j.tile) && !!plotAt(j.tile);
     case 'plant': {
       if (ground(j.tile) !== 't' || st.crops[j.tile]) return false;
@@ -70,6 +70,17 @@ function completeJob(j, worker) {
   const res = { job: j, worker };
   switch (j.type) {
     case 'clear': {
+      if (!debrisAt(j.tile)) { // chopping a tree: the clearing grows and a stump is left behind
+        const T = DATA.balance.trees || {};
+        st.map.ground[j.tile] = 'g';
+        st.map.obj[j.tile] = 'd:' + (Math.random() < (T.bigStumpChance ?? 0.6) ? 'stump_big' : 'stump_small');
+        const got = {};
+        for (const [m, [a, b]] of Object.entries(T.drops || { wood: [3, 5] })) { const n = randInt(a, b); if (n > 0) { st.mats[m] = (st.mats[m] || 0) + n; got[m] = n; } }
+        st.stats.chopped = (st.stats.chopped || 0) + 1;
+        res.tree = true; res.drops = got;
+        if (j.marked) addJob('clear', j.tile, { marked: true }); // the cats will clear the stump next
+        break;
+      }
       const d = debrisAt(j.tile), def = DATA.debris[d];
       st.map.obj[j.tile] = null;
       const got = {};
@@ -120,6 +131,7 @@ export function generate() {
 }
 
 export function jobLabel(j) {
+  if (j.type === 'clear' && !debrisAt(j.tile)) return 'Chopping a tree';
   if (j.type === 'clear') return `Clearing ${DATA.debris[debrisAt(j.tile)]?.name?.toLowerCase() || 'debris'}`;
   return JOB_VERB[j.type];
 }

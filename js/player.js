@@ -3,7 +3,7 @@ import { G, TILE, randRange } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
 import { drawSprite, animFrame, slotSwap, hasSprite } from './sprites.js';
-import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj } from './world.js';
+import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj, choppable } from './world.js';
 import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
@@ -54,11 +54,11 @@ export function cycleSeed(d) {
 }
 
 // What would pressing/holding A do right now?
-export function resolveAction() {
+export function resolveAction(ignoreCats = false) {
   const st = G.state, tool = TOOLS[st.player.tool] || TOOLS[0];
   const allow = t => !tool.allow || tool.allow.includes(t);
   const fp = facingPoint();
-  const cat = tool.id === 'hand' ? catNear(fp.x, fp.y) : null;
+  const cat = tool.id === 'hand' && !ignoreCats ? catNear(fp.x, fp.y) : null;
   if (cat) return { kind: 'pet', cat, label: `Pet ${cat.cfg.name}` };
   const t = facingTile();
   if (t < 0) return null;
@@ -72,6 +72,7 @@ export function resolveAction() {
   if (crop && crop.stage >= 3) return { kind: 'harvest', tile: t, crop, label: `Harvest ${farm.cropName(crop.id)}` };
   const d = debrisAt(t);
   if (d && allow('clear')) return { kind: 'work', type: 'clear', tile: t, label: `Clear ${DATA.debris[d]?.name || 'debris'}` };
+  if (choppable(t) && allow('clear')) return { kind: 'work', type: 'clear', tile: t, label: 'Chop down tree' };
   const plot = plotAt(t);
   if (ground(t) === 'g' && !o && allow('till')) {
     if (plot) return { kind: 'work', type: 'till', tile: t, label: 'Till soil' };
@@ -108,9 +109,11 @@ export function updatePlayer(dt, handlers) {
       anim.moving = true;
     }
   }
+  // keep working while A is held, even if a helpful cat wanders into the way
+  const wasWorking = anim.working && input.down('confirm');
   anim.working = false;
   if (G.mode !== 'play') { lastAction = null; return; }
-  const act = resolveAction();
+  const act = resolveAction(wasWorking);
   lastAction = act;
   if (!act) return;
   if (input.pressed('confirm')) {

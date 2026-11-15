@@ -157,40 +157,95 @@ add('tree_0', 'tiles', tree(0));
 add('tree_1', 'tiles', tree(1));
 
 /* ----------------------------------------------------------------- debris */
-{
-  const twig = new G(16, 16);
-  twig.line(3, 12, 12, 9, C.brown).line(4, 13, 12, 10, C.dbrown).line(7, 11, 6, 7, C.brown).line(10, 10, 13, 13, C.dbrown);
-  twig.pts([[6, 6], [5, 6], [6, 5]], C.green).set(13, 14, C.lgreen);
-  add('debris_twig', 'debris', twig.outline());
-
-  const weeds = new G(16, 16);
-  for (const [x, h] of [[4, 6], [6, 8], [8, 5], [10, 9], [12, 6]]) weeds.line(x, 14, x + (x % 4 ? 1 : -1), 14 - h, x % 4 ? C.green : C.green1);
-  weeds.pts([[7, 7], [11, 6], [5, 9]], C.lgreen).set(10, 4, C.yellow);
-  add('debris_weeds', 'debris', weeds.outline());
-
-  const bush = new G(16, 16);
-  bush.ellipse(8, 10, 7, 5.5, C.green1).ellipse(7, 9, 5, 4, C.green).pts([[5, 7], [6, 6], [9, 7], [11, 9], [4, 10]], C.lgreen).pts([[10, 12], [6, 13]], C.dgreen).pts([[11, 7], [5, 11]], C.red);
-  add('debris_bush', 'debris', bush.outline());
-
-  const rock = new G(16, 16);
-  rock.ellipse(8, 11, 6.5, 4.5, C.gray).ellipse(7, 10, 5, 3.3, C.lgray).pts([[5, 9], [6, 8], [7, 8]], C.vlgray).pts([[11, 13], [10, 14], [6, 14]], C.dgray);
-  add('debris_rock', 'debris', rock.outline());
-
-  const stump = (big) => {
-    const g = new G(16, 16), w = big ? 7 : 5;
-    g.rect(8 - w, 9, w * 2, big ? 5 : 4, C.brown).line(8 - w + 1, 10, 8 - w + 1, 13, C.dbrown).line(8 + w - 2, 10, 8 + w - 2, 13, C.tan);
-    g.ellipse(8, 9, w, big ? 2.6 : 2.2, C.ltan).ellipse(8, 9, w - 2, 1.4, C.tan).set(8, 9, C.ltan);
-    g.pts([[8 - w - 1, 14], [8 + w, 14], [6, 14], [10, 14]], C.dbrown);
-    if (big) g.pts([[3, 6], [4, 5]], C.green);
+// Each debris type has 5 looks: debris_<type> plus debris_<type>_1 .. _4.
+// The game picks one per tile so the clearing doesn't look copy-pasted.
+const DEBRIS_VARIANTS = 5;
+const debrisArt = {
+  twig(v, r) {
+    const g = new G(16, 16);
+    if (v === 0) {
+      g.line(3, 12, 12, 9, C.brown).line(4, 13, 12, 10, C.dbrown).line(7, 11, 6, 7, C.brown).line(10, 10, 13, 13, C.dbrown);
+      g.pts([[6, 6], [5, 6], [6, 5]], C.green).set(13, 14, C.lgreen);
+    } else {
+      const n = 2 + (v % 2);
+      for (let k = 0; k < n; k++) {
+        const x0 = 2 + r() * 4, y0 = 9 + r() * 5, x1 = 10 + r() * 4, y1 = 7 + r() * 6;
+        g.line(x0, y0, x1, y1, k % 2 ? C.dbrown : C.brown);
+        const mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+        if (r() < 0.7) g.line(mx, my, mx + (r() - 0.5) * 6, my - 2 - r() * 3, C.brown);
+      }
+      if (v === 2) g.pts([[11, 6], [12, 6], [11, 5]], C.orange).set(12, 5, C.yellow); // a fallen leaf
+      if (v === 3) g.pts([[4, 7], [5, 6], [5, 7]], C.green).pts([[12, 11], [13, 11]], C.lgreen);
+      if (v === 4) g.ellipse(11, 12, 1.5, 1, C.tan).set(11, 12, C.brown); // pinecone
+    }
     return g.outline();
-  };
-  add('debris_stump_small', 'debris', stump(false));
-  add('debris_stump_big', 'debris', stump(true));
-
-  const boulder = new G(16, 16);
-  boulder.ellipse(8, 9, 7.5, 6.5, C.gray).ellipse(7, 8, 6, 5, C.lgray).pts([[4, 6], [5, 5], [6, 5]], C.vlgray).pts([[12, 13], [10, 14], [5, 14], [13, 11]], C.dgray);
-  boulder.pts([[6, 3], [7, 3], [8, 3], [9, 4], [5, 4], [7, 4]], C.green).pts([[6, 3], [8, 3]], C.lgreen);
-  add('debris_boulder', 'debris', boulder.outline());
+  },
+  weeds(v, r) {
+    const g = new G(16, 16);
+    const blades = v === 0 ? [[4, 6], [6, 8], [8, 5], [10, 9], [12, 6]] : Array.from({ length: 4 + (v % 3) }, (_, k) => [3 + k * (10 / (3 + (v % 3))) + r(), 4 + r() * 6]);
+    for (const [x, h] of blades) g.line(x, 14, x + (r() < 0.5 ? 1 : -1), 14 - h, r() < 0.5 ? C.green : C.green1);
+    g.pts([[7, 7], [11, 6], [5, 9]].map(([x, y]) => [x + (v ? Math.round(r() * 2 - 1) : 0), y]), C.lgreen);
+    const flower = [C.yellow, C.white, C.lav, C.pink, C.yellow][v];
+    const fx = v === 0 ? 10 : 4 + Math.round(r() * 8), fy = v === 0 ? 4 : 4 + Math.round(r() * 3);
+    if (v !== 3) g.set(fx, fy, flower);
+    if (v === 4) g.pts([[fx - 1, fy], [fx + 1, fy], [fx, fy - 1]], C.yellow).set(fx, fy, C.orange); // dandelion
+    return g.outline();
+  },
+  bush(v, r) {
+    const g = new G(16, 16);
+    const rx = 6 + r() * 1.2, ry = 4.8 + r() * 1;
+    g.ellipse(8, 10, rx, ry, C.green1).ellipse(7, 9, rx - 2, ry - 1.5, C.green);
+    if (v === 2) g.ellipse(4, 11, 3, 2.5, C.green1).ellipse(12, 11, 3, 2.5, C.green1);
+    for (let k = 0; k < 5; k++) g.set(4 + Math.round(r() * 8), 6 + Math.round(r() * 5), C.lgreen);
+    g.pts([[10, 12], [6, 13]], C.dgreen);
+    const berry = [C.red, C.blue, null, C.white, C.purple][v];
+    if (berry) for (let k = 0; k < 3; k++) g.set(4 + Math.round(r() * 8), 7 + Math.round(r() * 5), berry);
+    return g.outline();
+  },
+  rock(v, r) {
+    const g = new G(16, 16);
+    if (v === 3) { // two small rocks
+      g.ellipse(5, 11, 3.5, 2.7, C.gray).ellipse(4.5, 10.5, 2.3, 1.7, C.lgray).ellipse(11, 12, 3, 2.3, C.gray).ellipse(10.5, 11.5, 2, 1.4, C.lgray).set(4, 10, C.vlgray).set(10, 11, C.vlgray);
+      return g.outline();
+    }
+    const rx = 5.5 + r() * 1.5, ry = 3.8 + r() * 1.2;
+    g.ellipse(8, 11, rx, ry, C.gray).ellipse(7, 10, rx - 1.5, ry - 1.2, C.lgray).pts([[5, 9], [6, 8], [7, 8]], C.vlgray).pts([[11, 13], [10, 14], [6, 14]], C.dgray);
+    if (v === 1) g.line(8, 8, 10, 12, C.dgray); // crack
+    if (v === 2) g.pts([[6, 7], [7, 7], [8, 7], [9, 8]], C.green).set(7, 7, C.lgreen); // moss
+    if (v === 4) g.pts([[11, 9], [12, 10]], C.lav); // a pretty crystal fleck
+    return g.outline();
+  },
+  stump_small(v, r) { return stumpArt(false, v, r); },
+  stump_big(v, r) { return stumpArt(true, v, r); },
+  boulder(v, r) {
+    const g = new G(16, 16);
+    const rx = 7 + r() * 0.6, ry = 6 + r() * 0.8;
+    g.ellipse(8, 9, rx, ry, C.gray).ellipse(7, 8, rx - 1.5, ry - 1.5, C.lgray).pts([[4, 6], [5, 5], [6, 5]], C.vlgray).pts([[12, 13], [10, 14], [5, 14], [13, 11]], C.dgray);
+    if (v === 0 || v === 2) g.pts([[6, 3], [7, 3], [8, 3], [9, 4], [5, 4], [7, 4]], C.green).pts([[6, 3], [8, 3]], C.lgreen);
+    if (v === 1) g.line(9, 4, 11, 9, C.dgray).line(11, 9, 10, 12, C.dgray);
+    if (v === 2) g.pts([[3, 11], [4, 12], [12, 6]], C.green);
+    if (v === 3) g.ellipse(12, 12, 2.5, 2, C.gray).set(11, 11, C.lgray); // a pebble beside it
+    if (v === 4) g.pts([[10, 7], [11, 7], [10, 8]], C.white).pts([[5, 10], [6, 11]], C.lav); // sparkly
+    return g.outline();
+  },
+};
+function stumpArt(big, v, r) {
+  const g = new G(16, 16), w = (big ? 7 : 5) - (v === 3 ? 1 : 0);
+  const h = (big ? 5 : 4) + (v === 1 ? 1 : 0);
+  g.rect(8 - w, 14 - h, w * 2, h, C.brown).line(8 - w + 1, 15 - h, 8 - w + 1, 13, C.dbrown).line(8 + w - 2, 15 - h, 8 + w - 2, 13, C.tan);
+  g.ellipse(8, 14 - h, w, big ? 2.6 : 2.2, C.ltan).ellipse(8, 14 - h, w - 2, 1.4, C.tan).set(8, 14 - h, C.ltan);
+  g.pts([[8 - w - 1, 14], [8 + w, 14], [6, 14], [10, 14]], C.dbrown);
+  if (v === 0 && big) g.pts([[3, 6], [4, 5]], C.green);
+  if (v === 2) g.pts([[8 + w - 1, 13 - h], [8 + w, 12 - h], [8 + w, 13 - h]], C.green).set(8 + w, 11 - h, C.lgreen); // little sprout
+  if (v === 3) g.ellipse(8 + w + 1, 13, 1.5, 1, C.coral).set(8 + w + 1, 12, C.red); // mushroom
+  if (v === 4) g.pts([[8 - w - 2, 13], [8 - w - 3, 14], [8 + w + 1, 13], [8 + w + 2, 14]], C.dbrown).set(8 - 1, 14 - h, C.brown);
+  return g.outline();
+}
+for (const [type, fn] of Object.entries(debrisArt)) {
+  for (let v = 0; v < DEBRIS_VARIANTS; v++) {
+    const r = rng(1000 + v * 97 + type.length * 13);
+    add(v === 0 ? `debris_${type}` : `debris_${type}_${v}`, 'debris', fn(v, r));
+  }
 }
 
 /* ------------------------------------------------------------------ cabin */

@@ -14,6 +14,12 @@ export const tileAtPx = (px, py) => ({ x: Math.floor(px / TILE), y: Math.floor(p
 export const tileCenter = i => ({ x: tx(i) * TILE + 8, y: ty(i) * TILE + 8 });
 
 export function debrisAt(i) { const o = obj(i); return o && o.startsWith('d:') ? o.slice(2) : null; }
+// A forest tile that can be chopped down (everything except the permanent outer woods).
+export function choppable(i) {
+  if (G.state.map.ground[i] !== 'f') return false;
+  const m = DATA.balance.trees?.permanentBorder ?? 3, x = tx(i), y = ty(i);
+  return x >= m && y >= m && x < W() - m && y < H() - m;
+}
 export function decorAt(i) { const o = obj(i); return o && o.startsWith('x:') ? o.slice(2) : null; }
 
 export function blocks(i) {
@@ -54,7 +60,7 @@ class Heap {
   get size() { return this.a.length; }
 }
 // Returns array of tile indices from start (exclusive) to goal (inclusive), or null.
-export function findPath(start, goal, maxNodes = 2500) {
+export function findPath(start, goal, maxNodes = 5000) {
   if (start === goal) return [];
   const w = W(), n = G.state.map.ground.length;
   if (blocks(goal)) return null;

@@ -57,6 +57,7 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 ## How to play (couch version)
 
 1. **Clear the land.** Hold **A** on twigs, rocks, stumps and bushes, or press **Y** for Plan mode, pick *Clear* and mark a whole area for the cats.
+   - **Grow the clearing.** You start in a small clearing deep in the woods. Hold **A** on a tree at the edge to chop it, or use Plan mode's *Chop trees* tab to mark a whole stretch. Each tree gives wood and leaves a stump to clear. Cats can only reach trees on the clearing's edge, so they work outward row by row. The outermost woods always stay.
 2. **Make a plot.** In Plan mode switch to *New plot* (LB/RB), press **A** on one corner and **A** on the other. The cats clear and till it.
 3. **Plant.** Each plot grows the seed chosen for it. New plots start with whatever seed you're holding (your mystery seeds at first). Cats plant, and you can too (hold **A** on tilled soil).
 4. **Wait for the moment.** When something grows, the game chimes: *"The garden grew!"*. Unknown plants show as **???** with a hint at each stage. Guess what they are!
@@ -75,7 +76,7 @@ The game autosaves every 30 seconds. While you're away (tab closed, TV off), it 
 
 Open `workshop.html` on the same site (*Settings → Sprite & Cat Workshop* in game, or the URL directly). Use a mouse there.
 
-- **Sprites:** every sprite in the game is editable. Use pencil, fill, line, rectangle, mirror, onion-skin and animation frames, with a live preview at TV scale.
+- **Sprites:** every sprite in the game is editable. Each debris type has five looks (`debris_rock`, `debris_rock_1` ... `debris_rock_4`), and the game picks one per tile for variety. Use pencil, fill, line, rectangle, mirror, onion-skin and animation frames, with a live preview at TV scale.
 - **Palette:** the whole game shares one 32-colour palette. Edit a colour and everything updates.
 - **Cats:** set name, coat colours, a personality blurb, per-job **speed** and **preference**, traits (stamina, naps, curiosity, zoomies, how much they love you, early bird or night owl) and weaknesses (distractible, hates water, refuses a job). *Simulate a day* shows how a cat would spend 24 hours.
 - **Players:** set both names and outfit colours, and edit their sprites.

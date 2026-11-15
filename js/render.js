@@ -1,7 +1,7 @@
 // World rendering: ground, y-sorted objects, entities, lighting.
 import { G, TILE, hash2, clamp } from './game.js';
 import { DATA } from './data.js';
-import { drawSprite, frameCanvas, optionSwap, mergeSwaps, animFrame } from './sprites.js';
+import { drawSprite, frameCanvas, optionSwap, mergeSwaps, animFrame, hasSprite } from './sprites.js';
 import { idx, tx, ty } from './world.js';
 import { lighting, isNight, hourOfDay } from './daytime.js';
 import { drawParticles, drawCritters, emit } from './particles.js';
@@ -87,7 +87,7 @@ export function renderWorld(t) {
       }
     }
     if (o) {
-      if (o.startsWith('d:')) pushDraw(y * TILE + 12, () => drawSprite(ctx, 'debris_' + o.slice(2), 0, x * TILE, y * TILE));
+      if (o.startsWith('d:')) { const name = debrisSprite(o.slice(2), x, y); pushDraw(y * TILE + 12, () => drawSprite(ctx, name, 0, x * TILE, y * TILE)); }
       else if (o.startsWith('x:')) { const d = DATA.decor[o.slice(2)]; pushDraw(y * TILE + 13, () => drawSprite(ctx, d?.sprite || 'decor_' + o.slice(2), 0, x * TILE, y * TILE)); }
       else if (o === 'crate' || o === 'shop') pushDraw(y * TILE + 13, () => drawSprite(ctx, o, 0, x * TILE, y * TILE));
     }
@@ -121,6 +121,13 @@ export function renderWorld(t) {
 
   renderLighting(t, ox, oy);
   ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
+}
+
+// Each debris type has several looks; pick one per tile (stable, so it never flickers).
+const DEBRIS_LOOKS = 5;
+export function debrisSprite(type, x, y) {
+  const v = Math.floor(hash2(x, y, 17) * DEBRIS_LOOKS);
+  return v && hasSprite(`debris_${type}_${v}`) ? `debris_${type}_${v}` : `debris_${type}`;
 }
 
 function drawCrop(crop, x, y, t) {
