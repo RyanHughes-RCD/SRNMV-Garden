@@ -18,7 +18,7 @@
     {
       "id": "p2",
       "name": "Player 2",
-      "spriteSet": "p2",
+      "spriteSet": "hero2",
       "colors": {
         "hair": "#6b2e3e",
         "hairHi": "#b8434a",
