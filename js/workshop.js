@@ -26,6 +26,7 @@ async function start() {
   CATS = clone(DATA.catsConfig);
   PLAYERS = clone(DATA.playersConfig);
   setSaveState('All changes saved', true);
+  $('version').textContent = 'v' + (document.querySelector('meta[name=game-version]')?.content || 'dev');
   initTabs(); initTopbar();
   initSprites(); initCats(); renderPlayers();
   const first = Object.keys(SPR.sprites).find(n => n.startsWith('crop_')) || Object.keys(SPR.sprites)[0];

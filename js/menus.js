@@ -310,6 +310,7 @@ export function settingsMenu() {
   const tog = key => ({ right: S[key] ? 'On' : 'Off', onLeft: () => { S[key] = !S[key]; saveSettings(); applyVolumes(); }, onRight: () => { S[key] = !S[key]; saveSettings(); applyVolumes(); } });
   openMenu({
     title: 'Settings', icon: 'tool_hand',
+    subtitle: `Version ${document.querySelector('meta[name=game-version]')?.content || 'dev'}`,
     items: () => [
       { header: true, label: 'Time' },
       { label: 'Day / night', sub: S.timeMode === 'real' ? 'Follows your real clock' : `A full day every ${DATA.balance.time.fastDayLengthSec / 60} minutes`, right: S.timeMode === 'real' ? 'Real clock' : 'Fast', onLeft: () => { S.timeMode = S.timeMode === 'real' ? 'fast' : 'real'; saveSettings(); }, onRight: () => { S.timeMode = S.timeMode === 'real' ? 'fast' : 'real'; saveSettings(); } },

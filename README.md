@@ -153,6 +153,10 @@ The placeholder art comes from `tools/gen-sprites.mjs` (`node tools/gen-sprites.
 
 The font is **Pixeloid Sans** by GGBotNet (https://ggbot.net/fonts/), used under the SIL Open Font License 1.1. The licence is in `fonts/Pixeloid-OFL.txt`.
 
+## Releasing updates
+
+Before merging an update, run `node tools/stamp-version.mjs` and commit the result. It stamps `index.html` and `workshop.html` with a new version so TVs and laptops load the new code immediately instead of a cached copy. The current version shows in *Settings* (game) and the Workshop's top bar.
+
 ## Project layout
 
 ```
