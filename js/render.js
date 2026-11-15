@@ -123,9 +123,9 @@ export function renderWorld(t) {
   ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
 }
 
-// Forest mix: mostly leafy and pine, with birches, maples, cherries, spruces and old oaks scattered in.
+// Forest mix: round, pine, birch, wide cloud, tall cloud, spruce and old oak trees.
 // Weights live in balance.json (trees.mix) so you can change the feel of the woods.
-const DEFAULT_TREE_MIX = [40, 22, 10, 6, 4, 10, 5];
+const DEFAULT_TREE_MIX = [34, 20, 10, 10, 8, 10, 8];
 export function treeSprite(x, y) {
   const mix = DATA.balance.trees?.mix || DEFAULT_TREE_MIX;
   let total = 0; for (const w of mix) total += w;

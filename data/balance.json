@@ -78,14 +78,14 @@
     "permanentBorder": 3,
     "bigStumpChance": 0.6,
     "mix": [
-      40,
-      22,
+      34,
+      20,
       10,
-      6,
-      4,
       10,
-      5
+      8,
+      10,
+      8
     ],
-    "_mix": "Relative chance of each tree look: round, pine, birch, autumn maple, cherry blossom, spruce, old oak"
+    "_mix": "Relative chance of each tree look: round, pine, birch, wide cloud, tall cloud, spruce, old oak"
   }
 }

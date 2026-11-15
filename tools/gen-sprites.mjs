@@ -154,16 +154,21 @@ function tree(kind) {
     g.pts([[11, 15], [12, 15], [12, 19], [13, 19], [11, 23], [11, 27], [12, 27]], C.dgray);
     g.ellipse(12, 10, 8.5, 8, C.green).ellipse(11, 8, 6, 5.5, C.lgreen).ellipse(9, 6, 3, 2.2, C.pgreen);
     g.ellipse(6, 14, 3.5, 3, C.green).ellipse(18, 13, 3.5, 3, C.green).pts([[14, 5], [16, 9], [6, 12], [12, 14]], C.pgreen).pts([[15, 16], [8, 16]], C.green1);
-  } else if (kind === 3) { // autumn maple
+  } else if (kind === 3) { // wide cloud tree: a broad canopy of soft puffs
     trunk(C.brown, C.tan, C.dbrown);
-    blob(C.coral, C.orange, C.yellow, C.red, [[15, 6], [17, 10], [6, 14], [14, 16], [18, 15], [8, 18]], [[16, 19], [7, 20], [19, 12], [12, 21], [5, 11]]);
-    g.pts([[3, 30], [20, 29], [17, 31]], C.orange).pts([[5, 31], [19, 31]], C.coral); // fallen leaves
-  } else if (kind === 4) { // cherry blossom
-    trunk(C.plum, C.dbrown, C.out);
-    g.line(12, 22, 7, 16, C.plum).line(12, 22, 17, 15, C.plum);
-    g.ellipse(12, 12, 10.5, 9, C.pink).ellipse(11, 10, 8, 6.5, C.ppink).ellipse(9, 7, 3.5, 2.5, C.white);
-    g.pts([[15, 6], [17, 10], [6, 13], [14, 15], [19, 13]], C.white).pts([[16, 18], [6, 18], [19, 10], [11, 19]], C.pink).pts([[4, 15], [20, 16]], C.violet);
-    g.pts([[4, 30], [8, 31], [18, 30], [21, 31]], C.ppink); // petals on the ground
+    g.line(12, 23, 8, 19, C.brown).line(12, 23, 16, 19, C.brown);
+    const puffs = [[5, 15, 4.5, 4], [19, 15, 4.5, 4], [8, 9, 5.5, 5], [16, 9, 5.5, 5], [12, 5, 5, 4.5], [12, 14, 6.5, 5]];
+    for (const [x, y, rx, ry] of puffs) g.ellipse(x, y, rx + 0.6, ry + 0.6, C.green1);
+    for (const [x, y, rx, ry] of puffs) g.ellipse(x - 0.5, y - 0.5, rx - 0.4, ry - 0.4, C.green);
+    for (const [x, y, rx] of puffs) g.ellipse(x - rx * 0.35, y - 1.6, rx * 0.4, 1.3, C.lgreen);
+    g.pts([[4, 18], [20, 18], [9, 19], [15, 19], [12, 18]], C.green1).pts([[11, 3], [7, 7], [15, 7]], C.pgreen);
+  } else if (kind === 4) { // tall cloud tree: stacked puffs like a pile of clouds
+    trunk(C.brown, C.tan, C.dbrown, 3);
+    const puffs = [[12, 4, 4.5, 3.8], [8, 10, 5, 4.3], [16, 10, 5, 4.3], [12, 12, 5, 4], [7, 17, 5, 4], [17, 17, 5, 4], [12, 19, 5.5, 3.5]];
+    for (const [x, y, rx, ry] of puffs) g.ellipse(x, y, rx + 0.6, ry + 0.6, C.dgreen);
+    for (const [x, y, rx, ry] of puffs) g.ellipse(x - 0.4, y - 0.5, rx - 0.5, ry - 0.5, C.green1);
+    for (const [x, y, rx] of puffs) g.ellipse(x - rx * 0.3, y - 1.5, rx * 0.45, 1.2, C.green);
+    g.pts([[11, 2], [6, 8], [14, 8], [5, 15], [15, 15]], C.lgreen);
   } else if (kind === 5) { // tall dark spruce
     g.rect(11, 25, 2, 6, C.dbrown).set(10, 30, C.dbrown).set(13, 30, C.dbrown);
     for (let t = 0; t < 6; t++) { const y = 1 + t * 4, half = 2 + t * 1.8; for (let j = 0; j < 5; j++) { const hw = Math.max(1, Math.round(half * (j + 1) / 5)); g.rect(12 - hw, y + j, hw * 2, 1, j < 1 ? C.green1 : C.dgreen); } }
