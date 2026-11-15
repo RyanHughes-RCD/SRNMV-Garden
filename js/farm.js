@@ -1,5 +1,5 @@
 // Crops: seeds, planting, growth, harvest, discovery, the shop and selling.
-import { G, randInt, rand } from './game.js';
+import { G, randInt, rand, pickWeighted } from './game.js';
 import { DATA, RARITY_ORDER } from './data.js';
 import { plotAt } from './world.js';
 
@@ -117,7 +117,7 @@ export function buyPack(r) {
   const pool = DATA.crops.filter(c => c.rarity === r);
   if (!pool.length) return null;
   st.coins -= price;
-  const id = pool[randInt(0, pool.length - 1)].id;
+  const id = pickWeighted(pool.map(c => [c.id, c.packWeight ?? 1]));
   let n = DATA.rarities[r].packSeeds ?? 2;
   if (rand() < DATA.balance.economy.packBonusSeedChance) n++;
   for (let k = 0; k < n; k++) (st.inv.unknown[r] ||= []).push(id);

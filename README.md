@@ -92,6 +92,17 @@ Every balance number (growth bonus from water, cat work speed, seed return chanc
 
 The placeholder art comes from `tools/gen-sprites.mjs` (`node tools/gen-sprites.mjs`). **Don't re-run it after you've started editing in the Workshop.** It overwrites `data/sprites.json`.
 
+## Testing and debugging
+
+- **Debug menu:** press **LB + RB + Start** on the controller (or \` / F9). It has time speed ×1/×10/×100/×1000, add coins and materials, give seeds, grow everything, reveal all crops, and reset the save.
+- **Soak test:** runs the game at ×1000 for a few real minutes (days of game time) and checks memory, DOM size and save integrity:
+
+  ```bash
+  npm i -D playwright && npx playwright install chromium
+  python3 -m http.server 8000 &
+  node tools/soak.cjs http://localhost:8000/ 4
+  ```
+
 ## Project layout
 
 ```

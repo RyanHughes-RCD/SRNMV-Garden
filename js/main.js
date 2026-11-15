@@ -69,6 +69,7 @@ function updateTitle() {
     if (G.realTime % 1 < 0.02) titleScreen();
     if (input.anyPressed) {
       initAudio(); applyVolumes(); requestWakeLock();
+      if (!document.fullscreenElement && !input.lastWasPad) document.documentElement.requestFullscreen?.().catch(() => {});
       titleStep = 1; whoSel = G.state.activePlayer || 0; sfx('confirm'); titleScreen(); input.consumeAll();
     }
     return;

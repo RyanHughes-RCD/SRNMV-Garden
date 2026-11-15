@@ -69,7 +69,7 @@ export function resolveAction() {
     if (o === 'cabin') return { kind: 'cabin', label: 'Customize the cabin' };
   }
   const crop = st.crops[t];
-  if (crop && crop.stage >= 3 && tool.id === 'hand') return { kind: 'harvest', tile: t, crop, label: `Harvest ${farm.cropName(crop.id)}` };
+  if (crop && crop.stage >= 3) return { kind: 'harvest', tile: t, crop, label: `Harvest ${farm.cropName(crop.id)}` };
   const d = debrisAt(t);
   if (d && allow('clear')) return { kind: 'work', type: 'clear', tile: t, label: `Clear ${DATA.debris[d]?.name || 'debris'}` };
   const plot = plotAt(t);
