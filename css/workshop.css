@@ -125,3 +125,7 @@ main { height: calc(100vh - 52px); }
 .resize-panel[hidden] { display: none; }
 #btn-add-colour { margin-top: 8px; }
 #edit-canvas.select-tool { cursor: cell; }
+.colors.all { gap: 6px; }
+.colors.all label { width: 44px; }
+.pal-where { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.pal-where canvas { width: 128px; height: 128px; image-rendering: pixelated; background: #5d9b4f; border-radius: 8px; }

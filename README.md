@@ -130,7 +130,7 @@ python3 tools/import_sheet.py art/player1-sheet.png hero
 python3 tools/import_sheet.py art/player2-sheet.png hero2
 ```
 
-The script picks the walk, work, sit, sleep and wave frames (edit `MAP` in the script to change which grid cells are used), keeps the art's own colours, and saves the result as `hero_*` / `hero2_*` sprites in `data/custom-sprites.json` and `data/sprites.json`. Imported sprites keep their own colours, so the outfit colour pickers in the Workshop's Players tab don't change them. Edit the pixels or colours in the Sprites tab instead. Re-running `tools/gen-sprites.mjs` keeps imported sprites. To use a different sheet, import it under a new name and pick that sprite set in the Workshop's Players tab.
+The script picks the walk, work, sit, sleep and wave frames (edit `MAP` in the script to change which grid cells are used), keeps the art's own colours, and saves the result as `hero_*` / `hero2_*` sprites in `data/custom-sprites.json` and `data/sprites.json`. Imported sprites keep their own colours. In the Workshop's Players tab, an imported character shows **all** of its colours. Change any of them and it updates every sprite in that character's set; point at a colour to see where it's used, and *Reset colours* puts them back. Re-running `tools/gen-sprites.mjs` keeps imported sprites. To use a different sheet, import it under a new name and pick that sprite set in the Workshop's Players tab.
 
 ## Tuning
 

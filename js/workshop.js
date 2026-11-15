@@ -797,6 +797,21 @@ function simulate(cfg) {
 }
 
 /* ========================================================== PLAYERS */
+// Imported characters carry their own colours: every sprite in the set shares one palette.
+function setSprites(set) { return Object.keys(SPR.sprites).filter(k => k.startsWith(set + '_') && SPR.sprites[k].pal); }
+function setPalette(set) { const n = SPR.sprites[`${set}_walk_down`]?.pal ? `${set}_walk_down` : setSprites(set)[0]; return n ? SPR.sprites[n].pal : null; }
+function setSetColour(set, i, hex) {
+  for (const k of setSprites(set)) {
+    if (SPR.sprites[k] === BASE.sprites[k]) SPR.sprites[k] = clone(BASE.sprites[k]);
+    const pal = SPR.sprites[k].pal; while (pal.length <= i) pal.push('#ffffff'); pal[i] = hex;
+  }
+  resetSpriteCache();
+  clearTimeout(setSetColour._t); setSetColour._t = setTimeout(() => { renderThumbs(); scheduleSave('sprites'); }, 250);
+}
+function resetSetColours(set) {
+  for (const k of setSprites(set)) if (BASE.sprites[k]?.pal) { if (SPR.sprites[k] === BASE.sprites[k]) continue; SPR.sprites[k].pal = clone(BASE.sprites[k].pal); }
+  resetSpriteCache(); renderThumbs(); scheduleSave('sprites');
+}
 const PLAYER_SLOTS = [['hair', 'Hair'], ['hairHi', 'Hair shine'], ['skin', 'Skin'], ['skinShade', 'Skin shade'], ['shirt', 'Top'], ['shirtShade', 'Top shade'], ['pants', 'Trousers'], ['accent', 'Hat / clip']];
 function playerSets() { return [...new Set(Object.keys(SPR.sprites).filter(n => n.endsWith('_walk_down') && SPR.sprites[n].cat === 'player').map(n => n.slice(0, -'_walk_down'.length)))]; }
 function renderPlayers() {
@@ -809,8 +824,12 @@ function renderPlayers() {
         <label class="l">Name</label><input type="text" data-name value="${esc(p.name)}" maxlength="16">
         <label class="l">Sprite set</label><div class="row"><select data-set>${sets.map(s => `<option ${s === p.spriteSet ? 'selected' : ''}>${s}</option>`).join('')}</select><button data-edit>Edit sprites ▸</button></div>
       </div>
-      <h3 style="margin-top:12px">Colours</h3>
-      <div class="colors">${PLAYER_SLOTS.map(([k, l]) => `<label><input type="color" data-slot="${k}" value="${p.colors?.[k] || '#888888'}">${l}</label>`).join('')}</div>
+      ${setPalette(p.spriteSet) ? `<h3 style="margin-top:12px">Colours <small>(all ${setPalette(p.spriteSet).length} colours in this character's sprites)</small></h3>
+      <div class="colors all">${setPalette(p.spriteSet).map((c, k) => `<label title="${c}"><input type="color" data-pal="${k}" value="${c}">${k + 1}</label>`).join('')}</div>
+      <div class="pal-where"><canvas data-where width="32" height="32"></canvas><span class="hint">Point at a colour to see where it's used.</span></div>
+      <div class="row" style="margin-top:8px"><button data-reset-colours>Reset colours</button><span class="hint">Each colour changes every sprite in the "${esc(p.spriteSet)}" set (walking, working, sitting...).</span></div>`
+      : `<h3 style="margin-top:12px">Colours</h3>
+      <div class="colors">${PLAYER_SLOTS.map(([k, l]) => `<label><input type="color" data-slot="${k}" value="${p.colors?.[k] || '#888888'}">${l}</label>`).join('')}</div>`}
       <div class="anim-row" style="margin-top:12px">${[['walk_down', 'Walk'], ['walk_side', 'Side'], ['walk_up', 'Back'], ['work_side', 'Working']].map(([k, l]) => `<figure><canvas class="tall" data-anim="${k}"></canvas><figcaption>${l}</figcaption></figure>`).join('')}</div>
     </section>`).join('') + `<section><h3>Good to know</h3><p class="hint">The garden is shared: switching player only changes who you see walking around. Swap on the title screen, from the menu, or by holding Back/Share on the controller.</p></section>`;
   for (const sec of form.querySelectorAll('section[data-p]')) {
@@ -820,6 +839,29 @@ function renderPlayers() {
     sec.querySelector('[data-set]').onchange = e => { p.spriteSet = e.target.value; changed(); };
     sec.querySelector('[data-edit]').onclick = () => { W.filter.q = p.spriteSet + '_'; $('search').value = W.filter.q; W.filter.cat = 'all'; $('category').value = 'all'; showTab('sprites'); const f = Object.keys(SPR.sprites).find(k => k.startsWith(W.filter.q)); if (f) selectSprite(f); };
     for (const inp of sec.querySelectorAll('input[data-slot]')) inp.oninput = () => { p.colors = { ...(p.colors || {}), [inp.dataset.slot]: inp.value }; changed(); };
+    for (const inp of sec.querySelectorAll('input[data-pal]')) inp.oninput = () => { setSetColour(p.spriteSet, +inp.dataset.pal, inp.value); inp.parentElement.title = inp.value; };
+    const where = sec.querySelector('canvas[data-where]');
+    const showWhere = i => {
+      if (!where) return;
+      const n = SPR.sprites[`${p.spriteSet}_walk_down`] ? `${p.spriteSet}_walk_down` : setSprites(p.spriteSet)[0], d = SPR.sprites[n];
+      if (!d) return;
+      where.width = d.w; where.height = d.h;
+      const ctx = where.getContext('2d'); ctx.clearRect(0, 0, d.w, d.h);
+      d.frames[0].forEach((row, y) => [...row].forEach((ch, x) => {
+        const k = CH.indexOf(ch); if (k < 0) return;
+        ctx.globalAlpha = i == null || k === i ? 1 : 0.18;
+        ctx.fillStyle = k === i ? (Math.floor(performance.now() / 300) % 2 ? '#ff4fd8' : d.pal[k]) : d.pal[k];
+        ctx.fillRect(x, y, 1, 1);
+      }));
+      ctx.globalAlpha = 1;
+    };
+    showWhere(null);
+    for (const lab of sec.querySelectorAll('.colors.all label')) {
+      const i = +lab.querySelector('input').dataset.pal;
+      lab.addEventListener('mouseenter', () => { clearInterval(where._blink); showWhere(i); where._blink = setInterval(() => showWhere(i), 300); });
+      lab.addEventListener('mouseleave', () => { clearInterval(where._blink); showWhere(null); });
+    }
+    sec.querySelector('[data-reset-colours]')?.addEventListener('click', () => { if (confirm(`Put all of ${p.name}'s colours back to how they were drawn?`)) { resetSetColours(p.spriteSet); renderPlayers(); } });
     for (const cv of sec.querySelectorAll('canvas[data-anim]')) {
       anims.push({ c: cv, draw: t => {
         const n = SPR.sprites[`${p.spriteSet}_${cv.dataset.anim}`] ? `${p.spriteSet}_${cv.dataset.anim}` : `p1_${cv.dataset.anim}`, d = SPR.sprites[n], s = slotSwap('player', p.colors);
