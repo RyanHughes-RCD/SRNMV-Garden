@@ -1,0 +1,323 @@
+// Boot, title screen, main loop, global controls, feedback, autosave, wake lock, offline catch-up.
+import { G, TILE, fmtTime, clamp } from './game.js';
+import { DATA, loadData, applyOverrides } from './data.js';
+import { input } from './input.js';
+import { resetSpriteCache, iconHTML } from './sprites.js';
+import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
+import { initRender, renderWorld, clampCamera } from './render.js';
+import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
+import * as farm from './farm.js';
+import { syncCats, updateCats } from './cats.js';
+import { updatePlayer, switchPlayer, cycleSeed, selectedSeedKey, TOOLS, currentAction, playerName, playerCfg } from './player.js';
+import { updatePlan, updatePlace, enterPlan, cursorPx } from './modes.js';
+import { initAudio, applyVolumes, sfx, updateAmbience } from './audio.js';
+import { updateParticles, sparkle, burst, emit } from './particles.js';
+import { clockLabel, phaseLabel, hourOfDay } from './daytime.js';
+import * as ui from './ui.js';
+import * as menus from './menus.js';
+import { tx, ty } from './world.js';
+
+const $ = id => document.getElementById(id);
+const B = () => DATA.balance;
+
+/* ------------------------------------------------------------------ boot */
+async function boot() {
+  try { await loadData(); }
+  catch (e) { $('title').innerHTML = `<div class="title-box"><h1>Oops</h1><p>${ui.esc(e.message)}</p><p>If you opened index.html directly from disk, run a local web server instead (see README).</p></div>`; return; }
+  G.settings = loadSettings();
+  input.setBindings(G.settings.bindings);
+  initRender($('screen'));
+  G.state = loadGame() || newGame();
+  G.isNewGame = !G.state.simTime;
+  rebuildJobIndex();
+  syncCats();
+  const p = G.state.player;
+  G.camera.x = p.x - G.view.w / 2; G.camera.y = p.y - G.view.h / 2; clampCamera();
+  wireEvents();
+  G.mode = 'title';
+  titleScreen();
+  lastFrame = performance.now();
+  requestAnimationFrame(frame);
+  window.__game = G; // handy for debugging and tests
+}
+
+/* ----------------------------------------------------------------- title */
+let titleStep = 0, whoSel = 0;
+function titleScreen() {
+  const el = $('title');
+  el.classList.add('show');
+  if (titleStep === 0) {
+    const pads = input.connectedPads();
+    el.innerHTML = `<div class="title-box">
+      <div class="title-logo">${iconHTML('crop_sunflower', 'ico logo', { frame: 3 })}<h1>SRNMV Garden</h1>${iconHTML('cat_sit', 'ico logo')}</div>
+      <p class="tagline">a cozy little clearing, tended by cats</p>
+      <p class="press blink">Press any button</p>
+      <p class="padstatus">${pads.length ? `Controller ready: ${ui.esc(pads[0].id.slice(0, 40))}` : 'Controller not seen yet. Press a button on it (browsers wait for a press), or use the keyboard.'}</p>
+    </div>`;
+  } else {
+    const ps = DATA.playersConfig.players;
+    el.innerHTML = `<div class="title-box">
+      <h2>Who's playing?</h2>
+      <div class="who">${ps.map((p, i) => `<div class="who-card ${i === whoSel ? 'sel' : ''}">${ui.playerPortrait(p)}<div class="who-name">${ui.esc(p.name)}</div></div>`).join('')}</div>
+      <p class="press">${ui.glyphs('◂ ▸ choose · Ⓐ start')}</p>
+      <p class="padstatus">You can swap any time: hold Back/Share, or use the menu.</p>
+    </div>`;
+  }
+}
+function updateTitle() {
+  if (titleStep === 0) {
+    if (G.realTime % 1 < 0.02) titleScreen();
+    if (input.anyPressed) {
+      initAudio(); applyVolumes(); requestWakeLock();
+      titleStep = 1; whoSel = G.state.activePlayer || 0; sfx('confirm'); titleScreen(); input.consumeAll();
+    }
+    return;
+  }
+  const n = DATA.playersConfig.players.length;
+  if (input.nav('left') || input.nav('up')) { whoSel = (whoSel + n - 1) % n; sfx('move'); titleScreen(); }
+  if (input.nav('right') || input.nav('down')) { whoSel = (whoSel + 1) % n; sfx('move'); titleScreen(); }
+  if (input.pressed('confirm')) {
+    G.state.activePlayer = whoSel;
+    sfx('confirm');
+    $('title').classList.remove('show');
+    input.consumeAll();
+    startPlaying();
+  }
+}
+function startPlaying() {
+  const away = (Date.now() - (G.state.lastSaved || Date.now())) / 1000;
+  G.mode = 'play';
+  if (G.isNewGame) {
+    ui.showCard(`<h2>Welcome home!</h2><p>Your little cabin sits in a clearing full of twigs, rocks and stumps.</p>
+      <p>${iconHTML('tool_axe')} Hold Ⓐ on debris to clear it, or press Ⓨ for <b>Plan mode</b> to mark land for the cats.</p>
+      <p>${iconHTML('tool_hoe')} In Plan mode choose <b>New plot</b> and pick two corners. The cats will till it.</p>
+      <p>${iconHTML('seedpack_mystery')} You have two mystery seed packs. What will grow?</p>`, { cls: 'welcome' });
+    G.isNewGame = false;
+  } else if (away > 30) {
+    catchUp(away, true);
+  }
+  ui.toast(`Now playing: ${ui.esc(playerName())}`, null);
+}
+
+/* ------------------------------------------------------- offline catch-up */
+function catchUp(seconds, summary) {
+  const cap = B().time.offlineCapHours * 3600;
+  const secs = Math.min(seconds, cap);
+  if (secs < 1) return;
+  const stats = { stages: 0, ready: 0, jobs: {}, cleared: 0 };
+  const off = [
+    G.on('stage', e => { stats.stages++; if (e.crop.stage >= 3) stats.ready++; }),
+    G.on('jobDone', e => { if (e.worker && e.worker !== 'player') { const c = (stats.jobs[e.worker] ||= {}); c[e.job.type] = (c[e.job.type] || 0) + 1; } if (e.job.type === 'clear') stats.cleared++; }),
+  ];
+  G.offline = true;
+  const step = B().time.offlineStepSec;
+  let left = secs;
+  while (left > 0) { const dt = Math.min(step, left); simStep(dt); left -= dt; }
+  G.offline = false;
+  off.forEach(f => f());
+  if (!summary || secs < 60) return;
+  const lines = [];
+  if (stats.stages) lines.push(`${iconHTML('fx_sparkle')} The garden grew ${stats.stages} time${stats.stages > 1 ? 's' : ''}${stats.ready ? `, and <b>${stats.ready}</b> crop${stats.ready > 1 ? 's are' : ' is'} ready to harvest!` : '.'}`);
+  for (const cat of G.cats) {
+    const j = stats.jobs[cat.id];
+    const did = j ? Object.entries(j).map(([t, n]) => `${JOB_VERB[t].toLowerCase()} ${n}×`).join(', ') : null;
+    lines.push(`${ui.catPortrait(cat.cfg)} <b>${ui.esc(cat.cfg.name)}</b> ${did ? `was busy: ${did}.` : 'mostly napped. Very important work.'}`);
+  }
+  if (!lines.length) lines.push('It was a quiet time in the clearing.');
+  ui.showCard(`<h2>While you were away</h2><p class="muted">${fmtTime(secs)}${seconds > cap ? ` (counted up to ${B().time.offlineCapHours}h)` : ''}</p>${lines.map(l => `<p>${l}</p>`).join('')}`, { cls: 'away' });
+}
+
+/* -------------------------------------------------------------- the sim */
+function simStep(dt) {
+  G.state.simTime += dt;
+  farm.updateCrops(dt);
+  updateJobs(dt);
+  updateCats(dt);
+}
+
+/* ---------------------------------------------------------------- events */
+let lastGrowBanner = -999;
+function wireEvents() {
+  G.on('stage', ({ tile, crop }) => {
+    if (G.offline) return;
+    const x = tx(tile) * TILE + 8, y = ty(tile) * TILE + 6;
+    sparkle(x, y, 3);
+    if (G.realTime - lastGrowBanner > B().farm.growBannerCooldownSec) {
+      lastGrowBanner = G.realTime;
+      G.hudWake = G.realTime;
+      sfx('grow');
+      const name = farm.cropName(crop.id);
+      const msg = crop.stage >= 3 ? `${name === '???' ? 'Something' : 'A ' + name} is ready to harvest!` : `${name === '???' ? 'A mystery plant' : 'A ' + name} got bigger. ${name === '???' ? 'What could it be?' : ''}`;
+      ui.banner(`${iconHTML(`crop_${crop.id}`, 'ico big', { frame: crop.stage })}<div><b>The garden grew!</b><small>${msg}</small></div>`);
+    }
+  });
+  G.on('discover', ({ id, def, tile }) => {
+    sfx('discover');
+    const x = tx(tile) * TILE + 8, y = ty(tile) * TILE;
+    for (let k = 0; k < 24; k++) emit({ x, y, vx: (Math.random() - 0.5) * 120, vy: -40 - Math.random() * 80, g: 120, life: 1.4, color: ['#f7cd5d', '#e88fb0', '#8cc65a', '#7fb3d5', '#c89bd8'][k % 5], size: 2, layer: 1 });
+    ui.showCard(`<div class="disc">${iconHTML(`item_${id}`, 'ico huge')}</div><h2>New crop discovered!</h2><div class="disc-name">${def.name}</div><span class="rar rar-${def.rarity}">${DATA.rarities[def.rarity].name}</span><p>Sells for ${def.price} coins. You got its seeds back, so you can grow more.</p><p class="muted">Added to the Almanac.</p>`, { cls: 'discover', ms: 15000 });
+  });
+  G.on('harvest', r => { if (!r.first) ui.toast(`+${r.crops} ${r.def.name} · +${r.seeds} seed${r.seeds > 1 ? 's' : ''}${r.seeds > 1 ? '!' : ''}`, `item_${r.id}`, 2600); });
+  G.on('jobDone', e => {
+    if (G.offline) return;
+    if (e.job.type === 'clear') {
+      const x = tx(e.job.tile) * TILE + 8, y = ty(e.job.tile) * TILE + 8;
+      burst(x, y, { n: 5, sprite: e.debris === 'rock' || e.debris === 'boulder' ? 'fx_dirt' : 'fx_leaf' });
+      if (e.worker === 'player' && e.drops) { const d = Object.entries(e.drops).map(([k, n]) => `+${n} ${k}`).join(' · '); if (d) ui.toast(d, `item_${Object.keys(e.drops)[0]}`, 1800); }
+    }
+  });
+  G.on('playerSwitched', cfg => ui.toast(`Now playing: ${ui.esc(cfg.name)}`, null, 2500));
+  G.on('plotCreated', () => { G.hudWake = G.realTime; });
+  addEventListener('gamepadconnected', e => { ui.toast(`Controller connected`, null, 3000); if (G.mode === 'title') titleScreen(); void e; });
+  addEventListener('gamepaddisconnected', () => ui.toast('Controller disconnected', null, 4000));
+  // Workshop edits arrive live through localStorage
+  addEventListener('storage', e => {
+    if (!e.key || !e.key.startsWith('srnmv.override.')) return;
+    applyOverrides(); resetSpriteCache(); syncCats(); ui.resetHudCache();
+    ui.toast('Workshop changes applied', 'fx_sparkle');
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) saveGame(); else { requestWakeLock(); lastFrame = performance.now(); }
+  });
+  addEventListener('pagehide', () => { if (!G.noSave) saveGame(); });
+}
+
+/* ------------------------------------------------------------ wake lock */
+let wakeLock = null;
+async function requestWakeLock() {
+  try { if ('wakeLock' in navigator && !document.hidden && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch { wakeLock = null; }
+}
+
+/* ----------------------------------------------------------- main loop */
+let lastFrame = 0, wallLast = Date.now(), frameSkip = false, autosaveT = 0, hudT = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  let dt = (now - lastFrame) / 1000; lastFrame = now;
+  // real elapsed time (handles the tab sleeping)
+  const wall = Date.now(), wallDt = (wall - wallLast) / 1000; wallLast = wall;
+  if (G.state && G.mode !== 'title' && G.mode !== 'boot' && wallDt > 2) { catchUp(wallDt, wallDt > 300); dt = 0.016; }
+  // idle frame throttle (~30fps) to keep the TV box cool
+  if (G.realTime - G.lastInput > B().tv.idleFpsAfterSec) { frameSkip = !frameSkip; if (frameSkip) { pendingDt += dt; return; } }
+  dt = Math.min(dt + pendingDt, 0.1); pendingDt = 0;
+  G.realTime += dt;
+  update(dt);
+  renderWorld(G.realTime);
+  input.afterFrame();
+}
+let pendingDt = 0;
+
+function update(dt) {
+  input.update(dt);
+  if (input.anyPressed || Math.hypot(input.axis.x, input.axis.y) > 0.1) G.lastInput = G.realTime;
+  if (G.mode === 'title') { updateTitle(); updateParticles(dt); idleCamera(dt, true); return; }
+
+  // sim (scaled by debug time scale, in small steps)
+  const simDt = dt * G.timeScale;
+  const steps = Math.ceil(simDt / B().time.maxSimStepSec);
+  for (let i = 0; i < steps; i++) simStep(simDt / steps);
+
+  const cardActive = ui.updateCard(dt);
+  if (!cardActive) {
+    if (G.mode === 'menu') ui.updateMenus(dt);
+    else if (G.mode === 'designate') updatePlan();
+    else if (G.mode === 'place') updatePlace();
+    else if (G.mode === 'play') globalControls();
+  }
+  updatePlayer(cardActive ? 0 : dt, { crate: menus.sellMenu, shop: menus.shopMenu, cabin: menus.cabinMenu });
+  updateParticles(dt);
+  updateCamera(dt);
+  const p = G.state.player, c = G.state.cabin;
+  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE);
+  hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); }
+  autosaveT += dt; if (autosaveT > B().tv.autosaveSec) { autosaveT = 0; if (!G.noSave) saveGame(); }
+  updatePadOverlay();
+}
+
+let hudSwitchFired = false;
+function globalControls() {
+  if ((input.pressed('debug')) || (input.down('seedPrev') && input.down('seedNext') && input.pressed('pause'))) { menus.debugMenu(); return; }
+  if (input.pressed('pause')) { menus.pauseMenu(); return; }
+  if (input.pressed('designate')) { enterPlan(); return; }
+  if (input.pressed('switchPlayer')) switchPlayer();
+  if (input.pressed('tool')) {
+    const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
+    ui.toast(`Tool: ${TOOLS[p.tool].name}`, TOOLS[p.tool].icon, 1400);
+  }
+  if (input.pressed('seedPrev') || input.pressed('seedNext')) {
+    const k = cycleSeed(input.pressed('seedNext') ? 1 : -1);
+    if (k) { sfx('move'); ui.toast(`${farm.seedLabel(k)} ×${farm.seedCount(k)}`, farm.seedIcon(k), 1400); } else { sfx('error'); ui.toast('No seeds yet', null, 1400); }
+  }
+  // Back/Share: tap toggles HUD, hold 1s switches player
+  if (input.down('hud') && input.held('hud') > 1 && !hudSwitchFired) { hudSwitchFired = true; switchPlayer(); }
+  if (input.released('hud')) { if (!hudSwitchFired) { G.hudHidden = !G.hudHidden; ui.toast(G.hudHidden ? 'HUD hidden (tap again to show)' : 'HUD shown', null, 1500); } hudSwitchFired = false; }
+}
+
+/* --------------------------------------------------------------- camera */
+let driftT = 0;
+function idleCamera(dt, force) {
+  driftT += dt;
+  const st = G.state;
+  const cx = (st.cabin.x + 1.5) * TILE, cy = (st.cabin.y + 4) * TILE;
+  const tx_ = cx + Math.sin(driftT / 47) * 140 - G.view.w / 2;
+  const ty_ = cy + Math.sin(driftT / 61 + 1) * 70 - G.view.h / 2;
+  const k = Math.min(1, dt * (force ? 0.5 : 0.25));
+  G.camera.x += (tx_ - G.camera.x) * k; G.camera.y += (ty_ - G.camera.y) * k;
+  clampCamera();
+}
+function updateCamera(dt) {
+  const idle = G.realTime - G.lastInput;
+  if (G.mode === 'play' && G.settings.cameraDrift && idle > B().tv.idleDriftAfterSec && !ui.cardOpen()) return idleCamera(dt);
+  let tgt;
+  if (G.mode === 'designate' || G.mode === 'place') tgt = cursorPx();
+  else { const p = G.state.player; tgt = { x: p.x, y: p.y - 8 }; }
+  const k = Math.min(1, dt * 6);
+  G.camera.x += (tgt.x - G.view.w / 2 - G.camera.x) * k;
+  G.camera.y += (tgt.y - G.view.h / 2 - G.camera.y) * k;
+  clampCamera();
+}
+
+/* ------------------------------------------------------------------ HUD */
+function updateHUD() {
+  const st = G.state, S = G.settings;
+  const idle = G.realTime - Math.max(G.lastInput, G.hudWake || 0);
+  const visible = G.mode !== 'title' && !G.hudHidden && !(S.hudAutoHide && idle > B().tv.hudAutoHideSec);
+  const tool = TOOLS[st.player.tool] || TOOLS[0];
+  const sk = selectedSeedKey();
+  const h = hourOfDay();
+  ui.updateHUD({
+    visible,
+    res: `<span>${iconHTML('item_coin')}${st.coins}</span><span>${iconHTML('item_wood')}${st.mats.wood || 0}</span><span>${iconHTML('item_stone')}${st.mats.stone || 0}</span><span>${iconHTML('item_fiber')}${st.mats.fiber || 0}</span>`,
+    clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div><div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
+    tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${tool.name}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
+    cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join(''),
+  });
+  // tooltip for what Ⓐ will do
+  let tip = '';
+  if (G.mode === 'play' && !ui.cardOpen() && G.realTime - G.lastInput < B().tv.hudAutoHideSec) {
+    const a = currentAction();
+    if (a) {
+      const crop = a.crop || (a.tile != null ? st.crops[a.tile] : null);
+      let extra = '';
+      if (crop) {
+        const wet = crop.wetUntil > st.simTime;
+        extra = `<small>${crop.stage >= 3 ? '' : `Stage ${crop.stage + 1}/4 · next in ~${fmtTime(farm.timeToNextStage(crop))}${wet ? ' · watered' : ''} · `}"${farm.stageHint(crop)}"</small>`;
+      }
+      if (a.kind === 'work') { const prog = st.jobs.find(j => j.type === a.type && j.tile === a.tile); tip = `Ⓐ hold: ${a.label}${prog ? ` (${Math.floor(prog.progress / prog.work * 100)}%)` : ''}${extra}`; }
+      else if (a.kind === 'inspect' || a.kind === 'info') tip = `${a.label}${extra}`;
+      else tip = `Ⓐ ${a.label}${extra}`;
+    }
+  }
+  ui.setTooltip(tip);
+}
+
+/* --------------------------------------------------- controller overlay */
+function updatePadOverlay() {
+  const el = $('padtest');
+  if (!G.settings.showControllerOverlay) { if (el.innerHTML) { el.innerHTML = ''; el.classList.remove('show'); } return; }
+  el.classList.add('show');
+  const pads = input.connectedPads();
+  el.innerHTML = pads.length ? pads.map(p => `<div><b>${ui.esc(p.id.slice(0, 48))}</b> (${p.mapping || 'non-standard'})<br>Buttons: ${p.buttons.map((b, i) => (b.pressed ? i : null)).filter(v => v != null).join(', ') || 'none'}<br>Stick: ${p.axes.slice(0, 2).map(a => a.toFixed(2)).join(', ')}</div>`).join('') : 'No controller detected. Press a button on it.';
+}
+
+void clamp; void saveSettings;
+boot();

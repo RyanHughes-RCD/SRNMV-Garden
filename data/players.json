@@ -1,0 +1,8 @@
+{
+  "players": [
+    { "id": "p1", "name": "Player 1", "spriteSet": "p1",
+      "colors": { "hair": "#5e3b2e", "hairHi": "#8a5a3b", "skin": "#e0b98a", "skinShade": "#b98352", "shirt": "#4a6fa5", "shirtShade": "#2b3a5a", "pants": "#4d4a52", "accent": "#5d9b4f" } },
+    { "id": "p2", "name": "Player 2", "spriteSet": "p2",
+      "colors": { "hair": "#6b2e3e", "hairHi": "#b8434a", "skin": "#e0b98a", "skinShade": "#b98352", "shirt": "#e88fb0", "shirtShade": "#b8434a", "pants": "#4a6fa5", "accent": "#e88fb0" } }
+  ]
+}

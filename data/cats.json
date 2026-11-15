@@ -1,0 +1,29 @@
+{
+  "jobTypes": ["clear", "till", "plant", "water"],
+  "cats": [
+    {
+      "id": "biscuit", "name": "Biscuit", "spriteSet": "cat",
+      "blurb": "Orange tabby. Lives to dig. Will nap anywhere, any time.",
+      "coat": { "coat": "#f29b4b", "shade": "#e5735a", "marking": "#b8434a", "belly": "#f6e7c8", "eye": "#8cc65a" },
+      "jobs": { "clear": { "speed": 1.2, "affinity": 1.0 }, "till": { "speed": 1.5, "affinity": 2.2 }, "plant": { "speed": 0.8, "affinity": 0.6 }, "water": { "speed": 0.9, "affinity": 0.7 } },
+      "traits": { "energy": 0.8, "napFrequency": 1.6, "napDuration": 1.4, "curiosity": 0.6, "zoomies": 0.4, "lovesPlayer": 0.9, "schedule": "neutral" },
+      "weaknesses": { "distractible": false, "hatesWater": false, "refuses": [] }
+    },
+    {
+      "id": "pepper", "name": "Pepper", "spriteSet": "cat",
+      "blurb": "Tuxedo. Neat, careful planter. Up with the sun, easily distracted by butterflies.",
+      "coat": { "coat": "#1a1423", "shade": "#3b2a3a", "marking": "#1a1423", "belly": "#fffaf0", "eye": "#f7cd5d" },
+      "jobs": { "clear": { "speed": 0.8, "affinity": 0.7 }, "till": { "speed": 0.9, "affinity": 0.8 }, "plant": { "speed": 1.6, "affinity": 2.4 }, "water": { "speed": 1.1, "affinity": 1.0 } },
+      "traits": { "energy": 1.2, "napFrequency": 0.8, "napDuration": 0.9, "curiosity": 1.4, "zoomies": 0.8, "lovesPlayer": 0.6, "schedule": "early" },
+      "weaknesses": { "distractible": true, "hatesWater": false, "refuses": [] }
+    },
+    {
+      "id": "mochi", "name": "Mochi", "spriteSet": "cat",
+      "blurb": "Fluffy grey. Strong rock-shover. Thinks water is a personal insult. Night owl.",
+      "coat": { "coat": "#b3aeb0", "shade": "#7d7a80", "marking": "#7d7a80", "belly": "#fffaf0", "eye": "#7fb3d5" },
+      "jobs": { "clear": { "speed": 1.6, "affinity": 2.0 }, "till": { "speed": 1.0, "affinity": 1.0 }, "plant": { "speed": 1.0, "affinity": 0.9 }, "water": { "speed": 0.4, "affinity": 0.2 } },
+      "traits": { "energy": 1.0, "napFrequency": 1.0, "napDuration": 1.0, "curiosity": 1.0, "zoomies": 1.6, "lovesPlayer": 1.4, "schedule": "night" },
+      "weaknesses": { "distractible": false, "hatesWater": true, "refuses": [] }
+    }
+  ]
+}

@@ -1,0 +1,666 @@
+// Generates data/sprites.json — the default placeholder pixel art for the game.
+// Run with: node tools/gen-sprites.mjs
+// Sprites are palette-indexed: each frame is an array of row strings where
+// '.' is transparent and '0'-'9','a'-'v' are indices into the 32-colour palette.
+// Once you start editing sprites in the Workshop, export from there instead of
+// re-running this script (it would overwrite your art).
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OUT = path.join(__dirname, '..', 'data', 'sprites.json');
+
+const PALETTE = [
+  '#1a1423', '#3b2a3a', '#5e3b2e', '#8a5a3b', '#b98352', '#e0b98a', '#f6e7c8', '#fffaf0',
+  '#2e4a3a', '#3f6e46', '#5d9b4f', '#8cc65a', '#c4e27a', '#2b3a5a', '#4a6fa5', '#7fb3d5',
+  '#b7e0ef', '#6b2e3e', '#b8434a', '#e5735a', '#f29b4b', '#f7cd5d', '#fbe9a0', '#5b3a6e',
+  '#8e5ba8', '#c89bd8', '#e88fb0', '#f7c6d3', '#4d4a52', '#7d7a80', '#b3aeb0', '#dcd6cf',
+];
+const C = {
+  out: 0, plum: 1, dbrown: 2, brown: 3, tan: 4, ltan: 5, cream: 6, white: 7,
+  dgreen: 8, green1: 9, green: 10, lgreen: 11, pgreen: 12, dblue: 13, blue: 14, lblue: 15,
+  pblue: 16, dred: 17, red: 18, coral: 19, orange: 20, yellow: 21, pyellow: 22, purple: 23,
+  violet: 24, lav: 25, pink: 26, ppink: 27, dgray: 28, gray: 29, lgray: 30, vlgray: 31,
+};
+const CH = '0123456789abcdefghijklmnopqrstuv';
+
+function rng(seed) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+class G {
+  constructor(w, h) { this.w = w; this.h = h; this.p = new Int16Array(w * h).fill(-1); }
+  in(x, y) { return x >= 0 && y >= 0 && x < this.w && y < this.h; }
+  set(x, y, c) { x = Math.round(x); y = Math.round(y); if (c != null && this.in(x, y)) this.p[y * this.w + x] = c; return this; }
+  get(x, y) { return this.in(x, y) ? this.p[y * this.w + x] : -1; }
+  rect(x, y, w, h, c) { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) this.set(i, j, c); return this; }
+  fill(c) { return this.rect(0, 0, this.w, this.h, c); }
+  ellipse(cx, cy, rx, ry, c) {
+    for (let y = Math.floor(cy - ry - 1); y <= cy + ry + 1; y++)
+      for (let x = Math.floor(cx - rx - 1); x <= cx + rx + 1; x++) {
+        const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
+        if (dx * dx + dy * dy <= 1) this.set(x, y, c);
+      }
+    return this;
+  }
+  line(x0, y0, x1, y1, c) {
+    x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+    const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy;
+    for (;;) {
+      this.set(x0, y0, c);
+      if (x0 === x1 && y0 === y1) break;
+      const e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+    return this;
+  }
+  pts(list, c) { for (const [x, y] of list) this.set(x, y, c); return this; }
+  // Paint every transparent pixel that touches a filled pixel.
+  outline(c = C.out, diag = false) {
+    const src = this.p.slice();
+    for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) {
+      if (src[y * this.w + x] !== -1) continue;
+      const n = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+      if (diag) n.push([1, 1], [-1, -1], [1, -1], [-1, 1]);
+      for (const [dx, dy] of n) {
+        const xx = x + dx, yy = y + dy;
+        if (this.in(xx, yy) && src[yy * this.w + xx] !== -1 && src[yy * this.w + xx] !== c) { this.p[y * this.w + x] = c; break; }
+      }
+    }
+    return this;
+  }
+  replace(a, b) { for (let i = 0; i < this.p.length; i++) if (this.p[i] === a) this.p[i] = b; return this; }
+  clone() { const g = new G(this.w, this.h); g.p = this.p.slice(); return g; }
+  flipX() { const g = new G(this.w, this.h); for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) g.p[y * this.w + x] = this.p[y * this.w + (this.w - 1 - x)]; return g; }
+  shift(dx, dy) { const g = new G(this.w, this.h); for (let y = 0; y < this.h; y++) for (let x = 0; x < this.w; x++) g.set(x + dx, y + dy, this.get(x, y) === -1 ? null : this.get(x, y)); return g; }
+  stamp(o, ox = 0, oy = 0) { for (let y = 0; y < o.h; y++) for (let x = 0; x < o.w; x++) { const v = o.get(x, y); if (v !== -1) this.set(x + ox, y + oy, v); } return this; }
+  rows() { const r = []; for (let y = 0; y < this.h; y++) { let s = ''; for (let x = 0; x < this.w; x++) { const v = this.p[y * this.w + x]; s += v < 0 ? '.' : CH[v]; } r.push(s); } return r; }
+}
+
+const sprites = {};
+function add(name, cat, frames, fps = 0, extra = {}) {
+  if (!Array.isArray(frames)) frames = [frames];
+  sprites[name] = { w: frames[0].w, h: frames[0].h, cat, fps, frames: frames.map(f => f.rows()), ...extra };
+}
+
+/* ------------------------------------------------------------------ tiles */
+function grass(seed, flowers = false) {
+  const g = new G(16, 16).fill(C.green), r = rng(seed);
+  for (let i = 0; i < 9; i++) { const x = (r() * 16) | 0, y = (r() * 16) | 0; g.set(x, y, C.lgreen); g.set(x + 1, y - 1, C.lgreen); }
+  for (let i = 0; i < 6; i++) { const x = (r() * 16) | 0, y = (r() * 16) | 0; g.set(x, y, C.green1); }
+  if (flowers) for (let i = 0; i < 3; i++) {
+    const x = 2 + ((r() * 12) | 0), y = 2 + ((r() * 12) | 0), col = [C.white, C.pink, C.yellow][i % 3];
+    g.pts([[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]], col); g.set(x, y, C.yellow === col ? C.orange : C.yellow);
+  }
+  return g;
+}
+for (let i = 0; i < 4; i++) add(`grass_${i}`, 'tiles', grass(11 + i * 7));
+add('grass_flowers', 'tiles', grass(99, true));
+
+function soil(wet) {
+  const base = wet ? C.dbrown : C.brown, dark = wet ? C.plum : C.dbrown, hi = wet ? C.brown : C.tan;
+  const g = new G(16, 16).fill(base), r = rng(wet ? 5 : 3);
+  for (const y of [3, 7, 11, 15]) { for (let x = 0; x < 16; x++) g.set(x, y, dark); for (let x = 1; x < 16; x += 3) g.set(x + ((y / 4) | 0) % 2, y - 1, hi); }
+  for (let i = 0; i < 5; i++) g.set((r() * 16) | 0, (r() * 16) | 0, dark);
+  if (wet) for (let i = 0; i < 3; i++) g.set((r() * 16) | 0, (r() * 16) | 0, C.dblue);
+  return g;
+}
+add('soil', 'tiles', soil(false));
+add('soil_wet', 'tiles', soil(true));
+
+{
+  const g = grass(42), r = rng(7);
+  const stones = [[4, 4, 3, 2.5], [11, 5, 3.5, 2.5], [5, 11, 3.5, 3], [12, 12, 3, 2.5]];
+  for (const [x, y, rx, ry] of stones) { g.ellipse(x, y, rx + 1, ry + 1, C.gray); g.ellipse(x, y, rx, ry, C.lgray); g.set(x - 1, y - 1, C.vlgray); g.set(x + (r() > 0.5 ? 1 : 0), y + 1, C.gray); }
+  add('path_stone', 'tiles', g);
+  const w = new G(16, 16).fill(C.tan);
+  for (const y of [0, 5, 10, 15]) for (let x = 0; x < 16; x++) w.set(x, y, C.brown);
+  for (const y of [2, 7, 12]) { w.set(2, y, C.dbrown); w.set(13, y, C.dbrown); for (let x = 4; x < 11; x += 2) w.set(x, y - 1, C.ltan); }
+  w.set(8, 3, C.brown); w.set(6, 8, C.brown); w.set(9, 13, C.brown);
+  add('path_wood', 'tiles', w);
+}
+
+function forest(seed) {
+  const g = new G(16, 16).fill(C.dgreen), r = rng(seed);
+  for (let i = 0; i < 6; i++) { const x = r() * 16, y = r() * 16; g.ellipse(x, y, 3, 2.5, C.green1); g.set(x - 1, y - 1, C.green); }
+  for (let i = 0; i < 4; i++) g.set((r() * 16) | 0, (r() * 16) | 0, C.plum);
+  return g;
+}
+for (let i = 0; i < 3; i++) add(`forest_${i}`, 'tiles', forest(200 + i));
+
+function tree(kind) {
+  const g = new G(24, 32);
+  g.rect(10, 22, 4, 9, C.brown); g.set(10, 30, C.dbrown); g.set(14, 30, C.brown); g.set(9, 30, C.brown); g.line(11, 23, 11, 29, C.tan);
+  if (kind === 0) {
+    g.ellipse(12, 13, 10.5, 10, C.green1);
+    g.ellipse(11, 11, 8, 7.5, C.green);
+    g.ellipse(9, 8, 4, 3, C.lgreen);
+    g.pts([[15, 6], [17, 10], [6, 14], [14, 16], [18, 15], [8, 18]], C.lgreen);
+    g.pts([[16, 19], [7, 20], [19, 12], [12, 21]], C.dgreen);
+  } else {
+    for (let t = 0; t < 4; t++) { const y = 4 + t * 5, half = 3 + t * 2.4; for (let j = 0; j < 7; j++) { const hw = Math.round(half * (j + 1) / 7); g.rect(12 - hw, y + j, hw * 2, 1, j < 2 ? C.green : C.green1); } }
+    g.pts([[11, 5], [10, 11], [9, 16], [8, 21], [13, 9], [12, 14]], C.lgreen);
+  }
+  return g.outline();
+}
+add('tree_0', 'tiles', tree(0));
+add('tree_1', 'tiles', tree(1));
+
+/* ----------------------------------------------------------------- debris */
+{
+  const twig = new G(16, 16);
+  twig.line(3, 12, 12, 9, C.brown).line(4, 13, 12, 10, C.dbrown).line(7, 11, 6, 7, C.brown).line(10, 10, 13, 13, C.dbrown);
+  twig.pts([[6, 6], [5, 6], [6, 5]], C.green).set(13, 14, C.lgreen);
+  add('debris_twig', 'debris', twig.outline());
+
+  const weeds = new G(16, 16);
+  for (const [x, h] of [[4, 6], [6, 8], [8, 5], [10, 9], [12, 6]]) weeds.line(x, 14, x + (x % 4 ? 1 : -1), 14 - h, x % 4 ? C.green : C.green1);
+  weeds.pts([[7, 7], [11, 6], [5, 9]], C.lgreen).set(10, 4, C.yellow);
+  add('debris_weeds', 'debris', weeds.outline());
+
+  const bush = new G(16, 16);
+  bush.ellipse(8, 10, 7, 5.5, C.green1).ellipse(7, 9, 5, 4, C.green).pts([[5, 7], [6, 6], [9, 7], [11, 9], [4, 10]], C.lgreen).pts([[10, 12], [6, 13]], C.dgreen).pts([[11, 7], [5, 11]], C.red);
+  add('debris_bush', 'debris', bush.outline());
+
+  const rock = new G(16, 16);
+  rock.ellipse(8, 11, 6.5, 4.5, C.gray).ellipse(7, 10, 5, 3.3, C.lgray).pts([[5, 9], [6, 8], [7, 8]], C.vlgray).pts([[11, 13], [10, 14], [6, 14]], C.dgray);
+  add('debris_rock', 'debris', rock.outline());
+
+  const stump = (big) => {
+    const g = new G(16, 16), w = big ? 7 : 5;
+    g.rect(8 - w, 9, w * 2, big ? 5 : 4, C.brown).line(8 - w + 1, 10, 8 - w + 1, 13, C.dbrown).line(8 + w - 2, 10, 8 + w - 2, 13, C.tan);
+    g.ellipse(8, 9, w, big ? 2.6 : 2.2, C.ltan).ellipse(8, 9, w - 2, 1.4, C.tan).set(8, 9, C.ltan);
+    g.pts([[8 - w - 1, 14], [8 + w, 14], [6, 14], [10, 14]], C.dbrown);
+    if (big) g.pts([[3, 6], [4, 5]], C.green);
+    return g.outline();
+  };
+  add('debris_stump_small', 'debris', stump(false));
+  add('debris_stump_big', 'debris', stump(true));
+
+  const boulder = new G(16, 16);
+  boulder.ellipse(8, 9, 7.5, 6.5, C.gray).ellipse(7, 8, 6, 5, C.lgray).pts([[4, 6], [5, 5], [6, 5]], C.vlgray).pts([[12, 13], [10, 14], [5, 14], [13, 11]], C.dgray);
+  boulder.pts([[6, 3], [7, 3], [8, 3], [9, 4], [5, 4], [7, 4]], C.green).pts([[6, 3], [8, 3]], C.lgreen);
+  add('debris_boulder', 'debris', boulder.outline());
+}
+
+/* ------------------------------------------------------------------ cabin */
+{
+  const g = new G(48, 48);
+  // walls (logs)
+  g.rect(2, 18, 44, 27, C.tan);
+  for (let y = 18; y < 45; y += 4) { g.line(2, y + 3, 45, y + 3, C.brown); g.line(2, y, 45, y, C.ltan); }
+  for (let y = 19; y < 45; y += 4) { g.ellipse(2.5, y + 1.5, 2, 2, C.ltan); g.set(2, y + 1, C.brown); g.ellipse(45.5, y + 1.5, 2, 2, C.ltan); g.set(45, y + 1, C.brown); }
+  // foundation
+  g.rect(1, 44, 46, 4, C.gray); for (let x = 1; x < 47; x += 4) { g.set(x, 45, C.lgray); g.set(x + 2, 46, C.dgray); }
+  // windows
+  for (const wx of [6, 33]) {
+    g.rect(wx, 27, 10, 10, C.cream).rect(wx + 1, 28, 8, 8, C.lblue).rect(wx + 1, 28, 3, 2, C.pblue);
+    g.line(wx + 5, 28, wx + 5, 35, C.cream).line(wx + 1, 31, wx + 8, 31, C.cream);
+    g.line(wx, 37, wx + 9, 37, C.brown);
+  }
+  // door hole (door overlays drawn on top)
+  g.rect(19, 30, 10, 15, C.dbrown);
+  g.rect(18, 44, 12, 1, C.lgray);
+  // roof
+  for (let y = 0; y < 21; y++) {
+    const inset = Math.max(0, 8 - y);
+    const col = y % 3 === 2 ? C.dred : C.red;
+    g.rect(inset, y + 2, 48 - inset * 2, 1, col);
+  }
+  for (let y = 4; y < 22; y += 3) for (let x = (y % 6 === 1 ? 2 : 5); x < 46; x += 6) g.set(x, y, C.coral);
+  g.rect(0, 22, 48, 1, C.dred);
+  g.rect(8, 2, 32, 1, C.coral);
+  // chimney
+  g.rect(34, 0, 6, 9, C.gray).rect(33, 0, 8, 2, C.lgray).pts([[35, 3], [38, 5], [36, 7]], C.dgray);
+  add('cabin', 'cabin', g.outline(), 0, { swaps: ['roof', 'wall'] });
+
+  const door = (style) => {
+    const d = new G(10, 15);
+    if (style === 0) { d.rect(0, 0, 10, 15, C.brown); for (let x = 2; x < 10; x += 3) d.line(x, 0, x, 14, C.dbrown); d.set(7, 8, C.yellow); }
+    if (style === 1) { d.rect(0, 2, 10, 13, C.green1); d.rect(1, 0, 8, 2, C.green1); d.rect(2, 3, 6, 4, C.lblue); d.line(5, 3, 5, 6, C.green1); d.set(7, 9, C.yellow); d.rect(1, 1, 8, 1, C.green); }
+    if (style === 2) { d.ellipse(5, 7.5, 5, 7.5, C.red); d.rect(0, 7, 10, 8, C.red); d.ellipse(5, 6, 2, 2, C.pyellow); d.set(5, 6, C.yellow); d.set(8, 9, C.yellow); d.line(0, 14, 9, 14, C.dred); }
+    if (style === 3) { d.rect(0, 0, 10, 15, C.lav); d.rect(1, 1, 8, 13, C.violet); d.rect(2, 2, 6, 5, C.lav); d.rect(2, 8, 6, 5, C.lav); d.set(7, 7, C.yellow); }
+    return d;
+  };
+  for (let i = 0; i < 4; i++) add(`cabin_door_${i}`, 'cabin', door(i));
+
+  const box = new G(12, 5);
+  box.rect(0, 2, 12, 3, C.brown).line(0, 2, 11, 2, C.tan);
+  box.pts([[1, 1], [4, 1], [7, 1], [10, 1]], C.green).pts([[2, 0], [3, 1], [8, 0], [9, 1]], C.pink).pts([[5, 0], [6, 1], [11, 0]], C.yellow).pts([[1, 0], [10, 0]], C.white);
+  add('cabin_windowbox', 'cabin', box);
+
+  const smoke = new G(8, 8);
+  smoke.ellipse(4, 4, 3.5, 3, C.vlgray).ellipse(3, 3, 2, 1.5, C.white);
+  add('fx_smoke', 'fx', smoke);
+}
+
+/* ------------------------------------------------------ props and decor */
+{
+  const crate = new G(16, 16);
+  crate.rect(2, 5, 12, 10, C.tan).rect(2, 5, 12, 2, C.ltan);
+  for (const y of [8, 11]) crate.line(2, y, 13, y, C.brown);
+  crate.line(2, 14, 13, 14, C.brown).line(3, 7, 12, 13, C.brown);
+  crate.rect(5, 2, 6, 3, C.orange).pts([[6, 1], [8, 1]], C.green).set(9, 2, C.red);
+  add('crate', 'decor', crate.outline());
+
+  const shop = new G(16, 16);
+  shop.rect(7, 9, 2, 6, C.brown).rect(1, 1, 14, 9, C.tan).rect(2, 2, 12, 7, C.ltan);
+  shop.rect(3, 3, 3, 4, C.red).rect(7, 3, 3, 4, C.blue).rect(11, 3, 2, 4, C.yellow);
+  shop.pts([[4, 4], [8, 4], [11, 4]], C.white).rect(1, 0, 14, 1, C.red).pts([[3, 0], [7, 0], [11, 0]], C.white);
+  add('shop', 'decor', shop.outline());
+
+  const fence = new G(16, 16);
+  fence.rect(2, 4, 2, 11, C.tan).rect(12, 4, 2, 11, C.tan).rect(0, 7, 16, 2, C.ltan).rect(0, 11, 16, 2, C.ltan);
+  fence.pts([[2, 4], [12, 4]], C.ltan).line(0, 8, 15, 8, C.tan).line(0, 12, 15, 12, C.tan);
+  add('decor_fence', 'decor', fence.outline());
+
+  const lantern = new G(16, 16);
+  lantern.rect(7, 7, 2, 8, C.dgray).rect(5, 14, 6, 1, C.dgray).rect(5, 2, 6, 6, C.dgray).rect(6, 3, 4, 4, C.yellow).set(7, 4, C.pyellow).rect(6, 1, 4, 1, C.dgray);
+  add('decor_lantern', 'decor', lantern.outline());
+
+  const bench = new G(16, 16);
+  bench.rect(1, 6, 14, 3, C.tan).line(1, 6, 14, 6, C.ltan).rect(1, 10, 14, 2, C.tan).line(1, 10, 14, 10, C.ltan);
+  bench.rect(2, 12, 2, 3, C.brown).rect(12, 12, 2, 3, C.brown).rect(2, 9, 1, 1, C.brown).rect(13, 9, 1, 1, C.brown);
+  add('decor_bench', 'decor', bench.outline());
+
+  const pot = new G(16, 16);
+  pot.rect(4, 9, 8, 6, C.coral).rect(3, 8, 10, 2, C.orange).line(5, 14, 10, 14, C.red);
+  pot.ellipse(8, 6, 4, 3, C.green).pts([[6, 4], [10, 5], [8, 3]], C.pink).pts([[5, 6], [9, 6]], C.yellow).pts([[7, 4], [11, 6]], C.white);
+  add('decor_flowerpot', 'decor', pot.outline());
+
+  const bath = new G(16, 16);
+  bath.rect(7, 9, 2, 5, C.lgray).rect(5, 13, 6, 2, C.gray).ellipse(8, 7, 7, 3, C.lgray).ellipse(8, 7, 5, 1.8, C.lblue).pts([[6, 6], [7, 6]], C.pblue);
+  add('decor_birdbath', 'decor', bath.outline());
+
+  const scare = new G(16, 16);
+  scare.line(8, 5, 8, 15, C.brown).line(2, 8, 14, 8, C.brown).rect(5, 7, 6, 5, C.blue).line(5, 9, 10, 9, C.dblue);
+  scare.ellipse(8, 4, 2.5, 2.5, C.pyellow).rect(4, 1, 8, 1, C.tan).rect(6, 0, 4, 1, C.tan).pts([[7, 4], [9, 4]], C.out).pts([[2, 9], [14, 9], [3, 7]], C.yellow);
+  add('decor_scarecrow', 'decor', scare.outline());
+
+  const gnome = new G(16, 16);
+  gnome.rect(5, 9, 6, 6, C.blue).ellipse(8, 8, 3, 2, C.ltan).ellipse(8, 10, 3, 2.5, C.white).set(8, 8, C.ppink);
+  for (let y = 0; y < 7; y++) gnome.rect(8 - Math.floor(y / 2), y, 1 + Math.floor(y / 2) * 2, 1, C.red);
+  gnome.pts([[6, 14], [9, 14]], C.brown);
+  add('decor_gnome', 'decor', gnome.outline());
+
+  // ground-decor preview icons reuse the tile sprites (path_stone, path_wood)
+}
+
+/* ----------------------------------------------------------- the players */
+// Colour slots (swapped per profile): hair 2/3, skin 5/4, shirt 14/13, pants 28, shoes 1
+function person(style, dir, frame, work) {
+  const g = new G(16, 24);
+  const step = work ? 0 : [0, 1, 0, -1][frame];
+  const bob = !work && (frame === 1 || frame === 3) ? 1 : 0;
+  const yo = -bob; // whole body lifts a pixel mid-step
+  // legs + shoes
+  if (dir === 'side') {
+    g.rect(6 + step, 18 + yo, 2, 5, C.dgray).rect(8 - step, 18 + yo, 2, 5, C.dgray);
+    g.rect(6 + step, 22 + yo + bob, 3, 1, C.plum).rect(8 - step, 22 + yo + bob, 3, 1, C.plum);
+  } else {
+    const l = step > 0 ? 1 : 0, r = step < 0 ? 1 : 0;
+    g.rect(5, 18 + yo, 6, 2, C.dgray);
+    g.rect(5, 20 + yo, 2, 3 - l, C.dgray).rect(9, 20 + yo, 2, 3 - r, C.dgray);
+    g.rect(5, 22 + yo - l + bob, 2, 1, C.plum).rect(9, 22 + yo - r + bob, 2, 1, C.plum);
+  }
+  // long hair behind body
+  if (style === 'long' && dir !== 'down') g.rect(dir === 'side' ? 3 : 3, 6 + yo, dir === 'side' ? 7 : 10, 9, C.dbrown);
+  if (style === 'long' && dir === 'down') { g.rect(3, 6 + yo, 2, 8, C.dbrown); g.rect(11, 6 + yo, 2, 8, C.dbrown); }
+  // torso
+  if (dir === 'side') { g.rect(5, 11 + yo, 6, 7, C.blue).line(10, 12 + yo, 10, 17 + yo, C.dblue); }
+  else { g.rect(4, 11 + yo, 8, 7, C.blue).line(11, 12 + yo, 11, 17 + yo, C.dblue).line(4, 17 + yo, 11, 17 + yo, C.dblue); }
+  // arms
+  if (work) {
+    const up = frame === 0;
+    if (dir === 'side') {
+      if (up) { g.rect(8, 8 + yo, 2, 4, C.blue).rect(8, 6 + yo, 2, 2, C.ltan); g.line(9, 5, 13, 1, C.gray).rect(12, 0, 3, 2, C.lgray); }
+      else { g.rect(9, 12 + yo, 3, 2, C.blue).rect(12, 13 + yo, 2, 2, C.ltan); g.line(13, 14, 15, 20, C.gray).rect(14, 20, 2, 2, C.lgray); }
+    } else {
+      const ay = up ? 7 : 13;
+      g.rect(2, ay + yo, 2, up ? 5 : 4, C.blue).rect(12, ay + yo, 2, up ? 5 : 4, C.blue);
+      g.rect(2, (up ? 6 : 17) + yo, 2, 1, C.ltan).rect(12, (up ? 6 : 17) + yo, 2, 1, C.ltan);
+      if (dir === 'down') { if (up) g.line(13, 5, 13, 0, C.gray).rect(12, 0, 3, 1, C.lgray); else g.line(13, 18, 13, 22, C.gray).rect(12, 22, 3, 1, C.lgray); }
+    }
+  } else if (dir === 'side') {
+    g.rect(7 + step, 12 + yo, 2, 5, C.blue).rect(7 + step, 17 + yo, 2, 1, C.ltan);
+  } else {
+    g.rect(3, 12 + yo + (step > 0 ? 1 : 0), 1, 5, C.blue).rect(12, 12 + yo + (step < 0 ? 1 : 0), 1, 5, C.blue);
+    g.set(3, 17 + yo + (step > 0 ? 1 : 0), C.ltan).set(12, 17 + yo + (step < 0 ? 1 : 0), C.ltan);
+  }
+  // head
+  g.ellipse(8, 7 + yo, 4.6, 4.4, C.ltan);
+  g.set(dir === 'side' ? 11 : 11, 9 + yo, C.tan);
+  // face
+  if (dir === 'down') {
+    g.pts([[6, 7 + yo], [10, 7 + yo]], C.out).pts([[5, 9 + yo], [11, 9 + yo]], C.ppink).set(8, 9 + yo, C.tan);
+  } else if (dir === 'side') {
+    g.set(10, 7 + yo, C.out).set(12, 8 + yo, C.ltan).set(10, 9 + yo, C.ppink);
+  }
+  // hair
+  const H = C.dbrown, Hh = C.brown;
+  if (dir === 'up') {
+    g.ellipse(8, 6.5 + yo, 4.8, 4.6, H).line(6, 4 + yo, 9, 3 + yo, Hh);
+    if (style === 'long') g.rect(4, 8 + yo, 8, 6, H).line(8, 6 + yo, 8, 13 + yo, Hh);
+  } else if (dir === 'side') {
+    g.ellipse(7, 5 + yo, 4.8, 3, H).rect(3, 5 + yo, 4, 5, H).line(5, 3 + yo, 9, 3 + yo, Hh);
+    if (style === 'short') g.set(11, 5 + yo, H).set(12, 6 + yo, H); else g.set(11, 5 + yo, H);
+  } else {
+    g.ellipse(8, 4.5 + yo, 4.8, 2.6, H).line(5, 3 + yo, 8, 2 + yo, Hh);
+    if (style === 'short') g.pts([[4, 6 + yo], [12, 6 + yo], [9, 5 + yo], [10, 5 + yo]], H);
+    else g.pts([[4, 6 + yo], [4, 7 + yo], [12, 6 + yo], [12, 7 + yo], [7, 5 + yo]], H);
+  }
+  if (style === 'long') { const fx = dir === 'side' ? 5 : 12; g.pts([[fx, 3 + yo], [fx - 1, 4 + yo], [fx + 1, 4 + yo], [fx, 5 + yo]], C.green).set(fx, 4 + yo, C.yellow); }
+  if (style === 'short') { // little beanie
+    g.rect(4, 1 + yo, 9, 2, C.green).line(4, 3 + yo, 12, 3 + yo, C.green1).set(8, 0 + yo, C.lgreen);
+  }
+  return g.outline();
+}
+for (const [set, style] of [['p1', 'short'], ['p2', 'long']]) {
+  for (const dir of ['down', 'up', 'side']) {
+    add(`${set}_walk_${dir}`, 'player', [0, 1, 2, 3].map(f => person(style, dir, f, false)), 8, { swaps: ['player'] });
+    add(`${set}_work_${dir}`, 'player', [0, 1].map(f => person(style, dir, f, true)), 5, { swaps: ['player'] });
+  }
+}
+
+/* ------------------------------------------------------------------ cats */
+// Colour slots (swapped per cat): coat 20, shade 19, marking 3, belly 6, eyes 11
+const K = { coat: C.orange, shade: C.coral, mark: C.brown, belly: C.cream, eye: C.lgreen, nose: C.pink };
+function catSide(frame, mode) {
+  const g = new G(16, 16);
+  const legs = mode === 'walk' ? [[3, 1], [5, -1], [9, -1], [11, 1]].map(([x, d]) => [x + (frame % 2 ? d : 0) * (frame === 1 ? 1 : -1), 0]) : [[3, 0], [5, 0], [9, 0], [11, 0]];
+  const headY = mode === 'work' ? 9 : 7, headX = mode === 'work' ? 12 : 12;
+  // tail
+  const tailTip = mode === 'walk' ? [[1, 4 + (frame % 2)]] : [[1, 5]];
+  g.line(3, 9, 1, 6, K.coat).set(tailTip[0][0], tailTip[0][1], K.mark).set(1, 5, K.mark);
+  // legs
+  for (const [x] of legs) g.rect(x, 12, 1, 2, K.coat).set(x, 14, K.belly);
+  if (mode === 'work') { const up = frame === 0; g.rect(11, up ? 11 : 12, 1, up ? 2 : 3, K.coat).set(12, up ? 11 : 14, K.belly); }
+  // body
+  g.ellipse(7, 10, 5.5, 3, K.coat).line(4, 12, 10, 12, K.shade).pts([[9, 11], [10, 11], [8, 12], [9, 12]], K.belly);
+  g.pts([[5, 7], [5, 8], [7, 7], [7, 8], [9, 7], [9, 8]], K.mark);
+  // head
+  g.ellipse(headX, headY, 3.2, 2.8, K.coat);
+  g.pts([[headX - 2, headY - 3], [headX - 2, headY - 4], [headX - 1, headY - 3], [headX + 1, headY - 3], [headX + 2, headY - 4], [headX + 2, headY - 3]], K.coat).set(headX - 2, headY - 3, K.nose);
+  g.set(headX + 1, headY, K.eye).set(headX + 3, headY + 1, K.nose).pts([[headX + 2, headY + 1], [headX + 1, headY + 2], [headX + 2, headY + 2]], K.belly);
+  return g.outline();
+}
+function catFront(frame, back) {
+  const g = new G(16, 16);
+  const s = frame % 2 ? (frame === 1 ? 1 : -1) : 0;
+  // tail
+  if (back) g.line(8, 9, 8 + s, 3, K.coat).set(8 + s, 3, K.mark); else g.line(12, 13, 14, 9 + Math.abs(s), K.coat).set(14, 9 + Math.abs(s), K.mark);
+  g.ellipse(8, 11, 4.5, 3.5, K.coat).line(5, 13, 11, 13, K.shade);
+  g.rect(5, 13 + (s > 0 ? -1 : 0), 2, 2, K.coat).rect(9, 13 + (s < 0 ? -1 : 0), 2, 2, K.coat);
+  g.set(5, 14 + (s > 0 ? -1 : 0), K.belly).set(10, 14 + (s < 0 ? -1 : 0), K.belly);
+  if (!back) g.ellipse(8, 11, 2, 2.2, K.belly);
+  g.ellipse(8, 6, 4, 3.4, K.coat);
+  g.pts([[4, 3], [4, 2], [5, 3], [11, 3], [11, 2], [10, 3]], K.coat);
+  if (back) { g.pts([[7, 4], [9, 4], [6, 9], [8, 9], [10, 9]], K.mark); }
+  else {
+    g.set(4, 3, K.nose).set(11, 3, K.nose);
+    g.pts([[6, 6], [9, 6]], K.eye).pts([[7, 8], [8, 8]], K.belly).set(7, 7, K.nose).set(8, 7, K.nose);
+    g.pts([[7, 3], [8, 3]], K.mark);
+  }
+  return g.outline();
+}
+function catSit(frame) {
+  const g = new G(16, 16);
+  g.line(11, 14, 13, 13, K.coat).line(13, 13, 13, 11 - frame, K.coat).set(13, 11 - frame, K.mark);
+  g.ellipse(8, 11, 4, 4, K.coat).line(5, 14, 11, 14, K.shade).ellipse(9, 11, 1.8, 2.5, K.belly);
+  g.pts([[6, 9], [6, 11], [6, 13]], K.mark);
+  g.ellipse(9, 5, 3.4, 3, K.coat).pts([[6, 2], [6, 1], [7, 2], [11, 2], [12, 1], [12, 2]], K.coat).set(6, 2, K.nose).set(12, 2, K.nose);
+  g.pts([[8, 5], [11, 5]], frame === 2 ? K.out : K.eye).set(10, 6, K.nose).pts([[9, 7], [10, 7]], K.belly);
+  g.pts([[8, 15], [10, 15]], K.belly);
+  return g.outline();
+}
+function catSleep(frame) {
+  const g = new G(16, 16);
+  const ry = frame ? 3.9 : 3.4;
+  g.ellipse(8, 11.5, 6.5, ry, K.coat).line(3, 14, 13, 14, K.shade);
+  g.pts([[5, 9], [7, 9], [9, 9]], K.mark);
+  g.ellipse(12, 11, 2.8, 2.4, K.coat).pts([[11, 8], [13, 8], [14, 9]], K.coat).set(13, 8, K.nose);
+  g.line(12, 11, 13, 11, K.out);
+  g.line(2, 13, 6, 14, K.mark).line(6, 14, 10, 14, K.coat);
+  return g.outline();
+}
+add('cat_walk_side', 'cats', [0, 1, 2, 3].map(f => catSide(f, 'walk')), 8, { swaps: ['cat'] });
+add('cat_walk_down', 'cats', [0, 1, 2, 3].map(f => catFront(f, false)), 8, { swaps: ['cat'] });
+add('cat_walk_up', 'cats', [0, 1, 2, 3].map(f => catFront(f, true)), 8, { swaps: ['cat'] });
+add('cat_sit', 'cats', [0, 1, 0, 2].map(f => catSit(f)), 2, { swaps: ['cat'] });
+add('cat_sleep', 'cats', [0, 1].map(f => catSleep(f)), 1, { swaps: ['cat'] });
+add('cat_work', 'cats', [0, 1].map(f => catSide(f, 'work')), 6, { swaps: ['cat'] });
+
+/* ------------------------------------------------------------------ crops */
+const CROPS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'crops.json'), 'utf8')).crops;
+const col = (n) => (typeof n === 'number' ? n : C[n]);
+
+function sprout(g, leaf) {
+  g.pts([[7, 15], [8, 15], [9, 15]], C.dbrown);
+  g.line(8, 14, 8, 12, leaf).pts([[7, 11], [6, 11], [6, 10]], leaf).pts([[9, 11], [10, 10], [10, 11]], leaf);
+}
+function rosette(g, cx, cy, r, leaf, dark) {
+  for (let a = 0; a < 6; a++) { const t = a / 6 * Math.PI * 2; g.ellipse(cx + Math.cos(t) * r * 0.55, cy + Math.sin(t) * r * 0.4, r * 0.55, r * 0.4, a % 2 ? leaf : dark); }
+}
+function fronds(g, n, h, leaf, dark) {
+  for (let i = 0; i < n; i++) { const x = 8 + (i - (n - 1) / 2) * 2; g.line(8, 14, x + (i - (n - 1) / 2), 14 - h + Math.abs(i - (n - 1) / 2), i % 2 ? leaf : dark); g.set(x + (i - (n - 1) / 2) - 1, 14 - h + 1 + Math.abs(i - (n - 1) / 2), leaf); }
+}
+function drawCrop(c, stage) {
+  const g = new G(16, 16);
+  const leaf = col(c.leaf), dark = col(c.leafDark), fruit = col(c.fruit), fdark = col(c.fruitDark), fhi = col(c.fruitHi);
+  const glow = c.rarity === 'mystical';
+  if (stage === 0) { sprout(g, leaf); return g.outline(); }
+  const a = c.archetype;
+  if (a === 'root') {
+    if (stage === 1) fronds(g, 3, 5, leaf, dark);
+    if (stage === 2) fronds(g, 5, 8, leaf, dark);
+    if (stage === 3) {
+      fronds(g, 5, 9, leaf, dark);
+      if (c.fruitShape === 'long') { g.ellipse(8, 13.5, 3, 2.2, fruit).set(7, 13, fhi).line(6, 14, 10, 14, fdark); }
+      else { g.ellipse(8, 13, 3.5, 2.6, fruit).set(7, 12, fhi).set(9, 14, fdark); }
+    }
+  } else if (a === 'leafy') {
+    if (stage === 1) rosette(g, 8, 12, 4, leaf, dark);
+    if (stage === 2) rosette(g, 8, 11, 6, leaf, dark);
+    if (stage === 3) {
+      rosette(g, 8, 11, 7, leaf, dark);
+      if (c.fruitShape === 'rainbow') { for (const [x, cc] of [[5, C.red], [7, C.yellow], [9, C.pink], [11, C.orange]]) g.line(x, 14, x, 6, cc); g.ellipse(8, 7, 5, 2.5, fruit); }
+      else { g.ellipse(8, 10, 4.5, 3.6, fruit).ellipse(7, 9, 2.5, 2, fhi).line(8, 8, 8, 12, fdark); }
+    }
+  } else if (a === 'stalk') {
+    const xs = stage === 1 ? [8] : [5, 8, 11];
+    const h = stage === 1 ? 7 : stage === 2 ? 11 : 13;
+    for (const x of xs) { g.line(x, 15, x, 15 - h, dark); g.line(x, 15 - h / 2, x - 2, 13 - h / 2, leaf).line(x, 14 - h / 3, x + 2, 12 - h / 3, leaf); }
+    if (stage === 3) for (const x of xs) {
+      if (c.fruitShape === 'wheat') { g.rect(x - 1, 1, 2, 5, fruit).pts([[x - 1, 1], [x, 2], [x - 1, 4]], fhi).set(x, 0, fdark); }
+      else { g.ellipse(x + 1, 6, 1.4, 3, fruit).set(x + 1, 4, fhi).line(x + 2, 8, x + 2, 9, leaf); }
+    }
+  } else if (a === 'bush') {
+    const r = stage === 1 ? 3.5 : stage === 2 ? 5.5 : 6.5;
+    g.line(8, 15, 8, 13, C.dbrown).ellipse(8, 14 - r, r, r * 0.95, dark).ellipse(7, 13.5 - r, r * 0.75, r * 0.7, leaf);
+    if (stage === 2) g.pts([[5, 7], [10, 6], [8, 9], [11, 10]], col(c.flower ?? 'white')).pts([[5, 7], [10, 6]], C.yellow);
+    if (stage === 3) {
+      const spots = [[5, 6], [10, 5], [8, 9], [11, 10], [4, 10], [7, 4]];
+      for (const [x, y] of spots) {
+        if (c.fruitShape === 'small') g.pts([[x, y], [x + 1, y]], fruit).set(x, y, fhi);
+        else if (c.fruitShape === 'long') { g.rect(x, y, 1, 3, fruit).set(x, y, fhi).set(x, y - 1, leaf); }
+        else g.ellipse(x + 0.5, y + 0.5, 1.6, 1.6, fruit).set(x, y, fhi);
+      }
+    }
+  } else if (a === 'vine') {
+    g.line(2, 13, 14, 12, dark).line(4, 12, 3, 9, leaf).line(12, 12, 13, 9, leaf);
+    g.ellipse(5, 11, 2, 1.5, leaf).ellipse(11, 10, 2, 1.5, leaf);
+    if (stage >= 2) { g.ellipse(2, 9, 2, 1.5, leaf).ellipse(14, 8, 2, 1.5, dark).line(8, 12, 7, 7, leaf).ellipse(7, 7, 2, 1.5, leaf); g.pts([[9, 9], [8, 8]], col(c.flower ?? 'yellow')); }
+    if (stage === 3) {
+      if (c.fruitShape === 'star') { for (const [x, y] of [[6, 11], [11, 8]]) g.pts([[x, y], [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1], [x - 2, y], [x + 2, y], [x, y - 2], [x, y + 2]], fruit).set(x, y, fhi); }
+      else { g.ellipse(8, 11.5, 5, 3.8, fruit).ellipse(6.5, 10.5, 2, 1.4, fhi).line(8, 8, 8, 15, fdark).line(5, 9, 5, 14, fdark).line(11, 9, 11, 14, fdark).set(8, 7, C.dbrown); }
+    }
+  } else if (a === 'flower') {
+    const h = stage === 1 ? 6 : stage === 2 ? 10 : 11;
+    g.line(8, 15, 8, 15 - h, dark).ellipse(6, 13 - h / 3, 2, 1, leaf).ellipse(10, 14 - h / 2, 2, 1, leaf);
+    if (stage === 2) g.ellipse(8, 15 - h, 1.6, 2, fdark).set(8, 14 - h, fruit);
+    if (stage === 3) { const cy = 4; for (let k = 0; k < 8; k++) { const t = k / 8 * Math.PI * 2; g.ellipse(8 + Math.cos(t) * 3, cy + Math.sin(t) * 3, 1.5, 1.5, k % 2 ? fruit : fhi); } g.ellipse(8, cy, 1.8, 1.8, col(c.flower ?? 'brown')); }
+  } else if (a === 'crystal') {
+    g.line(5, 14, 4, 11, leaf).line(11, 14, 12, 11, leaf).ellipse(4, 11, 1.5, 1, leaf).ellipse(12, 11, 1.5, 1, leaf);
+    const shards = stage === 1 ? [[8, 4]] : stage === 2 ? [[8, 7], [6, 4]] : [[8, 10], [5, 6], [11, 7]];
+    for (const [x, hh] of shards) { for (let y = 0; y < hh; y++) { const w = y < 2 ? 1 : 2; g.rect(x - (w > 1 ? 1 : 0), 14 - hh + y, w, 1, y % 3 === 0 ? fhi : fruit); } g.set(x, 14 - hh, C.white); }
+    if (stage === 3) g.line(7, 14, 7, 6, fdark);
+  }
+  g.outline();
+  if (glow && stage >= 2) g.pts([[2, 3], [13, 2], [14, 12], [1, 10]], C.white);
+  return g;
+}
+function drawItem(c) {
+  const g = new G(16, 16);
+  const leaf = col(c.leaf), fruit = col(c.fruit), fdark = col(c.fruitDark), fhi = col(c.fruitHi);
+  switch (c.item) {
+    case 'carrot': for (let y = 0; y < 9; y++) { const w = Math.max(1, Math.round(4 - y * 0.45)); g.rect(8 - w, 5 + y, w * 2, 1, y % 3 === 1 ? fdark : fruit); } g.set(6, 6, fhi); g.line(8, 5, 6, 1, leaf).line(8, 5, 8, 1, leaf).line(8, 5, 10, 1, col(c.leafDark)); break;
+    case 'round': g.ellipse(8, 10, 4.5, 4, fruit).ellipse(7, 9, 1.5, 1.2, fhi).line(8, 14, 8, 15, fdark).line(8, 6, 6, 1, leaf).line(8, 6, 10, 2, leaf).line(8, 6, 8, 1, col(c.leafDark)); break;
+    case 'potato': g.ellipse(8, 9, 6, 4.5, fruit).ellipse(6, 7.5, 2, 1.2, fhi).pts([[5, 10], [9, 8], [11, 11], [7, 12]], fdark); break;
+    case 'head': g.ellipse(8, 9, 6, 5.5, fruit).ellipse(7, 8, 3.5, 3, fhi).line(8, 4, 8, 13, fdark).line(4, 9, 6, 12, fdark).line(12, 9, 10, 12, fdark); break;
+    case 'chard': for (const [x, cc] of [[5, C.red], [7, C.yellow], [9, C.pink], [11, C.orange]]) g.line(x, 15, x + (x - 8) / 2, 7, cc); g.ellipse(8, 5, 6, 4, fruit).ellipse(6, 4, 2, 1.5, fhi); break;
+    case 'cob': g.ellipse(8, 8, 3, 6.5, fruit); for (let y = 3; y < 14; y += 2) g.set(7, y, fhi).set(9, y + 1, fdark); g.line(4, 14, 7, 5, leaf).line(12, 14, 9, 5, leaf); break;
+    case 'wheat': for (const x of [5, 8, 11]) { g.line(x, 15, 8, 9, col(c.leafDark)); g.rect(x - 1, 2 + Math.abs(x - 8) / 2, 2, 6, fruit).set(x - 1, 3, fhi); } g.rect(5, 10, 7, 2, C.brown); break;
+    case 'tomato': g.ellipse(8, 9.5, 5.5, 5, fruit).ellipse(6, 8, 2, 1.5, fhi).pts([[8, 4], [6, 4], [10, 4], [7, 5], [9, 5], [8, 3]], leaf); break;
+    case 'berry': for (let y = 0; y < 8; y++) { const w = Math.max(1, Math.round(5 - Math.abs(y - 2.5) * (y > 2 ? 1 : 0.4))); g.rect(8 - w, 5 + y, w * 2, 1, fruit); } g.pts([[6, 7], [9, 8], [7, 10], [10, 6], [8, 12]], C.pyellow).pts([[6, 4], [8, 3], [10, 4], [7, 4], [9, 4]], leaf); break;
+    case 'cluster': for (const [x, y] of [[6, 10], [10, 10], [8, 6], [5, 6], [11, 6]]) g.ellipse(x, y, 2.6, 2.6, fruit).set(x - 1, y - 1, fhi).set(x, y, fdark); break;
+    case 'bell': g.ellipse(8, 10, 5.5, 4.5, fruit).rect(4, 6, 8, 4, fruit).ellipse(6, 8, 1.5, 2, fhi).line(8, 7, 8, 14, fdark).rect(7, 3, 2, 3, leaf); break;
+    case 'long': for (let y = 0; y < 11; y++) { const w = y < 2 ? 2 : y > 8 ? 2 : 3; g.rect(8 - w + (y > 5 ? 1 : 0), 4 + y, w * 2, 1, fruit); } g.set(7, 6, fhi).set(7, 7, fhi).rect(6, 2, 5, 2, leaf).set(8, 1, leaf); break;
+    case 'chili': for (let y = 0; y < 11; y++) g.rect(6 + Math.round(y * 0.4), 4 + y, y > 8 ? 1 : 2, 1, fruit); g.set(6, 5, fhi).rect(5, 2, 3, 2, leaf); g.pts([[11, 4], [12, 6], [4, 9]], C.yellow); break;
+    case 'dragon': g.ellipse(8, 9, 5, 6, fruit).ellipse(6, 7, 1.5, 2, fhi).pts([[3, 6], [13, 7], [4, 12], [12, 12], [8, 2], [5, 3], [11, 3]], leaf); break;
+    case 'pumpkin': g.ellipse(8, 10, 7, 5, fruit).ellipse(5, 9, 2, 1.5, fhi).line(8, 6, 8, 14, fdark).line(4, 7, 4, 13, fdark).line(12, 7, 12, 13, fdark).rect(7, 3, 2, 3, C.dbrown).line(9, 4, 11, 3, leaf); break;
+    case 'melon': g.ellipse(8, 9, 7, 5.5, fruit).ellipse(5, 7, 2, 1.5, fhi); for (const x of [3, 6, 9, 12]) g.line(x, 5, x + 1, 13, fdark); break;
+    case 'star': g.pts([[8, 2], [8, 3], [7, 4], [8, 4], [9, 4]], fruit).rect(2, 5, 13, 3, fruit).rect(4, 8, 9, 2, fruit).rect(4, 10, 3, 2, fruit).rect(10, 10, 3, 2, fruit).rect(3, 12, 2, 2, fruit).rect(12, 12, 2, 2, fruit).pts([[7, 6], [6, 7]], fhi).set(8, 8, fdark); break;
+    case 'bloom': for (let k = 0; k < 8; k++) { const t = k / 8 * Math.PI * 2; g.ellipse(8 + Math.cos(t) * 4, 8 + Math.sin(t) * 4, 2.2, 2.2, k % 2 ? fruit : fhi); } g.ellipse(8, 8, 2.5, 2.5, col(c.flower ?? 'brown')); break;
+    case 'crystal': for (const [x, h, w] of [[8, 12, 2], [5, 8, 1], [11, 9, 1]]) { for (let y = 0; y < h; y++) g.rect(x - (y < 2 ? 0 : w - 1), 14 - h + y, y < 2 ? 1 : w * 2 - 1 + 1, 1, y % 3 ? fruit : fhi); } g.pts([[8, 2], [5, 6], [11, 5]], C.white); break;
+    default: g.ellipse(8, 9, 5, 5, fruit);
+  }
+  return g.outline();
+}
+const RARITY_COL = { common: C.gray, uncommon: C.green, rare: C.blue, legendary: C.orange, mystical: C.violet, mystery: C.pink };
+function packet(band, inner) {
+  const g = new G(16, 16);
+  g.rect(3, 2, 10, 13, C.cream).rect(3, 2, 10, 3, band).line(3, 5, 12, 5, C.ltan);
+  g.pts([[4, 2], [6, 2], [8, 2], [10, 2], [12, 2]], C.white);
+  if (inner) g.stamp(inner, 0, 0);
+  return g.outline();
+}
+for (const c of CROPS) {
+  add(`crop_${c.id}`, 'crops', [0, 1, 2, 3].map(s => drawCrop(c, s)), 0, { crop: c.id });
+  add(`item_${c.id}`, 'items', drawItem(c), 0, { crop: c.id });
+  const mini = new G(16, 16); mini.ellipse(8, 10, 2.6, 2.4, col(c.fruit)).set(7, 9, col(c.fruitHi)).line(8, 8, 9, 6, col(c.leaf));
+  add(`seed_${c.id}`, 'items', packet(RARITY_COL[c.rarity], mini), 0, { crop: c.id });
+}
+for (const [r, band] of Object.entries(RARITY_COL)) {
+  const q = new G(16, 16);
+  q.pts([[7, 7], [8, 7], [9, 7], [10, 8], [10, 9], [9, 10], [8, 10], [8, 11], [8, 13]], band);
+  add(`seedpack_${r}`, 'items', packet(band, q));
+}
+
+/* ------------------------------------------------------- items + ui icons */
+{
+  const wood = new G(16, 16);
+  wood.rect(2, 8, 12, 4, C.tan).ellipse(3, 10, 1.8, 2.2, C.ltan).set(3, 10, C.brown).rect(4, 4, 10, 4, C.brown).ellipse(4, 6, 1.8, 2.2, C.ltan).set(4, 6, C.tan).line(6, 9, 13, 9, C.ltan);
+  add('item_wood', 'items', wood.outline());
+  const stone = new G(16, 16);
+  stone.ellipse(6, 10, 4, 3.5, C.gray).ellipse(5, 9, 2, 1.5, C.lgray).ellipse(11, 9, 3.5, 3, C.lgray).set(10, 8, C.vlgray).set(12, 11, C.gray);
+  add('item_stone', 'items', stone.outline());
+  const fiber = new G(16, 16);
+  for (const x of [5, 7, 9, 11]) fiber.line(x, 14, 8 + (x - 8) * 1.4, 2, x % 4 === 1 ? C.green : C.lgreen);
+  fiber.rect(5, 9, 7, 2, C.tan);
+  add('item_fiber', 'items', fiber.outline());
+  const coin = new G(16, 16);
+  coin.ellipse(8, 8, 5.5, 5.5, C.yellow).ellipse(8, 8, 3.5, 3.5, C.orange).ellipse(8, 8, 2.5, 2.5, C.yellow).pts([[5, 5], [6, 4]], C.pyellow);
+  add('item_coin', 'items', coin.outline());
+
+  const hand = new G(16, 16);
+  hand.rect(5, 6, 7, 7, C.ltan).rect(5, 3, 2, 4, C.ltan).rect(7, 2, 2, 5, C.ltan).rect(9, 3, 2, 4, C.ltan).rect(3, 7, 2, 3, C.ltan).line(11, 7, 11, 12, C.tan);
+  add('tool_hand', 'ui', hand.outline());
+  const axe = new G(16, 16);
+  axe.line(4, 14, 11, 3, C.brown).line(5, 14, 12, 3, C.tan).rect(9, 2, 5, 5, C.lgray).rect(12, 2, 2, 5, C.vlgray).set(9, 6, C.gray);
+  add('tool_axe', 'ui', axe.outline());
+  const hoe = new G(16, 16);
+  hoe.line(3, 14, 11, 4, C.brown).line(4, 14, 12, 4, C.tan).rect(10, 2, 5, 2, C.lgray).rect(13, 4, 2, 3, C.lgray);
+  add('tool_hoe', 'ui', hoe.outline());
+  const bag = new G(16, 16);
+  bag.ellipse(8, 10, 5.5, 4.5, C.ltan).rect(6, 4, 4, 3, C.ltan).line(5, 6, 11, 6, C.red).pts([[6, 10], [9, 9], [8, 12], [10, 11]], C.brown);
+  add('tool_seeds', 'ui', bag.outline());
+  const can = new G(16, 16);
+  can.rect(3, 6, 8, 8, C.lblue).rect(3, 6, 8, 2, C.pblue).line(11, 9, 14, 5, C.lblue).rect(13, 4, 2, 2, C.blue).line(4, 4, 9, 4, C.blue).pts([[3, 5], [10, 5]], C.blue);
+  add('tool_can', 'ui', can.outline());
+
+  const heart = new G(8, 8);
+  heart.pts([[1, 1], [2, 1], [5, 1], [6, 1]], C.pink).rect(0, 2, 8, 2, C.pink).rect(1, 4, 6, 1, C.pink).rect(2, 5, 4, 1, C.pink).rect(3, 6, 2, 1, C.pink).set(1, 2, C.ppink);
+  add('icon_heart', 'ui', heart);
+  const zzz = new G(8, 8);
+  zzz.line(3, 0, 6, 0, C.pblue).line(6, 0, 3, 3, C.pblue).line(3, 3, 6, 3, C.pblue).line(0, 4, 2, 4, C.white).line(2, 4, 0, 6, C.white).line(0, 6, 2, 6, C.white);
+  add('icon_zzz', 'ui', zzz);
+  const mark = new G(8, 8);
+  mark.line(1, 0, 1, 7, C.brown).rect(2, 0, 5, 3, C.yellow).set(2, 1, C.pyellow);
+  add('icon_mark', 'ui', mark.outline());
+  const drop = new G(8, 8);
+  drop.set(3, 0, C.lblue).rect(2, 1, 3, 2, C.lblue).ellipse(3.5, 5, 2.5, 2.5, C.lblue).set(2, 4, C.pblue);
+  add('icon_drop', 'ui', drop.outline());
+  const q = new G(8, 8);
+  q.rect(2, 0, 4, 1, C.white).pts([[1, 1], [6, 1], [6, 2], [5, 3], [4, 4], [4, 5], [4, 7]], C.white);
+  add('icon_question', 'ui', q);
+  const exc = new G(8, 8);
+  exc.rect(3, 0, 2, 5, C.yellow).rect(3, 6, 2, 2, C.yellow);
+  add('icon_exclaim', 'ui', exc.outline());
+  const note = new G(8, 8);
+  note.rect(4, 0, 1, 6, C.white).rect(5, 0, 2, 1, C.white).ellipse(3, 6, 1.6, 1.3, C.white);
+  add('icon_note', 'ui', note);
+}
+
+/* ---------------------------------------------------------------- effects */
+{
+  const sparkle = [0, 1, 2, 3].map(f => {
+    const g = new G(8, 8), r = [1, 2, 3, 1][f];
+    g.line(4 - r, 4, 4 + r, 4, C.pyellow).line(4, 4 - r, 4, 4 + r, C.pyellow).set(4, 4, C.white);
+    if (f === 2) g.pts([[2, 2], [6, 2], [2, 6], [6, 6]], C.yellow);
+    return g;
+  });
+  add('fx_sparkle', 'fx', sparkle, 10);
+  const poof = [0, 1, 2, 3].map(f => {
+    const g = new G(16, 16), r = 2 + f * 1.5;
+    for (let k = 0; k < 6; k++) { const t = k / 6 * Math.PI * 2; g.ellipse(8 + Math.cos(t) * r, 8 + Math.sin(t) * r, 3 - f * 0.5, 3 - f * 0.5, f > 1 ? C.vlgray : C.white); }
+    return g;
+  });
+  add('fx_poof', 'fx', poof, 10);
+  const leafp = new G(4, 4); leafp.pts([[0, 1], [1, 0], [1, 1], [2, 1], [2, 2], [3, 2]], C.lgreen);
+  add('fx_leaf', 'fx', leafp);
+  const dirt = new G(4, 4); dirt.pts([[1, 1], [2, 1], [1, 2], [2, 2]], C.brown);
+  add('fx_dirt', 'fx', dirt);
+  const bf = (a, b) => [0, 1].map(f => {
+    const g = new G(8, 8);
+    if (f === 0) g.rect(1, 1, 2, 3, a).rect(5, 1, 2, 3, a).rect(1, 4, 2, 2, b).rect(5, 4, 2, 2, b);
+    else g.rect(2, 2, 1, 3, a).rect(5, 2, 1, 3, a).set(2, 5, b).set(5, 5, b);
+    g.line(4, 1, 4, 5, C.out).set(3, 0, C.out).set(5, 0, C.out);
+    return g;
+  });
+  add('fx_butterfly_a', 'fx', bf(C.pink, C.ppink), 8);
+  add('fx_butterfly_b', 'fx', bf(C.yellow, C.pyellow), 8);
+  add('fx_butterfly_c', 'fx', bf(C.lblue, C.pblue), 8);
+}
+
+/* ------------------------------------------------------------ swap sets */
+const swaps = {
+  roof: { indices: [17, 18, 19], options: { red: [17, 18, 19], blue: [13, 14, 15], green: [8, 9, 10], plum: [1, 23, 24], slate: [28, 29, 30], gold: [3, 20, 21] } },
+  wall: { indices: [3, 4, 5], options: { oak: [3, 4, 5], birch: [4, 5, 6], walnut: [1, 2, 3], driftwood: [29, 30, 31], cherry: [17, 19, 20] } },
+  // Colour slots: these palette indices get replaced by per-player / per-cat colours.
+  player: { slots: { hair: 2, hairHi: 3, skin: 5, skinShade: 4, shirt: 14, shirtShade: 13, pants: 28, accent: 10 } },
+  cat: { slots: { coat: 20, shade: 19, marking: 3, belly: 6, eye: 11 } },
+};
+
+const out = { version: 1, tile: 16, palette: PALETTE, swaps, sprites };
+fs.writeFileSync(OUT, JSON.stringify(out));
+console.log(`wrote ${Object.keys(sprites).length} sprites to ${path.relative(process.cwd(), OUT)} (${(fs.statSync(OUT).size / 1024).toFixed(1)} KB)`);

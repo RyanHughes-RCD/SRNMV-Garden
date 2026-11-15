@@ -1,0 +1,199 @@
+// World rendering: ground, y-sorted objects, entities, lighting.
+import { G, TILE, hash2, clamp } from './game.js';
+import { DATA } from './data.js';
+import { drawSprite, frameCanvas, optionSwap, mergeSwaps, animFrame } from './sprites.js';
+import { idx, tx, ty } from './world.js';
+import { lighting, isNight, hourOfDay } from './daytime.js';
+import { drawParticles, drawCritters, emit } from './particles.js';
+import { drawCats } from './cats.js';
+import { drawPlayer, playerLight } from './player.js';
+import { drawModeOverlay } from './modes.js';
+import { jobsAtTile } from './jobs.js';
+
+let canvas, ctx, lightCanvas, lctx;
+export function initRender(c) {
+  canvas = c; ctx = c.getContext('2d', { alpha: false });
+  lightCanvas = document.createElement('canvas'); lctx = lightCanvas.getContext('2d');
+  addEventListener('resize', resize);
+  resize();
+}
+export function resize() {
+  const W = innerWidth, H = innerHeight;
+  const s = Math.max(1, Math.floor(Math.min(W / 480, H / 270)));
+  G.view.scale = s;
+  G.view.w = Math.floor(W / s); G.view.h = Math.floor(H / s);
+  canvas.width = G.view.w; canvas.height = G.view.h;
+  canvas.style.width = `${G.view.w * s}px`; canvas.style.height = `${G.view.h * s}px`;
+  lightCanvas.width = G.view.w; lightCanvas.height = G.view.h;
+  ctx.imageSmoothingEnabled = false;
+  document.documentElement.style.setProperty('--scale', s);
+}
+
+export function clampCamera() {
+  const mw = G.state.map.w * TILE, mh = G.state.map.h * TILE;
+  const cam = G.camera;
+  cam.x = mw <= G.view.w ? (mw - G.view.w) / 2 : clamp(cam.x, 0, mw - G.view.w);
+  cam.y = mh <= G.view.h ? (mh - G.view.h) / 2 : clamp(cam.y, 0, mh - G.view.h);
+}
+
+function groundSprite(i, x, y) {
+  const g = G.state.map.ground[i];
+  if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * 4)}`; }
+  if (g === 'f') return `forest_${Math.floor(hash2(x, y, 5) * 3)}`;
+  if (g === 't') { const c = G.state.crops[i]; return c && c.wetUntil > G.state.simTime ? 'soil_wet' : 'soil'; }
+  return g; // path_stone, path_wood
+}
+
+const drawList = [];
+function pushDraw(y, fn) { drawList.push({ y, fn }); }
+
+export function cabinSwap() { const c = G.state.cabin; return mergeSwaps(optionSwap('roof', c.roof), optionSwap('wall', c.wall)); }
+
+export function renderWorld(t) {
+  const st = G.state, cam = G.camera, vw = G.view.w, vh = G.view.h;
+  const ox = Math.round(cam.x), oy = Math.round(cam.y);
+  ctx.fillStyle = '#2e4a3a'; ctx.fillRect(0, 0, vw, vh);
+  ctx.save();
+  ctx.translate(-ox, -oy);
+  const x0 = Math.max(0, Math.floor(ox / TILE) - 1), y0 = Math.max(0, Math.floor(oy / TILE) - 1);
+  const x1 = Math.min(st.map.w - 1, Math.ceil((ox + vw) / TILE) + 1), y1 = Math.min(st.map.h - 1, Math.ceil((oy + vh) / TILE) + 2);
+  // ground
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const i = y * st.map.w + x;
+    drawSprite(ctx, groundSprite(i, x, y), 0, x * TILE, y * TILE);
+  }
+  // pending till jobs + plot outlines
+  ctx.fillStyle = 'rgba(138,90,59,0.28)';
+  for (const p of st.plots) {
+    ctx.strokeStyle = 'rgba(255,248,220,0.45)'; ctx.lineWidth = 1;
+    ctx.setLineDash([3, 2]);
+    ctx.strokeRect(p.x * TILE + 0.5, p.y * TILE + 0.5, p.w * TILE - 1, p.h * TILE - 1);
+    ctx.setLineDash([]);
+  }
+  for (const j of st.jobs) if (j.type === 'till') ctx.fillRect(tx(j.tile) * TILE + 1, ty(j.tile) * TILE + 1, 14, 14);
+
+  // y-sorted drawables
+  drawList.length = 0;
+  for (let y = y0; y <= y1 + 1 && y < st.map.h; y++) for (let x = x0; x <= x1; x++) {
+    const i = y * st.map.w + x;
+    const o = st.map.obj[i];
+    if (st.map.ground[i] === 'f') {
+      const h = hash2(x, y, 11);
+      const edge = st.map.ground[i + 1] !== 'f' || st.map.ground[i - 1] !== 'f' || st.map.ground[i + st.map.w] !== 'f' || st.map.ground[i - st.map.w] !== 'f';
+      if (edge || h > 0.55) {
+        const tree = h > 0.8 ? 'tree_1' : 'tree_0';
+        const jx = Math.round((hash2(x, y, 13) - 0.5) * 6);
+        pushDraw(y * TILE + 15, () => drawSprite(ctx, tree, 0, x * TILE - 4 + jx, y * TILE - 16));
+      }
+    }
+    if (o) {
+      if (o.startsWith('d:')) pushDraw(y * TILE + 12, () => drawSprite(ctx, 'debris_' + o.slice(2), 0, x * TILE, y * TILE));
+      else if (o.startsWith('x:')) { const d = DATA.decor[o.slice(2)]; pushDraw(y * TILE + 13, () => drawSprite(ctx, d?.sprite || 'decor_' + o.slice(2), 0, x * TILE, y * TILE)); }
+      else if (o === 'crate' || o === 'shop') pushDraw(y * TILE + 13, () => drawSprite(ctx, o, 0, x * TILE, y * TILE));
+    }
+    const crop = st.crops[i];
+    if (crop) pushDraw(y * TILE + 10, () => drawCrop(crop, x, y, t));
+  }
+  // cabin
+  const cb = st.cabin;
+  pushDraw((cb.y + 2) * TILE - 1, () => drawCabin(t));
+  drawCats(pushDraw, ctx, t);
+  drawPlayer(pushDraw, ctx, t);
+  drawList.sort((a, b) => a.y - b.y);
+  for (const d of drawList) d.fn();
+
+  // job markers + progress
+  for (const j of st.jobs) {
+    const x = tx(j.tile) * TILE, y = ty(j.tile) * TILE;
+    if (x < ox - 16 || x > ox + vw || y < oy - 16 || y > oy + vh) continue;
+    if (j.type === 'clear' && j.marked) drawSprite(ctx, 'icon_mark', 0, x + 10, y - 3);
+    if (j.progress > 0) {
+      const f = Math.min(1, j.progress / j.work);
+      ctx.fillStyle = 'rgba(26,20,35,0.75)'; ctx.fillRect(x + 1, y - 2, 14, 3);
+      ctx.fillStyle = j.type === 'water' ? '#7fb3d5' : j.type === 'plant' ? '#8cc65a' : '#f7cd5d';
+      ctx.fillRect(x + 2, y - 1, Math.max(1, Math.round(12 * f)), 1);
+    }
+  }
+  drawParticles(ctx, t, 0);
+  drawCritters(ctx, t, false);
+  drawModeOverlay(ctx, t);
+  ctx.restore();
+
+  renderLighting(t, ox, oy);
+  ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
+}
+
+function drawCrop(crop, x, y, t) {
+  const st = G.state;
+  const ready = crop.stage >= 3;
+  const bob = ready ? Math.round(Math.sin(t * 2 + x + y) * 0.6) : 0;
+  drawSprite(ctx, `crop_${crop.id}`, crop.stage, x * TILE, y * TILE - 2 + bob);
+  if (ready && Math.sin(t * 1.3 + x * 3 + y * 7) > 0.97 && Math.random() < 0.3) emit({ x: x * TILE + 4 + Math.random() * 6, y: y * TILE - 4, vy: -6, life: 0.7, sprite: 'fx_sparkle', frameRate: 6, fade: false });
+  if (crop.wetUntil > st.simTime && crop.stage < 3 && Math.random() < 0.002) emit({ x: x * TILE + 8, y: y * TILE + 12, vy: -4, life: 0.6, color: '#b7e0ef', size: 1 });
+}
+
+function drawCabin(t) {
+  const cb = G.state.cabin;
+  const sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
+  const sw = cabinSwap();
+  drawSprite(ctx, 'cabin', 0, sx, sy, sw);
+  drawSprite(ctx, `cabin_door_${cb.door}`, 0, sx + 19, sy + 30);
+  if (cb.windowBoxes) { drawSprite(ctx, 'cabin_windowbox', 0, sx + 5, sy + 37); drawSprite(ctx, 'cabin_windowbox', 0, sx + 32, sy + 37); }
+  // chimney smoke (evening, night, early morning)
+  const h = hourOfDay();
+  if ((h > 17 || h < 9) && Math.random() < 0.04) emit({ x: sx + 34 + Math.random() * 3, y: sy - 4, vx: 3 + Math.random() * 3, vy: -9, life: 3.2, sprite: 'fx_smoke' });
+}
+
+function cut(x, y, r, strength = 1) {
+  const g = lctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(0,0,0,${strength})`); g.addColorStop(0.6, `rgba(0,0,0,${strength * 0.55})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+  lctx.fillStyle = g; lctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+function glow(x, y, r, a, col = '255,190,100') {
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+  g.addColorStop(0, `rgba(${col},${a})`); g.addColorStop(1, `rgba(${col},0)`);
+  ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2);
+}
+export function lightSources() {
+  const st = G.state, out = [];
+  const cb = st.cabin, sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
+  out.push({ x: sx + 11, y: sy + 33, r: 34, win: [sx + 7, sy + 28, 8, 8] }, { x: sx + 38, y: sy + 33, r: 34, win: [sx + 34, sy + 28, 8, 8] });
+  for (let i = 0; i < st.map.obj.length; i++) {
+    const o = st.map.obj[i];
+    if (o && o.startsWith('x:')) { const d = DATA.decor[o.slice(2)]; if (d?.light) out.push({ x: tx(i) * TILE + 8, y: ty(i) * TILE + 5, r: d.light }); }
+  }
+  const pl = playerLight(); if (pl) out.push(pl);
+  return out;
+}
+let lightsCache = [], lightsAt = -99;
+function renderLighting(t, ox, oy) {
+  const L = lighting();
+  const vw = G.view.w, vh = G.view.h;
+  if (L.dark > 0.01) {
+    if (G.realTime - lightsAt > 1) { lightsCache = lightSources(); lightsAt = G.realTime; }
+    lctx.globalCompositeOperation = 'source-over';
+    lctx.clearRect(0, 0, vw, vh);
+    lctx.fillStyle = `rgba(12,14,40,${L.dark.toFixed(3)})`;
+    lctx.fillRect(0, 0, vw, vh);
+    lctx.globalCompositeOperation = 'destination-out';
+    const flick = 1 + Math.sin(t * 7) * 0.03 + Math.sin(t * 13) * 0.02;
+    for (const s of lightsCache) cut(s.x - ox, s.y - oy, s.r * flick, 0.95);
+    lctx.globalCompositeOperation = 'source-over';
+    ctx.drawImage(lightCanvas, 0, 0);
+    const a = Math.min(1, L.dark * 1.6);
+    ctx.globalCompositeOperation = 'lighter';
+    for (const s of lightsCache) {
+      glow(s.x - ox, s.y - oy, s.r * 0.6 * flick, 0.18 * a);
+      if (s.win) { ctx.fillStyle = `rgba(255,205,110,${(0.55 * a).toFixed(3)})`; ctx.fillRect(s.win[0] - ox, s.win[1] - oy, s.win[2], s.win[3]); }
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  if (L.tintA > 0.005) {
+    ctx.fillStyle = `rgba(${L.tint.map(Math.round).join(',')},${L.tintA.toFixed(3)})`;
+    ctx.fillRect(0, 0, vw, vh);
+  }
+}
+
+export function getCtx() { return ctx; }
+export function getCanvas() { return canvas; }
+export { frameCanvas, animFrame, idx };

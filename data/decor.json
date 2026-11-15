@@ -1,0 +1,19 @@
+{
+  "decor": {
+    "path_stone": { "name": "Stone Path",  "ground": true,  "cost": { "stone": 2 },                   "sprite": "path_stone" },
+    "path_wood":  { "name": "Wood Path",   "ground": true,  "cost": { "wood": 2 },                    "sprite": "path_wood" },
+    "fence":      { "name": "Fence",       "blocks": true,  "cost": { "wood": 3 },                    "sprite": "decor_fence" },
+    "lantern":    { "name": "Lantern",     "blocks": true,  "cost": { "coins": 40, "stone": 2 },      "sprite": "decor_lantern", "light": 46 },
+    "bench":      { "name": "Bench",       "blocks": true,  "cost": { "wood": 8 },                    "sprite": "decor_bench" },
+    "flowerpot":  { "name": "Flower Pot",  "blocks": true,  "cost": { "coins": 25, "stone": 2 },      "sprite": "decor_flowerpot" },
+    "birdbath":   { "name": "Birdbath",    "blocks": true,  "cost": { "coins": 60, "stone": 8 },      "sprite": "decor_birdbath" },
+    "scarecrow":  { "name": "Scarecrow",   "blocks": true,  "cost": { "coins": 50, "wood": 6, "fiber": 6 }, "sprite": "decor_scarecrow" },
+    "gnome":      { "name": "Garden Gnome","blocks": true,  "cost": { "coins": 150 },                 "sprite": "decor_gnome" }
+  },
+  "cabin": {
+    "roof":   { "name": "Roof color",   "cost": { "coins": 60 },  "options": ["red", "blue", "green", "plum", "slate", "gold"] },
+    "wall":   { "name": "Wall wood",    "cost": { "wood": 20 },   "options": ["oak", "birch", "walnut", "driftwood", "cherry"] },
+    "door":   { "name": "Door style",   "cost": { "coins": 40, "wood": 5 }, "options": [0, 1, 2, 3], "labels": ["Plank", "Garden Green", "Round Red", "Lavender Panel"] },
+    "windowBoxes": { "name": "Window boxes", "cost": { "coins": 30, "wood": 4, "fiber": 4 }, "options": [false, true], "labels": ["Off", "On"] }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "_comment": "Every tuning number lives here. Times are in seconds unless named otherwise.",
+  "map": { "width": 46, "height": 34, "forestDepth": 3, "debrisDensity": 0.32, "clearRadiusAroundCabin": 4, "seed": 20261115 },
+  "player": { "speedTilesPerSec": 5, "workRate": 1.0, "interactReachPx": 11 },
+  "cats": { "baseWorkRate": 0.14, "walkTilesPerSec": 1.6, "zoomiesSpeedMult": 3.2, "energyDrainPerWorkSec": 0.0012, "energyRegenPerNapSec": 0.006, "baseNapSec": 150, "petBuffMult": 1.5, "petBuffSec": 180, "petCooldownSec": 8, "jobWaitBonusPerSec": 0.0016, "decideIntervalSec": [3, 8] },
+  "work": { "till": 3, "plant": 1.5, "water": 1.5 },
+  "farm": {
+    "waterGrowthBonus": 0.6, "waterDurationSec": 900, "doubleSeedChance": 0.15, "cropYield": 1,
+    "maxPlotSize": 10, "jobGenIntervalSec": 2, "growBannerCooldownSec": 45
+  },
+  "economy": { "startCoins": 60, "startMysteryPacks": 2, "mysteryPackSeeds": 3, "mysteryRarityWeights": { "common": 0.8, "uncommon": 0.2 }, "packBonusSeedChance": 0.2 },
+  "time": { "fastDayLengthSec": 1440, "offlineCapHours": 24, "offlineStepSec": 4, "maxSimStepSec": 2 },
+  "tv": { "hudAutoHideSec": 20, "idleDriftAfterSec": 60, "idleFpsAfterSec": 60, "autosaveSec": 30 }
+}
