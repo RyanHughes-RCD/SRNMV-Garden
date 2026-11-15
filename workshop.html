@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sprite & Cat Workshop</title>
+  <meta name="description" content="Edit every sprite, the palette, the cats' personalities and the two player characters.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%233b2a3a'/%3E%3Crect x='3' y='3' width='4' height='4' fill='%23f7cd5d'/%3E%3Crect x='9' y='3' width='4' height='4' fill='%23e88fb0'/%3E%3Crect x='3' y='9' width='4' height='4' fill='%238cc65a'/%3E%3Crect x='9' y='9' width='4' height='4' fill='%237fb3d5'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/workshop.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="index.html">◂ Back to the garden</a>
+    <h1>Sprite &amp; Cat Workshop</h1>
+    <nav class="tabs" id="tabs">
+      <button data-tab="sprites" class="on">Sprites</button>
+      <button data-tab="cats">Cats</button>
+      <button data-tab="players">Players</button>
+    </nav>
+    <div class="actions">
+      <span id="savestate" class="savestate">Loading...</span>
+      <button id="btn-export">Export ▾</button>
+      <button id="btn-import">Import</button>
+      <div id="export-menu" class="dropdown">
+        <button data-export="sprites">sprites.json <small>art + palette</small></button>
+        <button data-export="cats">cats.json <small>cat personalities</small></button>
+        <button data-export="players">players.json <small>player names + colours</small></button>
+        <hr>
+        <button data-reset="all" class="danger">Discard all workshop changes</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ======================================================= SPRITES -->
+    <section id="tab-sprites" class="tab-page on">
+      <aside class="col browser">
+        <div class="row">
+          <input id="search" type="search" placeholder="Search sprites..." autocomplete="off">
+        </div>
+        <div class="row">
+          <select id="category"></select>
+          <label class="chk"><input type="checkbox" id="only-changed"> Changed</label>
+        </div>
+        <div id="thumbs" class="thumbs"></div>
+      </aside>
+
+      <div class="col editor">
+        <div class="sprite-head">
+          <div>
+            <h2 id="sprite-name">-</h2>
+            <div id="sprite-meta" class="meta"></div>
+          </div>
+          <div class="head-actions">
+            <label>FPS <input id="fps" type="number" min="0" max="30" step="1"></label>
+            <button id="btn-reset-sprite" title="Restore this sprite to the shipped default">Reset sprite</button>
+          </div>
+        </div>
+        <div class="toolbar" id="toolbar">
+          <button data-tool="pencil" class="on" title="Pencil (B)">✎ Pencil</button>
+          <button data-tool="eraser" title="Eraser (E)">⌫ Eraser</button>
+          <button data-tool="fill" title="Fill (G)">▨ Fill</button>
+          <button data-tool="picker" title="Eyedropper (I) - or Alt+click">◉ Pick</button>
+          <button data-tool="line" title="Line (L)">╱ Line</button>
+          <button data-tool="rect" title="Rectangle (R)">▭ Rect</button>
+          <span class="sep"></span>
+          <button id="btn-mirror" class="toggle" title="Mirror horizontally while drawing (M)">⇋ Mirror</button>
+          <button id="btn-onion" class="toggle" title="Show previous frame faintly (O)">◐ Onion</button>
+          <button id="btn-grid" class="toggle on" title="Grid (#)"># Grid</button>
+          <span class="sep"></span>
+          <button id="btn-undo" title="Undo (Ctrl+Z)">↶</button>
+          <button id="btn-redo" title="Redo (Ctrl+Y)">↷</button>
+          <span class="sep"></span>
+          <button id="btn-zoom-out" title="Zoom out (-)">−</button>
+          <span id="zoom-label">16×</span>
+          <button id="btn-zoom-in" title="Zoom in (+)">+</button>
+          <span class="sep"></span>
+          <button id="btn-flip" title="Flip this frame horizontally">Flip frame</button>
+          <button id="btn-shift" title="Nudge this frame (hold Shift + arrow keys)">⇅ Nudge</button>
+        </div>
+        <div class="canvas-wrap" id="canvas-wrap">
+          <canvas id="edit-canvas"></canvas>
+        </div>
+        <div class="frames">
+          <div class="frames-head">
+            <span>Frames</span>
+            <button id="btn-frame-add" title="Add a blank frame">+ Blank</button>
+            <button id="btn-frame-dup" title="Duplicate this frame">⧉ Duplicate</button>
+            <button id="btn-frame-left" title="Move frame left">◂</button>
+            <button id="btn-frame-right" title="Move frame right">▸</button>
+            <button id="btn-frame-del" class="danger" title="Delete this frame">✕ Delete</button>
+          </div>
+          <div id="frame-strip" class="frame-strip"></div>
+        </div>
+        <p class="hint">Left-click draws with the left colour, right-click with the right colour. Alt+click picks a colour. Shift+arrows nudge the frame.</p>
+      </div>
+
+      <aside class="col side">
+        <div class="card">
+          <h3>Palette</h3>
+          <div class="current-colors">
+            <div><span id="c-left" class="swatch big"></span><small>Left</small></div>
+            <div><span id="c-right" class="swatch big"></span><small>Right</small></div>
+          </div>
+          <div id="palette" class="palette"></div>
+          <p class="hint">Click to choose a colour. Double-click to recolour it everywhere in the game.</p>
+          <input id="color-input" type="color" hidden>
+        </div>
+        <div class="card">
+          <h3>Preview <small id="preview-note"></small></h3>
+          <div id="swap-row" class="row"></div>
+          <div class="preview-row">
+            <canvas id="preview-tv"></canvas>
+            <canvas id="preview-1x"></canvas>
+          </div>
+          <h3>In the garden</h3>
+          <canvas id="preview-context"></canvas>
+          <div id="stages" class="stages"></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ========================================================== CATS -->
+    <section id="tab-cats" class="tab-page">
+      <aside class="col list">
+        <div id="cat-list" class="entity-list"></div>
+        <button id="btn-cat-add">+ Add a cat</button>
+      </aside>
+      <div class="col form" id="cat-form"></div>
+    </section>
+
+    <!-- ======================================================= PLAYERS -->
+    <section id="tab-players" class="tab-page">
+      <div class="col form wide" id="player-form"></div>
+    </section>
+  </main>
+
+  <input id="file-input" type="file" accept=".json,application/json" multiple hidden>
+  <div id="toast" class="toast"></div>
+  <script type="module" src="js/workshop.js"></script>
+</body>
+</html>
