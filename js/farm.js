@@ -56,7 +56,9 @@ export function plantTile(tile, k) {
 
 export const isDiscovered = id => !!G.state.discovered[id];
 export const cropName = id => (isDiscovered(id) ? DATA.cropById[id]?.name : '???');
-export const stageSeconds = c => (DATA.cropById[c.id]?.growMinutes ?? 30) * 60 / 3;
+// growMinutes is how long a crop takes when it's kept watered; growth points accrue faster while wet,
+// so a full stage needs (growMinutes * 60 / 3) * (watered growth rate).
+export const stageSeconds = c => { const d = DATA.cropById[c.id]; return (d?.growMinutes ?? 360) * 60 / 3 * (1 + DATA.balance.farm.waterGrowthBonus * (d?.waterMult ?? 1)); };
 
 export function growthRate(c, tile) {
   const st = G.state, def = DATA.cropById[c.id];

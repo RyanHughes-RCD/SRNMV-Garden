@@ -44,6 +44,19 @@ export function newGame() {
     const noise = (hash2(Math.floor(x / 2), Math.floor(y / 2), seed) - 0.5) * 2 * wob;
     if (Math.hypot(dx, dy) > 1 + noise) ground[y * w + x] = 'f';
   }
+  // a lake along the bottom of the map, starting just below the clearing
+  const L = B.map.lake || {}, Rv = B.map.river || {};
+  const lakeTop = Math.floor(my + RY) + (L.gapBelowClearing ?? 1);
+  const shoreAt = x => lakeTop + Math.round(Math.sin(x / 4.3 + seed % 5) * (L.shoreWobble ?? 1.4) + (hash2(Math.floor(x / 3), 9, seed) - 0.5) * 1.6);
+  for (let x = 0; x < w; x++) for (let y = Math.max(0, shoreAt(x)); y < h; y++) ground[y * w + x] = 'w';
+  // a river from the top edge, down the left side of the clearing, into the lake
+  const rw = Rv.width ?? 2, riverX = Math.floor(mx - RX) - (Rv.gapLeftOfClearing ?? 1) - rw;
+  for (let y = 0; y < h; y++) {
+    const x0 = Math.round(riverX + Math.sin(y / 5 + seed % 7) * (Rv.meander ?? 1.4));
+    let reached = false;
+    for (let x = x0; x < x0 + rw; x++) { if (ground[y * w + x] === 'w' && y > lakeTop - 3) reached = true; ground[y * w + x] = 'w'; }
+    if (reached) break;
+  }
   // cabin and props, a little north of the middle
   const cx = Math.floor(mx) - 2, cy = Math.floor(my) - 4;
   for (let y = cy; y < cy + 2; y++) for (let x = cx; x < cx + 3; x++) obj[y * w + x] = 'cabin';

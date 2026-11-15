@@ -177,6 +177,34 @@ function forest(seed) {
 }
 for (let i = 0; i < 3; i++) add(`forest_${i}`, 'tiles', forest(200 + i));
 
+// Water: shallow (rivers, near the shore) and deep (middle of the lake), each with 3 gently moving frames,
+// plus foam edges drawn on the side of a water tile that touches land.
+function water(deep, f) {
+  const base = deep ? C.dblue : C.blue, hi = deep ? C.blue : C.lblue, r = rng(deep ? 77 : 33);
+  const g = new G(16, 16).fill(base);
+  for (let k = 0; k < 5; k++) {
+    const x = Math.floor(r() * 14), y = Math.floor(r() * 16), len = 2 + Math.floor(r() * 3);
+    const shift = [0, 1, 0][f] * (k % 2 ? 1 : -1);
+    for (let j = 0; j < len; j++) g.set((x + j + shift + 16) % 16, y, hi);
+  }
+  if (!deep) { const x = Math.floor(r() * 12) + 2, y = Math.floor(r() * 12) + 2; if (f === 1) g.set(x, y, C.pblue); if (f === 2) g.set(x + 1, y + 1, C.pblue); }
+  return g;
+}
+add('water', 'tiles', [0, 1, 2].map(f => water(false, f)), 2);
+add('water_deep', 'tiles', [0, 1, 2].map(f => water(true, f)), 2);
+{
+  const edge = (dir) => {
+    const g = new G(16, 16);
+    for (let k = 0; k < 16; k++) {
+      const wob = (k % 5 === 0 ? 1 : 0);
+      const pts = { n: [[k, 0], [k, 1 + wob]], s: [[k, 15], [k, 14 - wob]], w: [[0, k], [1 + wob, k]], e: [[15, k], [14 - wob, k]] }[dir];
+      g.set(pts[0][0], pts[0][1], C.ltan).set(pts[1][0], pts[1][1], k % 3 ? C.pblue : C.white);
+    }
+    return g;
+  };
+  for (const d of ['n', 's', 'w', 'e']) add(`water_edge_${d}`, 'tiles', edge(d));
+}
+
 function tree(kind) {
   const g = new G(24, 32);
   const trunk = (col = C.brown, hi = C.tan, dark = C.dbrown, w = 4) => { g.rect(12 - w / 2, 22, w, 9, col); g.set(12 - w / 2, 30, dark); g.set(12 + w / 2, 30, col); g.set(11 - w / 2, 30, col); g.line(11, 23, 11, 29, hi); };

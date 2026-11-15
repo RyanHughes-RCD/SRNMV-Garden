@@ -188,6 +188,18 @@ function wireEvents() {
   addEventListener('pagehide', () => { if (!G.noSave) saveGame(); });
 }
 
+// Is there water within a few tiles of the player? (checked a few times a second)
+let waterCheckT = 0, waterNear = false;
+function nearWater(p) {
+  waterCheckT -= 1;
+  if (waterCheckT > 0) return waterNear;
+  waterCheckT = 15;
+  const m = G.state.map, px = Math.floor(p.x / TILE), py = Math.floor(p.y / TILE);
+  waterNear = false;
+  for (let y = py - 5; y <= py + 5 && !waterNear; y++) for (let x = px - 5; x <= px + 5; x++) if (x >= 0 && y >= 0 && x < m.w && y < m.h && m.ground[y * m.w + x] === 'w') { waterNear = true; break; }
+  return waterNear;
+}
+
 /* ------------------------------------------------- decoration actions */
 const decorHandlers = {
   crate: () => menus.sellMenu(),
@@ -249,7 +261,7 @@ function update(dt) {
   updateParticles(dt);
   updateCamera(dt);
   const p = G.state.player, c = G.state.cabin;
-  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE || nearFire(p.x, p.y));
+  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE || nearFire(p.x, p.y), nearWater(p));
   hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); G.birdBoost = birdBoost(); }
   autosaveT += dt; if (autosaveT > B().tv.autosaveSec) { autosaveT = 0; if (!G.noSave) saveGame(); }
   updatePadOverlay();

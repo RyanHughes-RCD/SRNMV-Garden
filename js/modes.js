@@ -55,6 +55,7 @@ export function plotProblem(r) {
     if (plotAt(t)) return 'Overlaps another plot';
     const g = ground(t), o = obj(t);
     if (g === 'f') return 'Too close to the forest';
+    if (g === 'w') return "Plots can't go in the water";
     if (o && !o.startsWith('d:')) return 'Something is built there';
     if (g !== 'g' && g !== 't') return 'Plots go on grass';
   }

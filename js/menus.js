@@ -245,7 +245,7 @@ export function almanacMenu() {
       if (!d) return `<div class="al-name">???</div>${rarityTag(c.rarity)}<p>Not discovered yet. Grow a ${rarityName(c.rarity).toLowerCase()} seed to find it!</p>`;
       return `<div class="al-row">${iconHTML(`crop_${c.id}`, 'ico big', { frame: 0 })}${iconHTML(`crop_${c.id}`, 'ico big', { frame: 1 })}${iconHTML(`crop_${c.id}`, 'ico big', { frame: 2 })}${iconHTML(`crop_${c.id}`, 'ico big', { frame: 3 })}</div>
         <div class="al-name">${c.name}</div>${rarityTag(c.rarity)}
-        <p>Grows in about ${fmtTime(c.growMinutes * 60)} · sells for ${c.price}</p><p>Harvested ${d.harvested} time${d.harvested === 1 ? '' : 's'}</p><p class="hint">"${c.hints[1]}"</p>`;
+        <p>Grows in about ${fmtTime(c.growMinutes * 60)} when watered · sells for ${c.price}</p><p>Harvested ${d.harvested} time${d.harvested === 1 ? '' : 's'}</p><p class="hint">"${c.hints[1]}"</p>`;
     },
   });
 }

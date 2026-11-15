@@ -7,7 +7,18 @@
     "clearingRadiusY": 7.5,
     "edgeWobble": 0.22,
     "debrisDensity": 0.4,
-    "clearRadiusAroundCabin": 2
+    "clearRadiusAroundCabin": 2,
+    "lake": {
+      "_comment": "A lake fills the bottom of the map; it starts this many rows below the clearing's bottom edge.",
+      "gapBelowClearing": 1,
+      "shoreWobble": 1.4
+    },
+    "river": {
+      "_comment": "A river runs from the top edge, down the left side of the clearing, into the lake.",
+      "width": 2,
+      "gapLeftOfClearing": 1,
+      "meander": 1.4
+    }
   },
   "player": {
     "speedTilesPerSec": 5,
@@ -37,12 +48,13 @@
   },
   "farm": {
     "waterGrowthBonus": 0.6,
-    "waterDurationSec": 900,
+    "waterDurationSec": 7200,
     "doubleSeedChance": 0.15,
     "cropYield": 1,
     "maxPlotSize": 10,
     "jobGenIntervalSec": 2,
-    "growBannerCooldownSec": 45
+    "growBannerCooldownSec": 45,
+    "_growth": "Crop growMinutes is the time to fully grow while kept watered (6-10 hours). A crop left dry grows (1 + waterGrowthBonus x waterMult) times slower. One watering lasts waterDurationSec."
   },
   "economy": {
     "startCoins": 60,

@@ -3,7 +3,7 @@
 import { G } from './game.js';
 import { hourOfDay } from './daytime.js';
 
-let ac = null, master, ambBus, sfxBus, noiseBuf, wind, windGain, fireGain;
+let ac = null, master, ambBus, sfxBus, noiseBuf, wind, windGain, fireGain, waterGain;
 let nextBird = 0, nextCricket = 0, nextOwl = 0, nextCrackle = 0;
 
 export function initAudio() {
@@ -24,6 +24,11 @@ export function initAudio() {
   windGain = ac.createGain(); windGain.gain.value = 0.05;
   wind.connect(lp); lp.connect(windGain); windGain.connect(ambBus); wind.start();
   fireGain = ac.createGain(); fireGain.gain.value = 0; fireGain.connect(ambBus);
+  // soft lapping water near the lake and river
+  const ws = ac.createBufferSource(); ws.buffer = noiseBuf; ws.loop = true; ws.playbackRate.value = 0.7;
+  const wf = ac.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 420; wf.Q.value = 0.8;
+  waterGain = ac.createGain(); waterGain.gain.value = 0;
+  ws.connect(wf); wf.connect(waterGain); waterGain.connect(ambBus); ws.start();
   applyVolumes();
 }
 export function applyVolumes() {
@@ -94,7 +99,7 @@ export function sfx(name) {
 }
 
 // Called every frame: schedules ambient sounds based on time of day.
-export function updateAmbience(dt, nearCabin) {
+export function updateAmbience(dt, nearCabin, nearWater = false) {
   if (!ac || ac.state !== 'running') return;
   const now = ac.currentTime, h = hourOfDay();
   const night = h < 5.5 || h >= 20.5, day = h >= 6 && h < 19.5;
@@ -113,6 +118,7 @@ export function updateAmbience(dt, nearCabin) {
     nextOwl = now + 40 + Math.random() * 80;
     if (Math.random() < 0.7) { tone(390, 0.35, { vol: 0.04, attack: 0.08, slide: 350, bus: ambBus }); tone(380, 0.55, { vol: 0.04, attack: 0.08, slide: 330, at: 0.5, bus: ambBus }); }
   }
+  waterGain.gain.setTargetAtTime(nearWater ? 0.05 + 0.035 * Math.sin(now / 2.7) + 0.02 * Math.sin(now / 1.3) : 0, now, 0.6);
   const fireTarget = nearCabin ? (night || h > 18 ? 0.5 : 0.18) : 0;
   fireGain.gain.setTargetAtTime(fireTarget, now, 0.8);
   if (fireTarget > 0.01 && now > nextCrackle) {

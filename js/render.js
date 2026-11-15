@@ -44,6 +44,19 @@ function grassLooks() {
   return grassCount;
 }
 
+// Water: deep in the middle of the lake, shallow near land, with foam where it meets the shore.
+const isW = (x, y) => { const m = G.state.map; return x < 0 || y < 0 || x >= m.w || y >= m.h || m.ground[y * m.w + x] === 'w'; };
+function drawWater(i, x, y, t) {
+  const deep = isW(x, y - 2) && isW(x, y + 2) && isW(x - 2, y) && isW(x + 2, y) && isW(x, y - 1) && isW(x, y + 1) && isW(x - 1, y) && isW(x + 1, y);
+  const name = deep ? 'water_deep' : 'water';
+  drawSprite(ctx, name, animFrame(name, t + hash2(x, y, 9) * 3), x * TILE, y * TILE);
+  if (!isW(x, y - 1)) drawSprite(ctx, 'water_edge_n', 0, x * TILE, y * TILE);
+  if (!isW(x, y + 1)) drawSprite(ctx, 'water_edge_s', 0, x * TILE, y * TILE);
+  if (!isW(x - 1, y)) drawSprite(ctx, 'water_edge_w', 0, x * TILE, y * TILE);
+  if (!isW(x + 1, y)) drawSprite(ctx, 'water_edge_e', 0, x * TILE, y * TILE);
+  if (!G.offline && Math.random() < 0.0005) emit({ x: x * TILE + 3 + Math.random() * 10, y: y * TILE + 3 + Math.random() * 10, vy: -2, life: 0.7, sprite: 'fx_sparkle', frameRate: 6, fade: false });
+}
+
 function groundSprite(i, x, y) {
   const g = G.state.map.ground[i];
   if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}`; }
@@ -70,6 +83,7 @@ export function renderWorld(t) {
   // ground
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const i = y * st.map.w + x;
+    if (st.map.ground[i] === 'w') { drawWater(i, x, y, t); continue; }
     drawSprite(ctx, groundSprite(i, x, y), 0, x * TILE, y * TILE);
     const ov = overlaySprite(st.map.ground[i]);
     if (ov) drawSprite(ctx, ov, 0, x * TILE, y * TILE);

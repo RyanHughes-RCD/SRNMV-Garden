@@ -57,9 +57,11 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 ## How to play (couch version)
 
 1. **Clear the land.** Hold **A** on twigs, rocks, stumps and bushes, or press **Y** for Plan mode, pick *Clear* and mark a whole area for the cats.
+   - **The land:** your clearing sits in the woods with a lake along the bottom of the map and a river running down past its left side. Water can't be walked on, built on or planted.
    - **Grow the clearing.** You start in a small clearing deep in the woods. Hold **A** on a tree at the edge to chop it, or use Plan mode's *Chop trees* tab to mark a whole stretch. Each tree gives wood and leaves a stump to clear. Cats can only reach trees on the clearing's edge, so they work outward row by row. The outermost woods always stay.
 2. **Make a plot.** In Plan mode switch to *New plot* (LB/RB), press **A** on one corner and **A** on the other. The cats clear and till it.
 3. **Plant.** Each plot grows the seed chosen for it. New plots start with whatever seed you're holding (your mystery seeds at first). Cats plant, and you can too (hold **A** on tilled soil).
+   - **Growing takes a while:** a crop takes about **6 hours (commons) to 10 hours (mysticals)** to fully grow while it's kept watered, which the cats mostly handle. Left dry, it grows noticeably slower. These times are `growMinutes` in `data/crops.json`.
 4. **Wait for the moment.** When something grows, the game chimes: *"The garden grew!"*. Unknown plants show as **???** with a hint at each stage. Guess what they are!
 5. **Harvest.** Only you can do this. Harvesting reveals the crop, adds it to the Almanac, and gives back its seeds (usually 1, sometimes 2). The cats replant the plot automatically.
 6. **Sell and buy.** Drop crops in the **shipping crate** for coins. The **seed board** sells mystery packs by rarity: Common, Uncommon, Rare, Legendary and Mystical.

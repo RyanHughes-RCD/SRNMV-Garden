@@ -64,6 +64,7 @@ export function placeProblem(id, anchor) {
     if (t < 0) return 'Out of bounds';
     const g = ground(t), o = obj(t);
     if (g === 'f') return 'Too deep in the forest';
+    if (g === 'w') return "That's water";
     if (o) return 'Something is already there';
     if (g === 't') return 'Not on tilled soil';
     if (d.ground) { if (g === id) return 'Already there'; continue; }

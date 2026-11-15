@@ -13,6 +13,7 @@ export const obj = i => G.state.map.obj[i];
 export const tileAtPx = (px, py) => ({ x: Math.floor(px / TILE), y: Math.floor(py / TILE) });
 export const tileCenter = i => ({ x: tx(i) * TILE + 8, y: ty(i) * TILE + 8 });
 
+export const isWater = i => G.state.map.ground[i] === 'w';
 export function debrisAt(i) { const o = obj(i); return o && o.startsWith('d:') ? o.slice(2) : null; }
 // A forest tile that can be chopped down (everything except the permanent outer woods).
 export function choppable(i) {
@@ -29,7 +30,8 @@ export function decorAt(i) {
 
 export function blocks(i) {
   if (i < 0 || i >= G.state.map.ground.length) return true;
-  if (G.state.map.ground[i] === 'f') return true;
+  const gr = G.state.map.ground[i];
+  if (gr === 'f' || gr === 'w') return true;
   const o = G.state.map.obj[i];
   if (!o) return false;
   if (o.startsWith('d:')) return !!DATA.debris[o.slice(2)]?.blocks;
