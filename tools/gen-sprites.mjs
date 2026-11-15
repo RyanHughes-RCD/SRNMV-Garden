@@ -642,9 +642,9 @@ for (const [r, band] of Object.entries(RARITY_COL)) {
   add('fx_dirt', 'fx', dirt);
   const bf = (a, b) => [0, 1].map(f => {
     const g = new G(8, 8);
-    if (f === 0) g.rect(1, 1, 2, 3, a).rect(5, 1, 2, 3, a).rect(1, 4, 2, 2, b).rect(5, 4, 2, 2, b);
-    else g.rect(2, 2, 1, 3, a).rect(5, 2, 1, 3, a).set(2, 5, b).set(5, 5, b);
-    g.line(4, 1, 4, 5, C.out).set(3, 0, C.out).set(5, 0, C.out);
+    if (f === 0) { g.ellipse(2, 2.5, 2, 2, a).ellipse(6, 2.5, 2, 2, a).ellipse(2.5, 5.5, 1.5, 1.5, b).ellipse(5.5, 5.5, 1.5, 1.5, b); }
+    else { g.ellipse(2.5, 3, 1.3, 2, a).ellipse(5.5, 3, 1.3, 2, a).set(3, 5, b).set(5, 5, b); }
+    g.line(4, 2, 4, 6, C.out).set(3, 1, C.out).set(5, 1, C.out);
     return g;
   });
   add('fx_butterfly_a', 'fx', bf(C.pink, C.ppink), 8);

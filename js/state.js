@@ -103,7 +103,7 @@ export function serialize() {
   return JSON.stringify(s);
 }
 export function saveGame() {
-  if (!G.state || G.mode === 'boot' || G.offline) return false;
+  if (!G.state || G.noSave || G.mode === 'boot' || G.offline) return false;
   try { localStorage.setItem(SAVE_KEY, serialize()); return true; } catch (e) { console.warn('save failed', e); return false; }
 }
 export function migrate(s) {

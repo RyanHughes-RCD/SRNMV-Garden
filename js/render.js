@@ -136,7 +136,7 @@ function drawCabin(t) {
   const cb = G.state.cabin;
   const sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   const sw = cabinSwap();
-  drawSprite(ctx, 'cabin', 0, sx, sy, sw);
+  drawSprite(ctx, 'cabin', 0, sx, sy, { swap: sw.swap, swapKey: sw.key });
   drawSprite(ctx, `cabin_door_${cb.door}`, 0, sx + 19, sy + 30);
   if (cb.windowBoxes) { drawSprite(ctx, 'cabin_windowbox', 0, sx + 5, sy + 37); drawSprite(ctx, 'cabin_windowbox', 0, sx + 32, sy + 37); }
   // chimney smoke (evening, night, early morning)
