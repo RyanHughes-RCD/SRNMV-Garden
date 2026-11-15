@@ -1,3 +1,5 @@
+@font-face { font-family: 'Pixeloid Sans'; src: url('../fonts/PixeloidSans.ttf') format('truetype'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Pixeloid Sans'; src: url('../fonts/PixeloidSans-Bold.ttf') format('truetype'); font-weight: 700; font-display: block; }
 :root {
   --ink: #fffaf0; --muted: #dcd6cf; --panel: rgba(30, 22, 38, 0.88); --edge: #8a5a3b; --edge2: #e0b98a;
   --hi: #f7cd5d; --good: #8cc65a; --bad: #e5735a; --blue: #7fb3d5;
@@ -6,11 +8,11 @@
 * { box-sizing: border-box; }
 html { font-size: clamp(13px, 2.15vh, 48px); }
 html, body { margin: 0; height: 100%; background: #1a1423; color: var(--ink); overflow: hidden; }
-body { font-family: 'Pixelify Sans', ui-monospace, 'Courier New', monospace; line-height: 1.25; -webkit-font-smoothing: antialiased; user-select: none; }
+body { font-family: 'Pixeloid Sans', ui-monospace, 'Courier New', monospace; line-height: 1.25; -webkit-font-smoothing: antialiased; user-select: none; }
 #game { position: fixed; inset: 0; display: grid; place-items: center; }
 #screen { image-rendering: pixelated; image-rendering: crisp-edges; display: block; }
 #ui { position: fixed; inset: 0; pointer-events: none; }
-b { color: var(--hi); font-weight: 600; }
+b { color: var(--hi); font-weight: 700; }
 small { display: block; color: var(--muted); font-size: 0.78em; }
 .muted { color: var(--muted); }
 
@@ -24,7 +26,7 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 .ico.portrait.tall { width: 1.6em; height: 2.4em; }
 
 /* button glyphs */
-.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35em; height: 1.35em; padding: 0 0.25em; border-radius: 0.7em; font-size: 0.8em; font-weight: 600; margin: 0 0.15em; background: #4d4a52; color: #fff; border: 0.1em solid rgba(0,0,0,0.4); vertical-align: 0.08em; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35em; height: 1.35em; padding: 0 0.25em; border-radius: 0.7em; font-size: 0.8em; font-weight: 700; margin: 0 0.15em; background: #4d4a52; color: #fff; border: 0.1em solid rgba(0,0,0,0.4); vertical-align: 0.08em; }
 .btn.a { background: #5d9b4f; } .btn.b { background: #b8434a; } .btn.x { background: #4a6fa5; } .btn.y { background: #c79a2c; }
 .btn.key { border-radius: 0.25em; background: #f6e7c8; color: #3b2a3a; }
 

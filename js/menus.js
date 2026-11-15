@@ -33,7 +33,7 @@ export function pauseMenu() {
       { label: 'Sell crops', icon: 'crate', onSelect: sellMenu },
       { label: 'Build & decorate', icon: 'decor_lantern', onSelect: buildMenu },
       { label: 'Cabin', icon: 'cabin_door_0', onSelect: cabinMenu },
-      { label: 'Almanac', icon: 'item_carrot', sub: () => '', right: `${Object.keys(G.state.discovered).length}/${DATA.crops.length}`, onSelect: almanacMenu },
+      { label: 'Almanac', icon: 'item_carrot', right: `${Object.keys(G.state.discovered).length}/${DATA.crops.length}`, onSelect: almanacMenu },
       { label: 'Cats', iconHTML: catPortrait(DATA.catsConfig.cats[0] || {}), onSelect: catsMenu },
       { label: `Switch player`, iconHTML: playerPortrait(pl[(G.state.activePlayer + 1) % pl.length]), sub: `Now playing: ${esc(playerName())}`, onSelect: () => { closeAllMenus(); switchPlayer(); } },
       { label: 'Settings', icon: 'tool_hand', onSelect: settingsMenu },

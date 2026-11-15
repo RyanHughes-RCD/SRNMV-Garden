@@ -1,9 +1,11 @@
+@font-face { font-family: 'Pixeloid Sans'; src: url('../fonts/PixeloidSans.ttf') format('truetype'); font-weight: 400; font-display: block; }
+@font-face { font-family: 'Pixeloid Sans'; src: url('../fonts/PixeloidSans-Bold.ttf') format('truetype'); font-weight: 700; font-display: block; }
 :root {
   --bg: #1f1828; --bg2: #2a2134; --bg3: #352a42; --ink: #fffaf0; --muted: #b9adc0; --edge: #4a3c58;
   --hi: #f7cd5d; --good: #8cc65a; --bad: #e5735a; --accent: #e0b98a;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 15px/1.35 'Pixelify Sans', system-ui, sans-serif; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font: 15px/1.35 'Pixeloid Sans', system-ui, sans-serif; }
 button, input, select, textarea { font: inherit; color: var(--ink); }
 button { background: var(--bg3); border: 1px solid var(--edge); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
 button:hover { border-color: var(--accent); }

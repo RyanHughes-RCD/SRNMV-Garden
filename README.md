@@ -143,10 +143,16 @@ The placeholder art comes from `tools/gen-sprites.mjs` (`node tools/gen-sprites.
   node tools/soak.cjs http://localhost:8000/ 4
   ```
 
+## Credits
+
+The font is **Pixeloid Sans** by GGBotNet (https://ggbot.net/fonts/), used under the SIL Open Font License 1.1. The licence is in `fonts/Pixeloid-OFL.txt`.
+
 ## Project layout
 
 ```
 index.html, workshop.html    the game and the editor
+fonts/                       Pixeloid Sans (OFL)
+art/                         source character sheets
 css/                         styles
 js/                          game modules (main.js is the entry point)
 data/                        all game data (JSON)
