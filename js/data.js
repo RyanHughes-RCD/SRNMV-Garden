@@ -19,7 +19,7 @@ export async function loadData(base = '') {
 export function mergeSprites(base, ov) {
   const out = { ...base, palette: [...base.palette], swaps: { ...base.swaps }, sprites: { ...base.sprites } };
   if (ov) {
-    if (Array.isArray(ov.palette) && ov.palette.length === base.palette.length) out.palette = [...ov.palette];
+    if (Array.isArray(ov.palette) && ov.palette.length >= base.palette.length) out.palette = [...ov.palette];
     if (ov.swaps) Object.assign(out.swaps, ov.swaps);
     if (ov.sprites) for (const [k, v] of Object.entries(ov.sprites)) out.sprites[k] = v;
     if (ov.deleted) for (const k of ov.deleted) delete out.sprites[k];

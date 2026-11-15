@@ -105,7 +105,13 @@ All costs and effects are in `data/decor.json`. Regrowth, mail and wishing-well 
 Open `workshop.html` on the same site (*Settings → Sprite & Cat Workshop* in game, or the URL directly). Use a mouse there.
 
 - **Sprites:** every sprite in the game is editable. Each debris type has five looks (`debris_rock`, `debris_rock_1` ... `debris_rock_4`), and the game picks one per tile for variety. Use pencil, fill, line, rectangle, mirror, onion-skin and animation frames, with a live preview at TV scale.
-- **Palette:** the whole game shares one 32-colour palette. Edit a colour and everything updates.
+- **Select tool (S):** drag a box to select a region. While it's selected:
+  - **Flip H / Flip V** flip just that region. Tick *All frames* to do it on every frame, e.g. to mirror only the legs on a walk cycle.
+  - Drag inside it to move those pixels, or nudge with Shift+arrows.
+  - Ctrl+C / Ctrl+V copy and paste, also across frames and sprites. Delete clears it, and Esc deselects.
+  - Drawing, fill and *Mirror* only affect pixels inside the selection, and Mirror reflects across the selection's middle.
+- **Canvas size…:** set a new width and height (up to 128) and choose which edge stays pinned. *Bottom* keeps a character's feet in place, and the game keeps them standing on the ground.
+- **Palette:** the shared palette starts with 32 colours. Edit a colour and everything updates. **+ Add colour** adds a new one (up to 62). Imported sprites have their own colours, and for those the new colour only belongs to that sprite.
 - **Cats:** set name, coat colours, a personality blurb, per-job **speed** and **preference**, traits (stamina, naps, curiosity, zoomies, how much they love you, early bird or night owl) and weaknesses (distractible, hates water, refuses a job). *Simulate a day* shows how a cat would spend 24 hours.
 - **Players:** set both names and outfit colours, and edit their sprites.
 

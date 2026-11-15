@@ -120,3 +120,8 @@ main { height: calc(100vh - 52px); }
   .browser, .side, .list { width: 100%; border: 0; }
   .thumbs { max-height: 300px; }
 }
+
+.resize-panel { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--bg2); border: 1px solid var(--edge); border-radius: 8px; padding: 8px 10px; margin-bottom: 8px; }
+.resize-panel[hidden] { display: none; }
+#btn-add-colour { margin-top: 8px; }
+#edit-canvas.select-tool { cursor: cell; }

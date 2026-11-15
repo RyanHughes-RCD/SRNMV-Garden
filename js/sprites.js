@@ -1,7 +1,8 @@
 // Turns palette-indexed sprite data into cached canvases.
 import { DATA } from './data.js';
 
-const CH = '0123456789abcdefghijklmnopqrstuv';
+// palette index characters: up to 62 colours per palette ('.' = transparent)
+const CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const cache = new Map();
 const urlCache = new Map();
 let palRGB = null;

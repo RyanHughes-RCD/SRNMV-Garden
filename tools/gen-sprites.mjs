@@ -23,7 +23,8 @@ const C = {
   pblue: 16, dred: 17, red: 18, coral: 19, orange: 20, yellow: 21, pyellow: 22, purple: 23,
   violet: 24, lav: 25, pink: 26, ppink: 27, dgray: 28, gray: 29, lgray: 30, vlgray: 31,
 };
-const CH = '0123456789abcdefghijklmnopqrstuv';
+// palette index characters: up to 62 colours per palette ('.' = transparent)
+const CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
 function rng(seed) {
   let a = seed >>> 0;

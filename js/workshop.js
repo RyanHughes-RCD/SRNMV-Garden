@@ -4,13 +4,15 @@ import { DATA, loadData, OVERRIDE_KEYS, writeLS } from './data.js';
 import { frameCanvas, resetSpriteCache, slotSwap, optionSwap, hexToRgb } from './sprites.js';
 import * as brain from './catbrain.js';
 
-const CH = '0123456789abcdefghijklmnopqrstuv';
+// palette index characters: up to 62 colours per palette ('.' = transparent)
+const CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const clone = o => JSON.parse(JSON.stringify(o));
 
 let BASE, SPR, CATS, PLAYERS;
 const W = {
+  sel: null, float: null, clip: null, // selection {x,y,w,h}, pixels being moved, copied pixels
   tab: 'sprites', name: null, frame: 0, tool: 'pencil', left: '0', right: '.', zoom: 16,
   mirror: false, onion: false, grid: true, history: {}, cat: 0, swap: {}, filter: { q: '', cat: 'all', changed: false },
 };
@@ -137,8 +139,13 @@ function initSprites() {
   $('btn-undo').onclick = undo; $('btn-redo').onclick = redo;
   $('btn-zoom-in').onclick = () => setZoom(W.zoom + (W.zoom >= 16 ? 4 : 2));
   $('btn-zoom-out').onclick = () => setZoom(W.zoom - (W.zoom > 16 ? 4 : 2));
-  $('btn-flip').onclick = () => { pushUndo(); const g = gridOf(def(), W.frame).map(r => r.reverse()); writeGrid(g); committed(); };
-  $('btn-shift').onclick = () => toast('Hold Shift and press the arrow keys to nudge the frame');
+  $('btn-flip').onclick = () => flip(true);
+  $('btn-flip-v').onclick = () => flip(false);
+  $('btn-shift').onclick = () => toast('Hold Shift and press the arrow keys to nudge the selection (or the whole frame)');
+  $('btn-resize').onclick = () => { const p = $('resize-panel'); p.hidden = !p.hidden; $('rs-w').value = def().w; $('rs-h').value = def().h; };
+  $('rs-cancel').onclick = () => { $('resize-panel').hidden = true; };
+  $('rs-apply').onclick = () => { const [ax, ay] = $('rs-anchor').value.split(',').map(Number); resizeSprite(+$('rs-w').value, +$('rs-h').value, ax, ay); $('resize-panel').hidden = true; };
+  $('btn-add-colour').onclick = addColour;
   $('fps').onchange = e => { pushUndo(); ensureOwn(); def().fps = Math.max(0, Math.min(30, +e.target.value || 0)); committed(); };
   $('btn-reset-sprite').onclick = resetSprite;
   $('btn-frame-add').onclick = () => frameOp('add');
@@ -155,7 +162,7 @@ function buildCategories() {
   $('category').innerHTML = `<option value="all">All categories</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join('');
   $('category').value = cats.includes(W.filter.cat) ? W.filter.cat : 'all';
 }
-function setTool(t) { W.tool = t; for (const b of $('toolbar').querySelectorAll('button[data-tool]')) b.classList.toggle('on', b.dataset.tool === t); }
+function setTool(t) { if (t !== 'select') dropFloat(); W.tool = t; $('edit-canvas').classList.toggle('select-tool', t === 'select'); for (const b of $('toolbar').querySelectorAll('button[data-tool]')) b.classList.toggle('on', b.dataset.tool === t); }
 function setZoom(z) { W.zoom = Math.max(4, Math.min(40, z)); $('zoom-label').textContent = `${W.zoom}×`; drawEditor(); }
 
 function renderThumbs() {
@@ -185,6 +192,7 @@ function refreshThumb(n) {
 }
 function selectSprite(n) {
   if (!SPR.sprites[n]) return;
+  dropFloat(); W.sel = null; $('resize-panel').hidden = true;
   W.name = n; W.frame = 0;
   for (const el of $('thumbs').querySelectorAll('.thumb')) el.classList.toggle('sel', el.dataset.name === n);
   const d = def();
@@ -212,11 +220,11 @@ function colorOf(ch, swap, pal = activePal()) {
   if (swap && swap[i] && pal === SPR.palette) return swap[i];
   return pal[i];
 }
-function paintGrid(ctx, g, s, swap, alpha = 1) {
+function paintGrid(ctx, g, s, swap, alpha = 1, pal = activePal(), ox = 0, oy = 0) {
   ctx.globalAlpha = alpha;
   for (let y = 0; y < g.length; y++) for (let x = 0; x < g[y].length; x++) {
-    const c = colorOf(g[y][x], swap); if (!c) continue;
-    ctx.fillStyle = c; ctx.fillRect(x * s, y * s, s, s);
+    const c = colorOf(g[y][x], swap, pal); if (!c) continue;
+    ctx.fillStyle = c; ctx.fillRect((x + ox) * s, (y + oy) * s, s, s);
   }
   ctx.globalAlpha = 1;
 }
@@ -231,6 +239,7 @@ function initCanvas() {
     const p = cell(e), ch = e.button === 2 ? W.right : W.left;
     if (!p) return;
     if (e.altKey || W.tool === 'picker') { pick(p, e.button === 2); return; }
+    if (W.tool === 'select') { selectDown(p); return; }
     pushUndo();
     const g = gridOf(def(), W.frame);
     drag = { g, ch: W.tool === 'eraser' ? '.' : ch, start: p, last: p };
@@ -239,11 +248,13 @@ function initCanvas() {
   });
   c.addEventListener('pointermove', e => {
     const p = cell(e);
+    if (W.tool === 'select' && (selDrag || W.float?.moving)) { if (p) selectMove(p); return; }
     if (!drag || !p) { hover = p; drawEditor(); return; }
     if (W.tool === 'pencil' || W.tool === 'eraser') { line(drag.last, p, (x, y) => plot(drag.g, x, y, drag.ch)); drag.last = p; drawEditor(drag.g); }
     if (W.tool === 'line' || W.tool === 'rect') { preview = drag.g.map(r => [...r]); shape(preview, drag.start, p, drag.ch); drawEditor(preview); }
   });
   const up = e => {
+    if (W.tool === 'select') { selectUp(cell(e)); return; }
     if (!drag) return;
     const p = cell(e) || drag.last;
     if (W.tool === 'line' || W.tool === 'rect') shape(drag.g, drag.start, p, drag.ch);
@@ -260,9 +271,15 @@ function cell(e) {
   const x = Math.floor((e.clientX - r.left) / r.width * d.w), y = Math.floor((e.clientY - r.top) / r.height * d.h);
   return x >= 0 && y >= 0 && x < d.w && y < d.h ? { x, y } : null;
 }
+// Inside the selection (if there is one), pixels outside it are protected.
+const inSel = (x, y) => !W.sel || (x >= W.sel.x && y >= W.sel.y && x < W.sel.x + W.sel.w && y < W.sel.y + W.sel.h);
 function plot(g, x, y, ch) {
-  if (g[y] && x >= 0 && x < g[y].length) g[y][x] = ch;
-  if (W.mirror) { const mx = g[0].length - 1 - x; if (g[y] && mx >= 0) g[y][mx] = ch; }
+  if (g[y] && x >= 0 && x < g[y].length && inSel(x, y)) g[y][x] = ch;
+  if (W.mirror) {
+    // mirror across the middle of the selection, or of the whole sprite
+    const mx = W.sel ? W.sel.x * 2 + W.sel.w - 1 - x : g[0].length - 1 - x;
+    if (g[y] && mx >= 0 && mx < g[y].length && inSel(mx, y)) g[y][mx] = ch;
+  }
 }
 function line(a, b, fn) {
   let x0 = a.x, y0 = a.y; const x1 = b.x, y1 = b.y;
@@ -279,7 +296,7 @@ function flood(g, x, y, ch) {
   const stack = [[x, y]];
   while (stack.length) {
     const [cx, cy] = stack.pop();
-    if (cy < 0 || cy >= g.length || cx < 0 || cx >= g[0].length || g[cy][cx] !== target) continue;
+    if (cy < 0 || cy >= g.length || cx < 0 || cx >= g[0].length || g[cy][cx] !== target || !inSel(cx, cy)) continue;
     g[cy][cx] = ch;
     stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
   }
@@ -305,7 +322,15 @@ function drawEditor(g) {
     ctx.stroke();
     if (d.w > 16 || d.h > 16) { ctx.strokeStyle = 'rgba(247,205,93,0.25)'; ctx.beginPath(); for (let x = 16; x < d.w; x += 16) { ctx.moveTo(x * s + 0.5, 0); ctx.lineTo(x * s + 0.5, d.h * s); } for (let y = 16; y < d.h; y += 16) { ctx.moveTo(0, y * s + 0.5); ctx.lineTo(d.w * s, y * s + 0.5); } ctx.stroke(); }
   }
-  if (hover && !drag) { ctx.strokeStyle = 'rgba(247,205,93,0.9)'; ctx.strokeRect(hover.x * s + 0.5, hover.y * s + 0.5, s - 1, s - 1); if (W.mirror) ctx.strokeRect((d.w - 1 - hover.x) * s + 0.5, hover.y * s + 0.5, s - 1, s - 1); }
+  if (W.float) paintGrid(ctx, W.float.px.map(r => r.map(c => c)), s, null, 1, activePal(), W.float.x, W.float.y);
+  if (W.sel) {
+    const r = W.float ? { x: W.float.x, y: W.float.y, w: W.sel.w, h: W.sel.h } : W.sel;
+    ctx.save(); ctx.lineWidth = 2; ctx.setLineDash([6, 4]); ctx.lineDashOffset = -(performance.now() / 60) % 10;
+    ctx.strokeStyle = '#fffaf0'; ctx.strokeRect(r.x * s + 1, r.y * s + 1, r.w * s - 2, r.h * s - 2);
+    ctx.strokeStyle = '#1a1423'; ctx.lineDashOffset += 5; ctx.strokeRect(r.x * s + 1, r.y * s + 1, r.w * s - 2, r.h * s - 2);
+    ctx.restore();
+  }
+  if (hover && !drag) { ctx.strokeStyle = 'rgba(247,205,93,0.9)'; ctx.strokeRect(hover.x * s + 0.5, hover.y * s + 0.5, s - 1, s - 1); if (W.mirror) { const mx = W.sel ? W.sel.x * 2 + W.sel.w - 1 - hover.x : d.w - 1 - hover.x; ctx.strokeRect(mx * s + 0.5, hover.y * s + 0.5, s - 1, s - 1); } }
 }
 
 /* ---- commit / undo */
@@ -338,6 +363,7 @@ function frameOp(op) {
   committed();
 }
 function nudge(dx, dy) {
+  if (W.sel) { moveSelectionBy(dx, dy); return; }
   const d = def(), g = gridOf(d, W.frame);
   const out = Array.from({ length: d.h }, (_, y) => Array.from({ length: d.w }, (_, x) => g[y - dy]?.[x - dx] ?? '.'));
   pushUndo(); writeGrid(out); committed();
@@ -349,9 +375,127 @@ function renderFrames() {
     paintGrid(c.getContext('2d'), gridOf(d, i), 1, null);
     if (i === W.frame) c.classList.add('sel');
     c.title = `Frame ${i + 1}`;
-    c.onclick = () => { W.frame = i; renderAll(); };
+    c.onclick = () => { dropFloat(); W.frame = i; renderAll(); };
     box.appendChild(c);
   });
+}
+
+/* ---- selection: select, move, flip, copy/paste, delete */
+let selDrag = null;
+function regionOf(g, r) { return Array.from({ length: r.h }, (_, y) => Array.from({ length: r.w }, (_, x) => g[r.y + y]?.[r.x + x] ?? '.')); }
+function stamp(g, px, x0, y0, transparentOnly = false) {
+  px.forEach((row, y) => row.forEach((c, x) => { if (transparentOnly && c === '.') return; if (g[y0 + y] && x0 + x >= 0 && x0 + x < g[0].length) g[y0 + y][x0 + x] = c; }));
+}
+function selectDown(p) {
+  dropFloat();
+  if (W.sel && p.x >= W.sel.x && p.y >= W.sel.y && p.x < W.sel.x + W.sel.w && p.y < W.sel.y + W.sel.h) {
+    // pick up the selected pixels so they can be dragged somewhere else
+    pushUndo();
+    const g = gridOf(def(), W.frame), px = regionOf(g, W.sel);
+    for (let y = 0; y < W.sel.h; y++) for (let x = 0; x < W.sel.w; x++) if (g[W.sel.y + y]) g[W.sel.y + y][W.sel.x + x] = '.';
+    writeGrid(g);
+    W.float = { px, x: W.sel.x, y: W.sel.y, grab: { x: p.x - W.sel.x, y: p.y - W.sel.y }, moving: true };
+    drawEditor(); return;
+  }
+  selDrag = { a: p, b: p };
+  W.sel = { x: p.x, y: p.y, w: 1, h: 1 };
+  drawEditor();
+}
+function selectMove(p) {
+  if (W.float?.moving) { W.float.x = p.x - W.float.grab.x; W.float.y = p.y - W.float.grab.y; drawEditor(); return; }
+  if (selDrag) { selDrag.b = p; const a = selDrag.a; W.sel = { x: Math.min(a.x, p.x), y: Math.min(a.y, p.y), w: Math.abs(a.x - p.x) + 1, h: Math.abs(a.y - p.y) + 1 }; drawEditor(); }
+}
+function selectUp() {
+  if (W.float?.moving) { dropFloat(); return; }
+  if (selDrag && selDrag.a.x === selDrag.b.x && selDrag.a.y === selDrag.b.y) W.sel = null; // a click without dragging clears it
+  selDrag = null; drawEditor();
+}
+// Put floating (moved or pasted) pixels down where they are.
+function dropFloat() {
+  if (!W.float || !def()) { W.float = null; return; }
+  const f = W.float; W.float = null;
+  const g = gridOf(def(), W.frame);
+  stamp(g, f.px, f.x, f.y, true);
+  writeGrid(g);
+  W.sel = clampRect({ x: f.x, y: f.y, w: f.px[0].length, h: f.px.length });
+  committed();
+}
+function clampRect(r) {
+  const d = def(), x0 = Math.max(0, r.x), y0 = Math.max(0, r.y), x1 = Math.min(d.w, r.x + r.w), y1 = Math.min(d.h, r.y + r.h);
+  return x1 > x0 && y1 > y0 ? { x: x0, y: y0, w: x1 - x0, h: y1 - y0 } : null;
+}
+function moveSelectionBy(dx, dy) {
+  if (!W.float) { // lift the pixels
+    pushUndo();
+    const g = gridOf(def(), W.frame), px = regionOf(g, W.sel);
+    for (let y = 0; y < W.sel.h; y++) for (let x = 0; x < W.sel.w; x++) if (g[W.sel.y + y]) g[W.sel.y + y][W.sel.x + x] = '.';
+    writeGrid(g);
+    W.float = { px, x: W.sel.x, y: W.sel.y };
+  }
+  W.float.x += dx; W.float.y += dy;
+  W.sel = { ...W.sel, x: W.float.x, y: W.float.y };
+  drawEditor();
+  clearTimeout(moveSelectionBy._t); moveSelectionBy._t = setTimeout(dropFloat, 700);
+}
+const framesToEdit = () => ($('all-frames').checked ? def().frames.map((_, i) => i) : [W.frame]);
+function flip(horizontal) {
+  dropFloat(); pushUndo(); ensureOwn();
+  const d = def(), r = W.sel || { x: 0, y: 0, w: d.w, h: d.h };
+  for (const f of framesToEdit()) {
+    const g = gridOf(d, f), px = regionOf(g, r);
+    const out = horizontal ? px.map(row => [...row].reverse()) : [...px].reverse();
+    stamp(g, out, r.x, r.y);
+    d.frames[f] = g.map(row => row.join(''));
+  }
+  committed();
+}
+function clearSel() {
+  dropFloat(); pushUndo(); ensureOwn();
+  const d = def(), r = W.sel;
+  for (const f of framesToEdit()) { const g = gridOf(d, f); for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (g[r.y + y]) g[r.y + y][r.x + x] = '.'; d.frames[f] = g.map(row => row.join('')); }
+  committed();
+}
+function copySel() { dropFloat(); W.clip = { px: regionOf(gridOf(def(), W.frame), W.sel), x: W.sel.x, y: W.sel.y, pal: activePal() === SPR.palette ? null : W.name }; toast('Copied. Switch frame or sprite and press Ctrl+V'); }
+function pasteClip() {
+  if (!W.clip) { toast('Select something and press Ctrl+C first'); return; }
+  dropFloat(); pushUndo();
+  const px = W.clip.px.map(r => [...r]);
+  W.float = { px, x: Math.min(W.clip.x, def().w - 1), y: Math.min(W.clip.y, def().h - 1) };
+  W.sel = { x: W.float.x, y: W.float.y, w: px[0].length, h: px.length };
+  setTool('select'); W.float.moving = false;
+  drawEditor();
+  toast('Pasted. Drag it with Select, or nudge with Shift+arrows. It sets down when you click elsewhere');
+}
+
+/* ---- canvas size */
+function resizeSprite(nw, nh, ax, ay) {
+  nw = Math.max(1, Math.min(128, Math.round(nw) || 1)); nh = Math.max(1, Math.min(128, Math.round(nh) || 1));
+  const d = def();
+  if (nw === d.w && nh === d.h) return;
+  dropFloat(); W.sel = null; pushUndo(); ensureOwn();
+  const dd = def(), dx = Math.round((nw - dd.w) * ax), dy = Math.round((nh - dd.h) * ay);
+  dd.frames = dd.frames.map((_, f) => {
+    const g = gridOf(dd, f);
+    return Array.from({ length: nh }, (_, y) => Array.from({ length: nw }, (_, x) => g[y - dy]?.[x - dx] ?? '.').join(''));
+  });
+  if (dd.ax != null) dd.ax += dx;
+  if (dd.ay != null) dd.ay += dy;
+  dd.w = nw; dd.h = nh;
+  W.zoom = Math.max(6, Math.min(24, Math.floor(420 / Math.max(nw, nh))));
+  committed();
+  toast(`Canvas is now ${nw}×${nh}`);
+}
+
+/* ---- add a colour */
+function addColour() {
+  const own = !!def()?.pal, pal = activePal();
+  if (pal.length >= CH.length) { toast(`A palette can hold up to ${CH.length} colours`); return; }
+  if (!own && !confirm('This sprite uses the shared game palette, so the new colour will be available to every sprite. Add it?')) return;
+  if (own) { ensureOwn(); def().pal.push('#ffffff'); } else SPR.palette.push('#ffffff');
+  const i = activePal().length - 1;
+  W.left = CH[i];
+  updatePalRGB(); resetSpriteCache(); renderPalette(); scheduleSave('sprites');
+  const inp = $('color-input'); inp.dataset.i = i; inp.value = '#ffffff'; inp.click();
 }
 
 /* ---- palette */
@@ -393,15 +537,20 @@ function onKey(e) {
   const k = e.key.toLowerCase();
   if ((e.ctrlKey || e.metaKey) && k === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
   if ((e.ctrlKey || e.metaKey) && k === 'y') { e.preventDefault(); redo(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'c') { if (W.sel) { e.preventDefault(); copySel(); } return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'v') { e.preventDefault(); pasteClip(); return; }
+  if ((e.ctrlKey || e.metaKey) && k === 'a') { e.preventDefault(); dropFloat(); W.sel = { x: 0, y: 0, w: def().w, h: def().h }; setTool('select'); drawEditor(); return; }
+  if (k === 'escape') { dropFloat(); W.sel = null; drawEditor(); return; }
+  if ((k === 'delete' || k === 'backspace') && W.sel) { e.preventDefault(); clearSel(); return; }
   if (e.shiftKey && k.startsWith('arrow')) { e.preventDefault(); nudge(k === 'arrowleft' ? -1 : k === 'arrowright' ? 1 : 0, k === 'arrowup' ? -1 : k === 'arrowdown' ? 1 : 0); return; }
-  const tools = { b: 'pencil', e: 'eraser', g: 'fill', i: 'picker', l: 'line', r: 'rect' };
+  const tools = { b: 'pencil', e: 'eraser', g: 'fill', i: 'picker', l: 'line', r: 'rect', s: 'select' };
   if (tools[k]) setTool(tools[k]);
   if (k === 'm') $('btn-mirror').click();
   if (k === 'o') $('btn-onion').click();
   if (k === '#') $('btn-grid').click();
   if (k === '+' || k === '=') setZoom(W.zoom + 2);
   if (k === '-') setZoom(W.zoom - 2);
-  if (k === '[' || k === ']') { const n = def().frames.length; W.frame = (W.frame + (k === ']' ? 1 : n - 1)) % n; renderAll(); }
+  if (k === '[' || k === ']') { dropFloat(); const n = def().frames.length; W.frame = (W.frame + (k === ']' ? 1 : n - 1)) % n; renderAll(); }
 }
 
 /* ---- previews */
@@ -454,6 +603,7 @@ function animLoop(now) {
   requestAnimationFrame(animLoop);
   animT += (now - lastT) / 1000; lastT = now;
   if (W.tab === 'sprites' && def()) drawSpritePreviews();
+  if (W.tab === 'sprites' && W.sel && !drag && !selDrag && Math.floor(now / 120) !== animLoop._t) { animLoop._t = Math.floor(now / 120); drawEditor(); }
   for (const a of anims) if (a.c.isConnected) a.draw(animT);
 }
 function frameAt(d, t) { return d.fps && d.frames.length > 1 ? Math.floor(t * d.fps) % d.frames.length : W.frame; }

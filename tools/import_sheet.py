@@ -23,7 +23,7 @@ MAP = {
     'sleep':     ([(6, 6, 0), (6, 7, 0)], 1),
     'wave':      ([(0, 5, 0), (1, 5, 0)], 4),
 }
-CH = '0123456789abcdefghijklmnopqrstuv'
+CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 
 def main(path, set_name):
