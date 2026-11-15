@@ -11,7 +11,7 @@ Work in the milestones listed at the end. Commit after each one and keep the gam
 - **Hosting:** static GitHub Pages site served from this repo, with no backend. Prefer vanilla JS (ES modules) + HTML5 Canvas with **no build step**, so the repo root is the site. If you decide a bundler is truly needed, add a GitHub Actions workflow that builds and deploys to Pages. All asset paths must be **relative** because the site lives at `https://<user>.github.io/SRNMV-Garden/`.
 - **Rendering:** Fixed low internal resolution (e.g. 480×270) scaled up by an **integer factor** to fill a 1080p/4K TV, with `image-rendering: pixelated` and no smoothing. Tiles are 16×16. Fullscreen on a button press.
 - **Controller is plug-and-play** through the browser **Gamepad API** (`standard` mapping). It must work with an Xbox controller and a PS4 DualShock 4 (USB or Bluetooth) in Chrome/Edge on Windows **without DS4Windows**. Show a "Press any button to start" screen, because browsers only expose gamepads (and allow audio) after an input. Handle connect and disconnect events, apply a stick dead-zone, and offer a keyboard fallback (WASD/arrows, E/Space, Q, Tab, Esc). Every action must be reachable with the controller. Never require a mouse in-game.
-  - Default mapping: Left stick / D-pad = move & navigate menus · A/✕ = interact/confirm · B/○ = cancel/back · X/□ = cycle tool · Y/△ = open build/designate menu · LB/RB = cycle selected seed · Start/Options = pause menu · Back/Share = toggle HUD.
+  - Default mapping: Left stick / D-pad = move & navigate menus · A/✕ = interact/confirm · B/○ = cancel/back · X/□ = cycle tool · Y/△ = open build/designate menu · LB/RB = cycle selected seed · Start/Options = pause menu · Back/Share = toggle HUD (hold for 1s = switch player).
   - Make the mapping rebindable in settings and save it.
 - **Always-on/TV friendly:**
   - Use the Screen Wake Lock API, and re-request it whenever the page becomes visible again.
@@ -34,7 +34,13 @@ Work in the milestones listed at the end. Commit after each one and keep the gam
 
 ## 3. Player & the architect/builder loop
 
-We control **one character**: the architect. Structure input handling so a **second, drop-in player** (a second controller) could be added later.
+We control **one character**: the architect. There are **two of us, and we pass one controller back and forth**.
+
+- There are two selectable player profiles, **Player 1** and **Player 2**. Their names are editable, and I'll set them.
+- Pick who's playing on the start screen ("Who's playing?"). You can also swap at any time from the pause menu or with a quick shortcut, e.g. holding Back/Share for 1 second.
+- Switching players **only changes the player sprite** (and the name shown on the HUD). The farm, inventory, coins, plots, cats and progress are all **shared**. No separate stats, saves or abilities.
+- Swapping is instant. Show a small poof/sparkle and a "Now playing: <name>" toast. The sprite changes in place, with no teleport and no menu reload.
+- The save remembers which player was active last.
 
 The core idea is **we designate, the cats do the work**. Any task we designate goes on a shared **job queue**. The player can do a job directly, and does it fast (e.g. a few seconds of holding A). The cats pick up queued jobs on their own and do them **much slower**. That makes our input meaningful while the garden still progresses when we're away.
 
@@ -92,7 +98,7 @@ The core idea is **we designate, the cats do the work**. Any task we designate g
   - tiles (grass variants, tilled/watered soil, paths, forest edge)
   - debris
   - cabin and its customization variants
-  - the player (4 directions × walk frames + tool actions)
+  - **two** player characters, one for each of us (4 directions × walk frames + tool actions). Make them visually distinct and keep the same frame list for both, so they're interchangeable.
   - 3 cats (idle, walk 4-dir, work, sleep, zoomies)
   - every crop stage, seed packets, items, UI icons and particles
 - **Sprite overrides:** at runtime, the game loads `sprites.json`, then applies any **overrides saved in `localStorage` by the Workshop**. The Workshop is hosted on the same GitHub Pages origin, so edits show up in the game immediately.
@@ -105,6 +111,7 @@ A separate page in the same repo. It's used with a mouse/keyboard, so controller
 - **Pixel editor:** zoomable grid with pencil, eraser, fill, eyedropper, line, rect, mirror-X, undo/redo, onion-skin for animation frames, add/duplicate/reorder frames, and a live animation preview at game speed and scale.
 - **Palette editor:** edit the master palette, with live recolor across all sprites. Support per-sprite palette swaps (useful for cat coats and cabin colors).
 - **In-context preview:** shows the sprite on a grass tile next to other sprites at TV scale, to check cohesion. Crop pages show all 4 stages side by side.
+- **Player editor:** for each of the two player profiles, set the name and edit the sprite set (with palette swaps for hair, skin and outfit). Show the two players side by side, both animated.
 - **Cat editor:** name, coat (sprite/palette swap), personality blurb, and per-job sliders for speed and affinity. Also trait sliders (energy, nap frequency, curiosity, zoomies, loves-player) and weakness toggles. A small "simulate a day" preview shows how the cat would split its time across jobs.
 - **Save/export:**
   - Save to `localStorage`, which the game picks up live.
@@ -121,7 +128,7 @@ A separate page in the same repo. It's used with a mouse/keyboard, so controller
 
 ## 10. Milestones (commit after each)
 
-1. **Foundation:** project skeleton, render loop, integer scaling, input (gamepad + keyboard) with a controller test overlay, tilemap, camera, player movement/collision, save/load, the Pages deploy, and README instructions (how to enable Pages and connect a controller).
+1. **Foundation:** project skeleton, render loop, integer scaling, input (gamepad + keyboard) with a controller test overlay, tilemap, camera, player movement/collision, two-player profile select & swap, save/load, the Pages deploy, and README instructions (how to enable Pages and connect a controller).
 2. **Clearing & jobs:** debris, designation, the job queue, player work, and materials.
 3. **Cats:** data-driven cats, AI state machine, pathfinding, job selection by affinity, idle behaviors, and petting.
 4. **Farming:** plots, tilling, planting, watering, growth stages, harvest, seed returns, auto-replant, the shipping crate, coins, the shop with hidden seed packs, discovery moments, and the Almanac.
