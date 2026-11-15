@@ -14,6 +14,7 @@ export const tileAtPx = (px, py) => ({ x: Math.floor(px / TILE), y: Math.floor(p
 export const tileCenter = i => ({ x: tx(i) * TILE + 8, y: ty(i) * TILE + 8 });
 
 export const isWater = i => G.state.map.ground[i] === 'w';
+export function shellAt(i) { const o = obj(i); return o && o.startsWith('h:') ? o.slice(2) : null; }
 export function debrisAt(i) { const o = obj(i); return o && o.startsWith('d:') ? o.slice(2) : null; }
 // A forest tile that can be chopped down (everything except the permanent outer woods).
 export function choppable(i) {
@@ -31,9 +32,11 @@ export function decorAt(i) {
 export function blocks(i) {
   if (i < 0 || i >= G.state.map.ground.length) return true;
   const gr = G.state.map.ground[i];
-  if (gr === 'f' || gr === 'w') return true;
   const o = G.state.map.obj[i];
+  if (gr === 'f') return true;
+  if (gr === 'w') return !(o && (o.startsWith('x:') || o.startsWith('p:')) && DATA.decor[decorAt(i)]?.onWater); // docks are walkable
   if (!o) return false;
+  if (o.startsWith('h:')) return false; // a seashell on the sand
   if (o.startsWith('d:')) return !!DATA.debris[o.slice(2)]?.blocks;
   if (o.startsWith('x:') || o.startsWith('p:')) { const d = DATA.decor[decorAt(i)]; return !!d && !d.ground && d.blocks !== false; }
   return true; // cabin, crate, shop

@@ -671,6 +671,24 @@ for (const [type, fn] of Object.entries(debrisArt)) {
   const plate = new G(12, 5); plate.rect(0, 0, 12, 5, C.cream).rect(0, 0, 12, 1, C.white).line(2, 2, 9, 2, C.brown).set(5, 3, C.brown);
   add('cathouse_plate', 'decor', plate.outline());
 
+  // dock: 3 tiles wide, 5 long, drawn flat on the water (you can walk on it)
+  const dock = new G(48, 80);
+  dock.rect(4, 0, 40, 80, C.tan);
+  for (let y = 0; y < 80; y += 5) { dock.line(4, y, 43, y, C.brown); dock.line(4, y + 1, 43, y + 1, C.ltan); }
+  for (let y = 2; y < 80; y += 10) dock.pts([[7, y], [24, y + 2], [40, y]], C.dbrown);
+  for (let y = 12; y < 80; y += 16) { dock.rect(1, y, 4, 6, C.dbrown).rect(1, y, 4, 1, C.brown); dock.rect(43, y, 4, 6, C.dbrown).rect(43, y, 4, 1, C.brown); }
+  dock.rect(3, 72, 6, 7, C.brown).rect(3, 72, 6, 2, C.tan).rect(39, 72, 6, 7, C.brown).rect(39, 72, 6, 2, C.tan);
+  dock.line(9, 74, 14, 77, C.cream).line(14, 77, 18, 75, C.cream).ellipse(34, 64, 3, 2, C.cream).set(34, 64, C.tan);
+  add('decor_dock', 'decor', dock.outline());
+
+  // seashells (also used as their inventory icons)
+  const shell = (draw) => { const g = new G(16, 16); draw(g); return g.outline(); };
+  add('shell_scallop', 'items', shell(g => { for (let k = 0; k < 5; k++) { const a = Math.PI * (0.15 + k * 0.175); g.line(8, 13, 8 + Math.cos(a) * 6, 13 - Math.sin(a) * 7, k % 2 ? C.pink : C.ppink); } g.ellipse(8, 8, 5.5, 4.5, C.ppink); for (let k = 0; k < 5; k++) { const a = Math.PI * (0.15 + k * 0.175); g.line(8, 12, 8 + Math.cos(a) * 5, 12 - Math.sin(a) * 6, C.pink); } g.rect(6, 12, 5, 2, C.pink); }));
+  add('shell_conch', 'items', shell(g => { g.ellipse(7, 9, 4.5, 3.5, C.cream).ellipse(11, 8, 3, 2.2, C.ltan); for (let k = 0; k < 3; k++) g.ellipse(4 - k, 9 - k * 0.3, 1.6 - k * 0.3, 1.4, C.ltan); g.ellipse(9, 10, 2.5, 1.2, C.ppink).line(5, 7, 10, 7, C.tan).line(4, 10, 8, 11, C.tan).set(13, 7, C.orange); }));
+  add('shell_cowrie', 'items', shell(g => { g.ellipse(8, 9, 5, 3.6, C.tan).ellipse(8, 8.5, 4, 2.6, C.ltan).pts([[6, 7], [9, 7], [11, 9], [5, 9], [8, 10]], C.brown).line(5, 11, 11, 11, C.cream).pts([[6, 12], [8, 12], [10, 12]], C.white); }));
+  add('shell_moonsnail', 'items', shell(g => { g.ellipse(8, 9, 5, 4.5, C.lav).ellipse(8.5, 8.5, 3.6, 3.2, C.white).ellipse(9, 8, 2.2, 2, C.lav).ellipse(9.3, 7.8, 1, 1, C.violet).line(4, 11, 7, 13, C.violet); }));
+  add('shell_sanddollar', 'items', shell(g => { g.ellipse(8, 9, 5.5, 5, C.cream).ellipse(8, 9, 4.5, 4, C.vlgray); for (let k = 0; k < 5; k++) { const a = -Math.PI / 2 + k * Math.PI * 2 / 5; g.line(8 + Math.cos(a), 9 + Math.sin(a), 8 + Math.cos(a) * 3, 9 + Math.sin(a) * 3, C.tan); } g.set(8, 9, C.tan); }));
+
   // ambient critter
   const bird = [0, 1].map(f => {
     const g = new G(8, 8);

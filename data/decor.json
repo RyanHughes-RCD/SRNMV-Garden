@@ -94,6 +94,23 @@
    },
    "sprite": "decor_picnic"
   },
+  "dock": {
+   "name": "Dock",
+   "cat": "Paths & floors",
+   "size": [
+    3,
+    5
+   ],
+   "onWater": true,
+   "floor": true,
+   "blocks": false,
+   "cost": {
+    "wood": 60,
+    "stone": 4
+   },
+   "sprite": "decor_dock",
+   "desc": "3 wide × 5 long. Build it from the beach out over the lake, then walk to the end"
+  },
   "fence": {
    "name": "Fence",
    "cat": "Fences & hedges",

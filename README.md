@@ -57,7 +57,7 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 ## How to play (couch version)
 
 1. **Clear the land.** Hold **A** on twigs, rocks, stumps and bushes, or press **Y** for Plan mode, pick *Clear* and mark a whole area for the cats.
-   - **The land:** your clearing sits in the woods with a lake along the bottom of the map (with a small sandy beach on its far shore) and a river running down past its left side. Water can't be walked on, built on or planted.
+   - **The land:** your clearing sits in the woods. Below it is a band of forest, then a sandy beach on the lake, which runs to the bottom of the map. A river runs down past the clearing's left side into the lake. Chop through the trees to reach the beach. Water can't be walked on, built on or planted.
    - **Grow the clearing.** You start in a small clearing deep in the woods. Hold **A** on a tree at the edge to chop it, or use Plan mode's *Chop trees* tab to mark a whole stretch. Each tree gives wood and leaves a stump to clear. Cats can only reach trees on the clearing's edge, so they work outward row by row. The outermost woods always stay.
 2. **Make a plot.** In Plan mode switch to *New plot* (LB/RB), press **A** on one corner and **A** on the other. The cats clear and till it.
 3. **Plant.** Each plot grows the seed chosen for it. New plots start with whatever seed you're holding (your mystery seeds at first). Cats plant, and you can too (hold **A** on tilled soil).
@@ -87,7 +87,10 @@ The game autosaves every 30 seconds. While you're away (tab closed, TV off), it 
 | Lights | Lantern, string lights, campfire (crackles; cats gather there at night) |
 | Cozy | Bench, hammock, signpost (write a name on it), mailbox (letters, sometimes with a gift), wheelbarrow, watering can stand, crate of produce |
 | Resources | **Quarry Rock** grows a new rock beside it every ~25 min, and **Wild Meadow** regrows weeds and bushes every ~20 min. The cats clear them automatically, so stone and fiber never run out |
+| On the water | **Dock** (3 wide, 5 long): build it with its top row on the beach and the rest over the lake, then walk out to the end. Found under *Paths & floors* |
 | Big projects | Greenhouse (crops within 6 tiles grow 25% faster), garden shed (cats work 10% faster) |
+
+**Seashells:** five kinds (scallop, cowrie, conch, moon snail and the rare sand dollar) wash up on the sand next to the water, about one every 20 minutes and up to 4 at a time. Press A to pick one up. The first of each kind gets a "New shell found!" moment, the inventory tracks your collection, and you can sell spares at the shipping crate. Tuning is in `data/shells.json`.
 
 The clearing also slowly grows back a little wild debris (weeds, twigs, the odd bush or rock) on its own.
 

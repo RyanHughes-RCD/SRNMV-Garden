@@ -9,8 +9,8 @@
     "debrisDensity": 0.4,
     "clearRadiusAroundCabin": 2,
     "lake": {
-      "_comment": "A lake fills the bottom of the map; it starts this many rows below the clearing's bottom edge.",
-      "gapBelowClearing": 1,
+      "_comment": "The lake fills the bottom of the map. Between the clearing and the lake: a band of forest (chop through it), then the beach.",
+      "forestBelowClearing": 2,
       "shoreWobble": 1.4
     },
     "river": {
@@ -20,7 +20,7 @@
       "meander": 1.4
     },
     "beach": {
-      "_comment": "A sandy beach along the bottom edge of the map, below the lake.",
+      "_comment": "Sand along the lake's near shore, leading into the water.",
       "minDepth": 2,
       "maxDepth": 3
     }

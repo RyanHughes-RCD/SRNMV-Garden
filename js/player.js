@@ -3,11 +3,11 @@ import { G, TILE, randRange } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
 import { drawSprite, animFrame, slotSwap, hasSprite } from './sprites.js';
-import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj, choppable } from './world.js';
+import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj, choppable, shellAt } from './world.js';
 import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
-import { decorAction } from './decorations.js';
+import { decorAction, gatherShell } from './decorations.js';
 import { emit, poof, burst } from './particles.js';
 import { sfx } from './audio.js';
 
@@ -70,6 +70,8 @@ export function resolveAction(ignoreCats = false) {
     const da = decorAction(t);
     if (da) return da;
   }
+  const sh = shellAt(t);
+  if (sh) return { kind: 'shell', tile: t, label: `Pick up ${DATA.shellById[sh]?.name || 'shell'}` };
   const crop = st.crops[t];
   if (crop && crop.stage >= 3) return { kind: 'harvest', tile: t, crop, label: `Harvest ${farm.cropName(crop.id)}` };
   const d = debrisAt(t);
@@ -125,6 +127,7 @@ export function updatePlayer(dt, handlers) {
       case 'shop': handlers.shop(); return;
       case 'cabin': handlers.cabin(); return;
       case 'decor': act.run(handlers); return;
+      case 'shell': gatherShell(act.tile); return;
       case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
     }
   }

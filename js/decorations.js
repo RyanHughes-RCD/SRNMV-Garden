@@ -60,6 +60,7 @@ export function placeProblem(id, anchor) {
   const d = def(id);
   if (!d) return 'Unknown item';
   const p = G.state.player, c = G.state.cabin;
+  if (d.onWater) return waterProblem(id, anchor);
   for (const t of footprint(anchor, id)) {
     if (t < 0) return 'Out of bounds';
     const g = ground(t), o = obj(t);
@@ -77,10 +78,28 @@ export function placeProblem(id, anchor) {
   }
   return null;
 }
+// Docks start on the shore and reach out over the water.
+function waterProblem(id, anchor) {
+  const [w] = sizeOf(id), tiles = footprint(anchor, id);
+  let water = 0;
+  for (let k = 0; k < tiles.length; k++) {
+    const t = tiles[k];
+    if (t < 0) return 'Out of bounds';
+    const g = ground(t), o = obj(t);
+    if (o && !o.startsWith('h:')) return 'Something is in the way';
+    if (g === 'f') return 'Trees are in the way';
+    if (k < w) { if (g === 'w') return 'Start the dock on the shore (top row on land)'; if (g === 't') return 'Not on tilled soil'; }
+    else if (g === 'w') water++;
+    else if (g !== 's' && g !== 'g' && !def(g)?.ground) return 'Something is in the way';
+  }
+  if (water < tiles.length / 2) return 'Point it out over the water';
+  return null;
+}
+
 export function placeDecor(id, anchor) {
   const d = def(id), st = G.state;
   if (d.ground) { st.map.ground[anchor] = id; markDirty(); return; }
-  footprint(anchor, id).forEach((t, k) => { st.map.obj[t] = k === 0 ? 'x:' + id : 'p:' + anchor; });
+  footprint(anchor, id).forEach((t, k) => { st.map.obj[t] = k === 0 ? 'x:' + id : 'p:' + anchor; }); // (any shells underneath are swept away)
   if (d.spawn) decorState(anchor).next = st.simTime + d.spawn.everySec;
   if (d.interact === 'wish') decorState(anchor).next = st.simTime + 3600;
   if (d.interact === 'mail') decorState(anchor).next = st.simTime + randRange(1800, 3600);
@@ -312,6 +331,7 @@ export function drawDecor(push, ctx, t, x0, y0, x1, y1) {
       if (ax + 1 < w && connects(a.i + 1, grp)) push(baseY - 0.5, () => drawSprite(ctx, h, 0, ax * TILE + 8, ay * TILE));
       if (connects(a.i + w, grp)) push(baseY + 8, () => drawSprite(ctx, v, 0, ax * TILE, ay * TILE + 8));
     }
+    if (a.d.floor) continue; // drawn with the ground (drawFloorDecor)
     if (a.d.interact === 'cathouse') { push(baseY, () => drawCatHouse(ctx, a.i, px, py)); continue; }
     push(baseY, () => {
       drawSprite(ctx, spr, frame, px, py);
@@ -322,6 +342,51 @@ export function drawDecor(push, ctx, t, x0, y0, x1, y1) {
     if (b) push(b.y, () => drawSprite(ctx, 'fx_bird', b.hop > 0 ? 1 : 0, b.x - 4, b.y - 7 - (b.hop > 0 ? 2 : 0), { flip: b.dir < 0 }));
   }
 }
+// Big flat decorations (docks) drawn right after the ground, under everything else.
+export function drawFloorDecor(ctx, x0, y0, x1, y1) {
+  for (const a of anchors()) {
+    if (!a.d.floor) continue;
+    const ax = tx(a.i), ay = ty(a.i), [fw, fh] = sizeOf(a.id);
+    if (ax + fw < x0 || ax > x1 || ay + fh < y0 || ay > y1) continue;
+    drawSprite(ctx, a.d.sprite, 0, ax * TILE, ay * TILE);
+  }
+}
+
+/* ------------------------------------------------------------ seashells */
+let shellT = 0;
+// Every so often a shell washes up on a sand tile next to the water.
+export function updateShells(dt) {
+  const st = G.state, W = DATA.shellWashUp, list = DATA.shells;
+  if (!list.length) return;
+  shellT += dt;
+  if (shellT < W.everySec * (0.8 + (hash2(Math.floor(st.simTime / 997), 3) * 0.4))) return;
+  shellT = 0;
+  let n = 0; for (const o of st.map.obj) if (o && o.startsWith('h:')) n++;
+  if (n >= W.maxOnBeach) return;
+  const m = st.map, spots = [];
+  for (let i = 0; i < m.ground.length; i++) {
+    if (m.ground[i] !== 's' || m.obj[i]) continue;
+    const x = i % m.w, y = Math.floor(i / m.w);
+    if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => inBounds(x + dx, y + dy) && m.ground[(y + dy) * m.w + x + dx] === 'w')) spots.push(i);
+  }
+  if (!spots.length) return;
+  const t = spots[randInt(0, spots.length - 1)];
+  m.obj[t] = 'h:' + pickWeighted(list.map(s => [s.id, s.weight ?? 1]));
+  G.emit('shellWashed', { tile: t });
+}
+export function gatherShell(t) {
+  const st = G.state, o = obj(t);
+  if (!o || !o.startsWith('h:')) return null;
+  const id = o.slice(2);
+  st.map.obj[t] = null;
+  st.inv.shells[id] = (st.inv.shells[id] || 0) + 1;
+  const first = !st.shellsFound[id];
+  st.shellsFound[id] = (st.shellsFound[id] || 0) + 1;
+  const res = { id, def: DATA.shellById[id], first, tile: t };
+  G.emit('shell', res);
+  return res;
+}
+
 // Floor decorations: drawn on top of a grass tile
 export function overlaySprite(g) { const d = def(g); return d?.overlay ? d.sprite : null; }
 export function lightsFrom() {

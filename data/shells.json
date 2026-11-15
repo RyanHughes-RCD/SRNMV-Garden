@@ -1,0 +1,11 @@
+{
+  "_help": "Seashells wash up on sand tiles next to the water. weight = how often each one appears; price = coins at the shipping crate.",
+  "washUp": { "everySec": 1200, "maxOnBeach": 4 },
+  "shells": [
+    { "id": "scallop",    "name": "Scallop Shell", "weight": 10, "price": 6,  "desc": "A pink fan with neat little ridges." },
+    { "id": "cowrie",     "name": "Cowrie",        "weight": 8,  "price": 9,  "desc": "Smooth and speckled, like a tiny egg." },
+    { "id": "conch",      "name": "Conch",         "weight": 5,  "price": 16, "desc": "Hold it up and you can hear the lake." },
+    { "id": "moonsnail",  "name": "Moon Snail",    "weight": 3,  "price": 28, "desc": "A lavender spiral that swirls forever." },
+    { "id": "sanddollar", "name": "Sand Dollar",   "weight": 1,  "price": 60, "desc": "A rare little star stamped in white." }
+  ]
+}

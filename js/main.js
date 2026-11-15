@@ -16,6 +16,7 @@ import { clockLabel, phaseLabel, hourOfDay } from './daytime.js';
 import * as ui from './ui.js';
 import * as menus from './menus.js';
 import { tx, ty } from './world.js';
+import { updateShells } from './decorations.js';
 import { updateDecor, updateMail, updateDecorFx, nearFire, birdBoost, decorState, readLetter, makeWish, markDirty } from './decorations.js';
 
 const $ = id => document.getElementById(id);
@@ -137,6 +138,7 @@ function simStep(dt) {
   updateCats(dt);
   updateDecor(dt);
   updateMail();
+  updateShells(dt);
 }
 
 /* ---------------------------------------------------------------- events */
@@ -169,6 +171,11 @@ function wireEvents() {
       burst(x, y, { n: 5, sprite: e.debris === 'rock' || e.debris === 'boulder' ? 'fx_dirt' : 'fx_leaf' });
       if (e.worker === 'player' && e.drops) { const d = Object.entries(e.drops).map(([k, n]) => `+${n} ${k}`).join(' · '); if (d) ui.toast(d, `item_${Object.keys(e.drops)[0]}`, 1800); }
     }
+  });
+  G.on('shell', r => {
+    sfx(r.first ? 'discover' : 'pop');
+    if (r.first) ui.showCard(`<div class="disc">${iconHTML(`shell_${r.id}`, 'ico huge')}</div><h2>New shell found!</h2><div class="disc-name">${r.def?.name}</div><p>${r.def?.desc || ''}</p><p class="muted">Shells: ${Object.keys(G.state.shellsFound).length} of ${DATA.shells.length} kinds found</p>`, { cls: 'discover', ms: 12000 });
+    else ui.toast(`+1 ${r.def?.name}`, `shell_${r.id}`, 2200);
   });
   G.on('mail', () => { if (!G.offline) { sfx('coin'); ui.toast("You've got mail! Check the mailbox.", 'decor_mailbox', 5000); } });
   G.on('built', ({ id, tile }) => { if (DATA.decor[id]?.interact === 'cathouse') menus.catHouseMenu(tile); });

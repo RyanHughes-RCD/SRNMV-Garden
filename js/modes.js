@@ -132,6 +132,8 @@ export function updatePlace() {
   if (input.pressed('cancel') || input.pressed('pause') || input.pressed('designate')) { sfx('cancel'); exit(); return; }
   const t = idx(M.cx, M.cy);
   if (input.pressed('tool')) { // pick up (full refund)
+    const onIt = DATA.decor[decorAt(t)]?.onWater && (() => { const p = G.state.player, pt = idx(Math.floor(p.x / TILE), Math.floor((p.y - 3) / TILE)); return decorAt(pt) === decorAt(t) && ground(pt) === 'w'; })();
+    if (onIt) { sfx('error'); toast('Step off the dock first'); return; }
     const id = removeDecorAt(t);
     if (id) { refund(DATA.decor[id]?.cost); poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('cancel'); toast(`Picked up ${DATA.decor[id]?.name}`); }
     else sfx('error');

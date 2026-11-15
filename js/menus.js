@@ -57,6 +57,11 @@ export function inventoryMenu() {
       const keys = farm.ownedSeedKeys();
       if (!keys.length) out.push({ label: 'No seeds - visit the shop!', disabled: true });
       for (const k of keys) out.push({ label: farm.seedLabel(k), icon: farm.seedIcon(k), right: `×${farm.seedCount(k)}`, sub: st.player.seedKey === k ? 'In your seed bag' : '', onSelect: () => { st.player.seedKey = k; st.player.tool = 0; toast(`Holding ${farm.seedLabel(k)}`, farm.seedIcon(k)); } });
+      out.push({ header: true, label: `Shells (${Object.keys(st.shellsFound).length}/${DATA.shells.length} found)` });
+      for (const sh of DATA.shells) {
+        const found = st.shellsFound[sh.id];
+        out.push({ label: found ? sh.name : '???', iconHTML: iconHTML(`shell_${sh.id}`, 'ico', { silhouette: !found }), sub: found ? sh.desc : 'Washes up on the beach now and then', right: `×${st.inv.shells[sh.id] || 0}` });
+      }
       out.push({ header: true, label: 'Materials' });
       for (const m of ['wood', 'stone', 'fiber']) out.push({ label: m[0].toUpperCase() + m.slice(1), icon: `item_${m}`, right: `×${st.mats[m] || 0}` });
       return out;
@@ -119,10 +124,12 @@ export function sellMenu() {
     empty: 'Nothing to sell yet. Harvest some crops first!',
     items: () => {
       const crops = Object.entries(G.state.inv.crops).filter(([, n]) => n > 0);
-      if (!crops.length) return [];
+      const shells = shellSellItems();
+      if (!crops.length) return shells;
       const total = crops.reduce((a, [id, n]) => a + n * DATA.cropById[id].price, 0);
       return [
-        { label: 'Sell everything', icon: 'item_coin', right: `+${total}`, onSelect: () => { const c = farm.sellAll(); if (c) { sfx('coin'); toast(`Sold everything for ${c} coins`, 'item_coin'); } } },
+        { label: 'Sell all crops', icon: 'item_coin', right: `+${total}`, onSelect: () => { const c = farm.sellAll(); if (c) { sfx('coin'); toast(`Sold everything for ${c} coins`, 'item_coin'); } } },
+        ...shells,
         ...crops.map(([id, n]) => { const c = DATA.cropById[id]; return { label: c.name, icon: `item_${id}`, sub: `${c.price} each · Ⓐ sell one · Ⓧ sell all`, right: `×${n}`, xLabel: 'sell all', onSelect: () => { if (farm.sell(id, 1)) sfx('coin'); }, onX: () => { const v = farm.sell(id, n); if (v) { sfx('coin'); toast(`Sold ${n} ${c.name} for ${v} coins`, `item_${id}`); } } }; }),
       ];
     },
@@ -130,6 +137,20 @@ export function sellMenu() {
 }
 
 /* ---------------------------------------------------------------- build */
+function sellShell(id, n) {
+  const inv = G.state.inv.shells, have = inv[id] || 0; n = Math.min(n, have);
+  if (n <= 0) return 0;
+  const coins = n * (DATA.shellById[id]?.price ?? 1);
+  inv[id] = have - n; if (!inv[id]) delete inv[id];
+  G.state.coins += coins;
+  return coins;
+}
+function shellSellItems() {
+  const list = Object.entries(G.state.inv.shells || {}).filter(([, n]) => n > 0);
+  if (!list.length) return [];
+  return [{ header: true, label: 'Shells' }, ...list.map(([id, n]) => { const s = DATA.shellById[id]; return { label: s?.name || id, icon: `shell_${id}`, sub: `${s?.price ?? 1} each · Ⓐ sell one · Ⓧ sell all`, right: `×${n}`, xLabel: 'sell all', onSelect: () => { if (sellShell(id, 1)) sfx('coin'); }, onX: () => { const v = sellShell(id, n); if (v) { sfx('coin'); toast(`Sold ${n} ${s?.name} for ${v} coins`, `shell_${id}`); } } }; }), { header: true, label: 'Crops' }];
+}
+
 export function buildMenu() {
   openMenu({
     title: 'Build & decorate', icon: 'decor_lantern', live: true,

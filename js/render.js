@@ -9,7 +9,7 @@ import { drawCats } from './cats.js';
 import { drawPlayer } from './player.js';
 import { drawModeOverlay } from './modes.js';
 import { jobsAtTile } from './jobs.js';
-import { drawDecor, overlaySprite, lightsFrom } from './decorations.js';
+import { drawDecor, overlaySprite, lightsFrom, drawFloorDecor } from './decorations.js';
 
 let canvas, ctx, lightCanvas, lctx;
 export function initRender(c) {
@@ -98,6 +98,7 @@ export function renderWorld(t) {
     ctx.setLineDash([]);
   }
   drawCabinGround();
+  drawFloorDecor(ctx, x0, y0, x1, y1);
   for (const j of st.jobs) if (j.type === 'till') ctx.fillRect(tx(j.tile) * TILE + 1, ty(j.tile) * TILE + 1, 14, 14);
 
   // y-sorted drawables
@@ -116,6 +117,7 @@ export function renderWorld(t) {
     }
     if (o) {
       if (o.startsWith('d:')) { const name = debrisSprite(o.slice(2), x, y); pushDraw(y * TILE + 12, () => drawSprite(ctx, name, 0, x * TILE, y * TILE)); }
+      else if (o.startsWith('h:')) pushDraw(y * TILE + 4, () => drawSprite(ctx, `shell_${o.slice(2)}`, 0, x * TILE, y * TILE + Math.round(Math.sin(t * 1.5 + x) * 0.5)));
       else if (o === 'crate' || o === 'shop') pushDraw(y * TILE + 13, () => drawSprite(ctx, o, 0, x * TILE, y * TILE));
     }
     const crop = st.crops[i];

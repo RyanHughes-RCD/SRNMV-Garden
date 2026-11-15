@@ -5,7 +5,7 @@ export const OVERRIDE_KEYS = {
   cats: 'srnmv.override.cats',
   players: 'srnmv.override.players',
 };
-const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites'];
+const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites', 'shells'];
 
 export function readLS(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } }
 export function writeLS(key, value) { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
@@ -34,6 +34,9 @@ export function applyOverrides() {
   DATA.rarities = b.crops.rarities;
   DATA.cropById = Object.fromEntries(DATA.crops.map(c => [c.id, c]));
   DATA.debris = b.debris.debris;
+  DATA.shells = b.shells?.shells || [];
+  DATA.shellById = Object.fromEntries(DATA.shells.map(s => [s.id, s]));
+  DATA.shellWashUp = b.shells?.washUp || { everySec: 1200, maxOnBeach: 4 };
   DATA.decor = b.decor.decor;
   DATA.decorCategories = b.decor.categories || [];
   DATA.letters = b.decor.letters || [];

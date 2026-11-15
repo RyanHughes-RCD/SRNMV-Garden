@@ -44,16 +44,16 @@ export function newGame() {
     const noise = (hash2(Math.floor(x / 2), Math.floor(y / 2), seed) - 0.5) * 2 * wob;
     if (Math.hypot(dx, dy) > 1 + noise) ground[y * w + x] = 'f';
   }
-  // a lake along the bottom of the map, starting just below the clearing
+  // below the clearing: a band of forest (chop through it), then a sandy beach, then the lake to the bottom edge
   const L = B.map.lake || {}, Rv = B.map.river || {};
-  const lakeTop = Math.floor(my + RY) + (L.gapBelowClearing ?? 1);
-  const shoreAt = x => lakeTop + Math.round(Math.sin(x / 4.3 + seed % 5) * (L.shoreWobble ?? 1.4) + (hash2(Math.floor(x / 3), 9, seed) - 0.5) * 1.6);
-  for (let x = 0; x < w; x++) for (let y = Math.max(0, shoreAt(x)); y < h; y++) ground[y * w + x] = 'w';
-  // a small sandy beach along the bottom edge, below the lake
   const Bc = B.map.beach || {}, bMin = Bc.minDepth ?? 2, bMax = Bc.maxDepth ?? 3;
+  const lakeTop = Math.floor(my + RY) + (L.forestBelowClearing ?? 2) + bMax + 1;
+  const shoreAt = x => lakeTop + Math.round(Math.sin(x / 4.3 + seed % 5) * (L.shoreWobble ?? 1.4) + (hash2(Math.floor(x / 3), 9, seed) - 0.5) * 1.6);
   for (let x = 0; x < w; x++) {
+    const shore = Math.max(0, shoreAt(x));
+    for (let y = shore; y < h; y++) ground[y * w + x] = 'w';
     const depth = bMin + Math.round((Math.sin(x / 5 + seed % 3) * 0.5 + 0.5) * (bMax - bMin) * 0.6 + hash2(Math.floor(x / 2), 21, seed) * (bMax - bMin) * 0.4);
-    for (let y = h - depth; y < h; y++) ground[y * w + x] = 's';
+    for (let y = Math.max(0, shore - depth); y < shore; y++) ground[y * w + x] = 's';
   }
   // a river from the top edge, down the left side of the clearing, into the lake
   const rw = Rv.width ?? 2, riverX = Math.floor(mx - RX) - (Rv.gapLeftOfClearing ?? 1) - rw;
@@ -99,7 +99,8 @@ export function newGame() {
     player: { x: (cx + 1) * 16 + 8, y: (cy + 3) * 16 + 12, dir: 'down', tool: 0, seedSel: 0 },
     coins: E.startCoins,
     mats: { wood: 0, stone: 0, fiber: 0 },
-    inv: { crops: {}, seeds: {}, unknown },
+    inv: { crops: {}, seeds: {}, unknown, shells: {} },
+    shellsFound: {},
     discovered: {},
     map: { w, h, ground, obj },
     cabin: { x: cx, y: cy, ...CABIN_DEFAULTS },
@@ -140,7 +141,7 @@ function validate(s) {
   const ok = s.map && Array.isArray(s.map.ground) && s.map.ground.length === s.map.w * s.map.h && Array.isArray(s.map.obj) && s.inv && s.player;
   if (!ok) throw new Error('Save file is damaged');
   s.jobs ||= []; s.plots ||= []; s.crops ||= {}; s.lastCrop ||= {}; s.discovered ||= {}; s.cats ||= {};
-  s.inv.crops ||= {}; s.inv.seeds ||= {}; s.inv.unknown ||= {};
+  s.inv.crops ||= {}; s.inv.seeds ||= {}; s.inv.unknown ||= {}; s.inv.shells ||= {}; s.shellsFound ||= {};
   s.mats ||= { wood: 0, stone: 0, fiber: 0 };
   s.stats ||= {};
   s.decorState ||= {};
