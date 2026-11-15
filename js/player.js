@@ -8,7 +8,6 @@ import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
 import { decorAction } from './decorations.js';
-import { isNight } from './daytime.js';
 import { emit, poof, burst } from './particles.js';
 import { sfx } from './audio.js';
 
@@ -164,9 +163,4 @@ export function drawPlayer(push, ctx, t) {
     const sw = playerSwap();
     drawSprite(ctx, name, f, p.x - 8, p.y - 23, { flip: p.dir === 'left', swap: sw.swap, swapKey: sw.key });
   });
-}
-export function playerLight() {
-  if (!isNight()) return null;
-  const p = G.state.player;
-  return { x: p.x, y: p.y - 8, r: 30 };
 }

@@ -6,7 +6,7 @@ import { idx, tx, ty } from './world.js';
 import { lighting, isNight, hourOfDay } from './daytime.js';
 import { drawParticles, drawCritters, emit } from './particles.js';
 import { drawCats } from './cats.js';
-import { drawPlayer, playerLight } from './player.js';
+import { drawPlayer } from './player.js';
 import { drawModeOverlay } from './modes.js';
 import { jobsAtTile } from './jobs.js';
 import { drawDecor, overlaySprite, lightsFrom } from './decorations.js';
@@ -203,7 +203,6 @@ export function lightSources() {
   const cb = st.cabin, sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   out.push({ x: sx + 11, y: sy + 33, r: 34, win: [sx + 7, sy + 28, 8, 8] }, { x: sx + 38, y: sy + 33, r: 34, win: [sx + 34, sy + 28, 8, 8] });
   out.push(...lightsFrom());
-  const pl = playerLight(); if (pl) out.push(pl);
   return out;
 }
 let lightsCache = [], lightsAt = -99;
