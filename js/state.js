@@ -49,6 +49,12 @@ export function newGame() {
   const lakeTop = Math.floor(my + RY) + (L.gapBelowClearing ?? 1);
   const shoreAt = x => lakeTop + Math.round(Math.sin(x / 4.3 + seed % 5) * (L.shoreWobble ?? 1.4) + (hash2(Math.floor(x / 3), 9, seed) - 0.5) * 1.6);
   for (let x = 0; x < w; x++) for (let y = Math.max(0, shoreAt(x)); y < h; y++) ground[y * w + x] = 'w';
+  // a small sandy beach along the bottom edge, below the lake
+  const Bc = B.map.beach || {}, bMin = Bc.minDepth ?? 2, bMax = Bc.maxDepth ?? 3;
+  for (let x = 0; x < w; x++) {
+    const depth = bMin + Math.round((Math.sin(x / 5 + seed % 3) * 0.5 + 0.5) * (bMax - bMin) * 0.6 + hash2(Math.floor(x / 2), 21, seed) * (bMax - bMin) * 0.4);
+    for (let y = h - depth; y < h; y++) ground[y * w + x] = 's';
+  }
   // a river from the top edge, down the left side of the clearing, into the lake
   const rw = Rv.width ?? 2, riverX = Math.floor(mx - RX) - (Rv.gapLeftOfClearing ?? 1) - rw;
   for (let y = 0; y < h; y++) {

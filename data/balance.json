@@ -18,6 +18,11 @@
       "width": 2,
       "gapLeftOfClearing": 1,
       "meander": 1.4
+    },
+    "beach": {
+      "_comment": "A sandy beach along the bottom edge of the map, below the lake.",
+      "minDepth": 2,
+      "maxDepth": 3
     }
   },
   "player": {

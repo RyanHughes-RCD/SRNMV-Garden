@@ -61,6 +61,7 @@ function groundSprite(i, x, y) {
   const g = G.state.map.ground[i];
   if (g === 'g') { const h = hash2(x, y, 7); return h < 0.05 ? 'grass_flowers' : `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}`; }
   if (g === 'f') return `forest_${Math.floor(hash2(x, y, 5) * 3)}`;
+  if (g === 's') { const h = hash2(x, y, 31); return h < 0.08 ? 'sand_1' : h < 0.13 ? 'sand_2' : 'sand_0'; }
   if (g === 't') { const c = G.state.crops[i]; return c && c.wetUntil > G.state.simTime ? 'soil_wet' : 'soil'; }
   const dd = DATA.decor[g];
   if (dd?.ground) return dd.overlay ? `grass_${Math.floor(hash2(x, y, 3) * grassLooks())}` : dd.sprite;

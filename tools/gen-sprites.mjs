@@ -205,6 +205,17 @@ add('water_deep', 'tiles', [0, 1, 2].map(f => water(true, f)), 2);
   for (const d of ['n', 's', 'w', 'e']) add(`water_edge_${d}`, 'tiles', edge(d));
 }
 
+// Sand for the beach along the bottom of the lake: three looks, a few with shells or driftwood.
+function sand(v) {
+  const g = new G(16, 16).fill(C.ltan), r = rng(900 + v * 13);
+  for (let k = 0; k < 10; k++) g.set(Math.floor(r() * 16), Math.floor(r() * 16), k % 3 ? C.tan : C.cream);
+  for (let k = 0; k < 3; k++) { const x = Math.floor(r() * 14), y = Math.floor(r() * 15); g.set(x, y, C.cream).set(x + 1, y, C.cream); }
+  if (v === 1) g.pts([[5, 9], [6, 9], [7, 9], [6, 8]], C.ppink).set(6, 9, C.pink); // a little shell
+  if (v === 2) g.line(3, 11, 10, 9, C.brown).line(4, 12, 10, 10, C.tan).set(11, 9, C.dbrown); // driftwood
+  return g;
+}
+for (let v = 0; v < 3; v++) add(`sand_${v}`, 'tiles', sand(v));
+
 function tree(kind) {
   const g = new G(24, 32);
   const trunk = (col = C.brown, hi = C.tan, dark = C.dbrown, w = 4) => { g.rect(12 - w / 2, 22, w, 9, col); g.set(12 - w / 2, 30, dark); g.set(12 + w / 2, 30, col); g.set(11 - w / 2, 30, col); g.line(11, 23, 11, 29, hi); };
