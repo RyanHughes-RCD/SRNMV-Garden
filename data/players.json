@@ -1,4 +1,5 @@
 {
+  "spritesVersion": 2,
   "players": [
     {
       "id": "p1",
@@ -30,5 +31,6 @@
         "accent": "#e88fb0"
       }
     }
-  ]
+  ],
+  "_spritesVersion": "Bump spritesVersion when the default character art changes; saved Workshop profiles then switch to the new spriteSet (names and colours are kept)."
 }

@@ -46,6 +46,13 @@ export function applyOverrides() {
   const cats = readLS(OVERRIDE_KEYS.cats);
   DATA.catsConfig = cats && Array.isArray(cats.cats) ? cats : b.cats;
   const players = readLS(OVERRIDE_KEYS.players);
+  if (players && Array.isArray(players.players) && (players.spritesVersion || 0) < (b.players.spritesVersion || 0)) {
+    // The default character art changed since these profiles were saved in the Workshop:
+    // switch them to the new sprite sets, keeping names and colours.
+    for (const pl of players.players) { const def = b.players.players.find(q => q.id === pl.id); if (def) pl.spriteSet = def.spriteSet; }
+    players.spritesVersion = b.players.spritesVersion;
+    writeLS(OVERRIDE_KEYS.players, players);
+  }
   DATA.playersConfig = players && Array.isArray(players.players) ? players : b.players;
 }
 
