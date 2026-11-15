@@ -3,7 +3,7 @@ import { G, clamp } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
 import { sfx } from './audio.js';
-import { iconHTML, slotSwap } from './sprites.js';
+import { iconHTML, slotSwap, frameCanvas } from './sprites.js';
 
 const $ = id => document.getElementById(id);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -200,17 +200,29 @@ export function textInput(title, initial, onDone, max = 18) {
 /* ----------------------------------------------------------------- HUD */
 let hudCache = {};
 function setHTML(id, html) { if (hudCache[id] !== html) { hudCache[id] = html; $(id).innerHTML = html; } }
-export function resetHudCache() { hudCache = {}; }
+export function resetHudCache() { hudCache = {}; portraitCache.clear(); }
 export function catPortrait(cfg) {
   const set = cfg.spriteSet || 'cat';
   const name = DATA.sprites.sprites[`${set}_sit`] ? `${set}_sit` : 'cat_sit';
   const sw = slotSwap('cat', cfg.coat);
   return iconHTML(name, 'ico portrait', { swap: sw.swap, swapKey: sw.key });
 }
+// Player portraits are trimmed to the visible character, so art with empty space around it
+// (like 32x32 imported frames) shows at a similar size to the built-in characters.
+const portraitCache = new Map();
 export function playerPortrait(cfg) {
   const name = DATA.sprites.sprites[`${cfg.spriteSet}_walk_down`] ? `${cfg.spriteSet}_walk_down` : 'p1_walk_down';
-  const sw = slotSwap('player', cfg.colors);
-  return iconHTML(name, 'ico portrait tall', { swap: sw.swap, swapKey: sw.key });
+  const sw = slotSwap('player', cfg.colors), key = name + '|' + sw.key;
+  let url = portraitCache.get(key);
+  if (!url) {
+    const src = frameCanvas(name, 0, sw.swap, sw.key), d = src.getContext('2d').getImageData(0, 0, src.width, src.height).data;
+    let x0 = src.width, y0 = src.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < src.height; y++) for (let x = 0; x < src.width; x++) if (d[(y * src.width + x) * 4 + 3]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    const c = document.createElement('canvas');
+    if (x1 < 0) { c.width = 1; c.height = 1; } else { c.width = x1 - x0 + 1; c.height = y1 - y0 + 1; c.getContext('2d').drawImage(src, -x0, -y0); }
+    url = c.toDataURL(); portraitCache.set(key, url);
+  }
+  return `<img class="ico portrait tall" src="${url}" alt="">`;
 }
 export function updateHUD(info) {
   const hud = $('hud');

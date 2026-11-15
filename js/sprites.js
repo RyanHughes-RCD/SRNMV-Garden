@@ -34,7 +34,9 @@ export function frameCanvas(name, frame = 0, swap = null, swapKey = '', silhouet
   c = document.createElement('canvas'); c.width = def.w; c.height = def.h;
   const ctx = c.getContext('2d');
   const img = ctx.createImageData(def.w, def.h);
-  const swapRGB = swap ? Object.fromEntries(Object.entries(swap).map(([k, v]) => [k, hexToRgb(v)])) : null;
+  // a sprite may carry its own colours (imported art); palette swaps only apply to shared-palette sprites
+  const pal = def.pal ? def.pal.map(hexToRgb) : palRGB;
+  const swapRGB = swap && !def.pal ? Object.fromEntries(Object.entries(swap).map(([k, v]) => [k, hexToRgb(v)])) : null;
   for (let y = 0; y < def.h; y++) {
     const row = rows[y] || '';
     for (let x = 0; x < def.w; x++) {
@@ -42,7 +44,7 @@ export function frameCanvas(name, frame = 0, swap = null, swapKey = '', silhouet
       if (!ch || ch === '.') continue;
       const idx = CH.indexOf(ch);
       if (idx < 0) continue;
-      const rgb = silhouette ? [40, 32, 52] : (swapRGB && swapRGB[idx]) || palRGB[idx] || [255, 0, 255];
+      const rgb = silhouette ? [40, 32, 52] : (swapRGB && swapRGB[idx]) || pal[idx] || [255, 0, 255];
       const o = (y * def.w + x) * 4;
       img.data[o] = rgb[0]; img.data[o + 1] = rgb[1]; img.data[o + 2] = rgb[2]; img.data[o + 3] = 255;
     }

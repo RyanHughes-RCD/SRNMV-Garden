@@ -199,16 +199,18 @@ function renderAll() {
   $('fps').value = d.fps || 0;
   $('btn-reset-sprite').textContent = BASE.sprites[W.name] ? 'Reset sprite' : 'Delete sprite';
   $('btn-reset-sprite').disabled = !isChanged(W.name);
-  drawEditor(); renderFrames(); renderSwapRow(); renderStages(); updateUndoButtons();
+  drawEditor(); renderFrames(); renderSwapRow(); renderStages(); updateUndoButtons(); renderPalette();
 }
 
 /* ---- drawing helpers */
 let palRGB = [];
 function updatePalRGB() { palRGB = SPR.palette.map(hexToRgb); }
-function colorOf(ch, swap) {
+// The palette for the selected sprite: its own colours (imported art) or the shared game palette.
+const activePal = () => def()?.pal || SPR.palette;
+function colorOf(ch, swap, pal = activePal()) {
   const i = CH.indexOf(ch); if (i < 0) return null;
-  if (swap && swap[i]) return swap[i];
-  return SPR.palette[i];
+  if (swap && swap[i] && pal === SPR.palette) return swap[i];
+  return pal[i];
 }
 function paintGrid(ctx, g, s, swap, alpha = 1) {
   ctx.globalAlpha = alpha;
@@ -358,7 +360,9 @@ function initPalette() {
   renderPalette();
   const inp = $('color-input');
   inp.addEventListener('input', () => {
-    const i = +inp.dataset.i; SPR.palette[i] = inp.value; updatePalRGB();
+    const i = +inp.dataset.i;
+    if (def()?.pal) { ensureOwn(); def().pal[i] = inp.value; } else SPR.palette[i] = inp.value;
+    updatePalRGB();
     resetSpriteCache(); renderPalette(); drawEditor(); renderFrames(); renderStages();
     clearTimeout(inp._t); inp._t = setTimeout(() => { renderThumbs(); scheduleSave('sprites'); }, 200);
   });
@@ -372,12 +376,14 @@ function renderPalette() {
     s.title = ch === '.' ? 'Transparent' : `Colour ${CH.indexOf(ch)} ${color}`;
     s.onclick = () => { W.left = ch; renderPalette(); };
     s.oncontextmenu = e => { e.preventDefault(); W.right = ch; renderPalette(); };
-    s.ondblclick = () => { if (ch === '.') return; const inp = $('color-input'); inp.dataset.i = CH.indexOf(ch); inp.value = SPR.palette[CH.indexOf(ch)]; inp.click(); };
+    s.ondblclick = () => { if (ch === '.') return; const inp = $('color-input'); inp.dataset.i = CH.indexOf(ch); inp.value = activePal()[CH.indexOf(ch)]; inp.click(); };
     box.appendChild(s);
   };
-  SPR.palette.forEach((c, i) => mk(CH[i], c));
+  activePal().forEach((c, i) => mk(CH[i], c));
   mk('.', null);
-  const setBig = (id, ch) => { const el = $(id); el.className = 'swatch big' + (ch === '.' ? ' transparent' : ''); el.style.background = ch === '.' ? '' : SPR.palette[CH.indexOf(ch)]; };
+  const hint = document.querySelector('#palette + .hint');
+  if (hint) hint.textContent = def()?.pal ? 'This sprite has its own colours (imported art). Double-click a colour to change it for this sprite only.' : 'Click to choose a colour. Double-click to recolour it everywhere in the game.';
+  const setBig = (id, ch) => { const el = $(id); el.className = 'swatch big' + (ch === '.' ? ' transparent' : ''); el.style.background = ch === '.' ? '' : activePal()[CH.indexOf(ch)]; };
   setBig('c-left', W.left); setBig('c-right', W.right);
 }
 
@@ -480,7 +486,7 @@ function drawSpritePreviews() {
   }
   // scale references: a player and a cat
   const p = PLAYERS.players[0], c = CATS.cats[0];
-  if (p) { const s = slotSwap('player', p.colors); ctx.drawImage(frameCanvas(`${p.spriteSet}_walk_down`, 0, s.swap, s.key), 1 * T, 4 * T - 24 + 8); }
+  if (p) { const s = slotSwap('player', p.colors), pd = SPR.sprites[`${p.spriteSet}_walk_down`]; ctx.drawImage(frameCanvas(`${p.spriteSet}_walk_down`, 0, s.swap, s.key), 1 * T + 8 - (pd?.ax ?? 8), 4 * T + 8 - (pd?.ay ?? 23)); }
   if (c) { const s = slotSwap('cat', c.coat); ctx.drawImage(frameCanvas(`${SPR.sprites[`${c.spriteSet}_sit`] ? c.spriteSet : 'cat'}_sit`, frameAt(SPR.sprites.cat_sit, animT), s.swap, s.key), 7 * T, 4 * T - 16 + 8); }
   ctx.restore();
 }
@@ -665,10 +671,10 @@ function renderPlayers() {
     sec.querySelector('[data-edit]').onclick = () => { W.filter.q = p.spriteSet + '_'; $('search').value = W.filter.q; W.filter.cat = 'all'; $('category').value = 'all'; showTab('sprites'); const f = Object.keys(SPR.sprites).find(k => k.startsWith(W.filter.q)); if (f) selectSprite(f); };
     for (const inp of sec.querySelectorAll('input[data-slot]')) inp.oninput = () => { p.colors = { ...(p.colors || {}), [inp.dataset.slot]: inp.value }; changed(); };
     for (const cv of sec.querySelectorAll('canvas[data-anim]')) {
-      cv.width = 16; cv.height = 24;
       anims.push({ c: cv, draw: t => {
         const n = SPR.sprites[`${p.spriteSet}_${cv.dataset.anim}`] ? `${p.spriteSet}_${cv.dataset.anim}` : `p1_${cv.dataset.anim}`, d = SPR.sprites[n], s = slotSwap('player', p.colors);
-        const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, 16, 24);
+        if (d && (cv.width !== d.w || cv.height !== d.h)) { cv.width = d.w; cv.height = d.h; }
+        const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height);
         ctx.drawImage(frameCanvas(n, d?.fps ? Math.floor(t * d.fps) % d.frames.length : 0, s.swap, s.key), 0, 0);
       } });
     }

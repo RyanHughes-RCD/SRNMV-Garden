@@ -164,6 +164,7 @@ export function drawPlayer(push, ctx, t) {
     if (!hasSprite(name)) name = `p1_${kind}_${dir}`;
     const f = anim.working || anim.moving ? animFrame(name, anim.t) : 0;
     const sw = playerSwap();
-    drawSprite(ctx, name, f, p.x - 8, p.y - 23, { flip: p.dir === 'left', swap: sw.swap, swapKey: sw.key });
+    const d = DATA.sprites.sprites[name], ax = d?.ax ?? (d?.w ?? 16) / 2, ay = d?.ay ?? (d?.h ?? 24) - 1;
+    drawSprite(ctx, name, f, p.x - ax, p.y - ay, { flip: p.dir === 'left', swap: sw.swap, swapKey: sw.key });
   });
 }

@@ -15,7 +15,7 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 .muted { color: var(--muted); }
 
 .panel { background: var(--panel); border: 0.14rem solid var(--edge); box-shadow: 0 0 0 0.14rem rgba(26, 20, 35, 0.6), 0 0.4rem 1rem rgba(0, 0, 0, 0.35); border-radius: 0.45rem; padding: 0.45rem 0.7rem; }
-.ico { width: 1.5em; height: 1.5em; image-rendering: pixelated; vertical-align: middle; flex: none; }
+.ico { width: 1.5em; height: 1.5em; object-fit: contain; image-rendering: pixelated; vertical-align: middle; flex: none; }
 .ico.sm { width: 1.05em; height: 1.05em; }
 .ico.big { width: 2.6em; height: 2.6em; }
 .ico.huge { width: 7em; height: 7em; }

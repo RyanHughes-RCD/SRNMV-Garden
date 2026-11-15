@@ -1090,6 +1090,9 @@ const swaps = {
   cat: { slots: { coat: 20, shade: 19, marking: 3, belly: 6, eye: 11 } },
 };
 
+// Imported art (e.g. tools/import_sheet.py) lives in data/custom-sprites.json and always wins.
+const CUSTOM = path.join(__dirname, '..', 'data', 'custom-sprites.json');
+if (fs.existsSync(CUSTOM)) Object.assign(sprites, JSON.parse(fs.readFileSync(CUSTOM, 'utf8')).sprites || {});
 const out = { version: 1, tile: 16, palette: PALETTE, swaps, sprites };
 fs.writeFileSync(OUT, JSON.stringify(out));
 console.log(`wrote ${Object.keys(sprites).length} sprites to ${path.relative(process.cwd(), OUT)} (${(fs.statSync(OUT).size / 1024).toFixed(1)} KB)`);

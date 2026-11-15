@@ -115,6 +115,16 @@ Changes save to the browser and **show up in the running game immediately** (sam
 
 ---
 
+### Importing your own character sheet
+
+Player 1 uses the custom character in `art/player1-sheet.png` (an 8×8 grid of 32×32 frames). It was brought in with:
+
+```bash
+python3 tools/import_sheet.py art/player1-sheet.png hero
+```
+
+The script picks the walk, work, sit, sleep and wave frames (edit `MAP` in the script to change which grid cells are used), keeps the art's own colours, and saves the result as `hero_*` sprites in `data/custom-sprites.json` and `data/sprites.json`. Imported sprites keep their own colours, so the outfit colour pickers in the Workshop's Players tab don't change them. Edit the pixels or colours in the Sprites tab instead. Re-running `tools/gen-sprites.mjs` keeps imported sprites. To use a sheet for Player 2, import it under another name (e.g. `hero2`) and pick that sprite set in the Workshop's Players tab.
+
 ## Tuning
 
 Every balance number (growth bonus from water, cat work speed, seed return chance, prices, map size, autosave interval, offline cap and so on) lives in `data/balance.json`. Crops (names, rarity, growth time, price, hint text) are in `data/crops.json`. Debris and decorations are in `data/debris.json` and `data/decor.json`.
