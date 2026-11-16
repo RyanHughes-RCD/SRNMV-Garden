@@ -35,7 +35,7 @@ export function pauseMenu() {
       { label: 'Sell crops', icon: 'crate', onSelect: sellMenu },
       { label: 'Build & decorate', icon: 'decor_lantern', onSelect: buildMenu },
       { label: 'Cabin', icon: 'cabin_door_0', onSelect: cabinMenu },
-      { label: 'Almanac', icon: 'item_carrot', right: `${Object.keys(G.state.discovered).length}/${DATA.crops.length}`, onSelect: almanacMenu },
+      { label: 'Almanac', icon: 'item_carrot', right: `${Object.keys(G.state.discovered).length + Object.keys(G.state.fishFound || {}).length}/${DATA.crops.length + DATA.fish.length}`, onSelect: almanacMenu },
       { label: 'Cats', iconHTML: catPortrait(DATA.catsConfig.cats[0] || {}), onSelect: catsMenu },
       { label: `Switch player`, iconHTML: playerPortrait(pl[(G.state.activePlayer + 1) % pl.length]), sub: `Now playing: ${esc(playerName())}`, onSelect: () => { closeAllMenus(); switchPlayer(); } },
       { label: 'Settings', icon: 'tool_hand', onSelect: settingsMenu },
@@ -300,10 +300,39 @@ function ownerPicker(a) {
 }
 
 /* -------------------------------------------------------------- almanac */
+// The Almanac: one page per collection.
 export function almanacMenu() {
+  const st = G.state;
+  openMenu({
+    title: 'Almanac', icon: 'item_carrot',
+    items: () => [
+      { label: 'Crops', icon: 'item_carrot', sub: 'Everything you can grow from seed', right: `${Object.keys(st.discovered).length}/${DATA.crops.length}`, onSelect: almanacCrops },
+      { label: 'Fish', icon: 'fish_perch', sub: st.fishingUnlocked || Object.keys(st.fishFound || {}).length ? 'Everything that swims in the lake' : 'Build a dock to start fishing', right: `${Object.keys(st.fishFound || {}).length}/${DATA.fish.length}`, onSelect: almanacFish },
+    ],
+  });
+}
+function almanacFish() {
+  const list = [...DATA.fish].sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
+  openMenu({
+    title: () => `Fish · ${Object.keys(G.state.fishFound || {}).length}/${DATA.fish.length} caught`, icon: 'fish_perch', columns: 6, cls: 'almanac',
+    footer: 'Move with the stick · Ⓑ back',
+    items: list.map(f => {
+      const n = G.state.fishFound?.[f.id];
+      return { label: n ? f.name : '???', iconHTML: iconHTML(`fish_${f.id}`, 'ico big', { silhouette: !n }), cls: `rar-b-${f.rarity}`, fish: f };
+    }),
+    detail: it => {
+      const f = it.fish, n = G.state.fishFound?.[f.id];
+      if (!n) return `<div class="al-name">???</div>${rarityTag(f.rarity)}<p>Not caught yet. ${f.rarity === 'common' ? 'Any bait will do.' : `Better bait makes ${rarityName(f.rarity).toLowerCase()} fish more likely.`}</p>`;
+      return `<div class="al-row">${iconHTML(`fish_${f.id}`, 'ico huge')}</div>
+        <div class="al-name">${f.name}</div>${rarityTag(f.rarity)}
+        <p>Sells for ${f.price}</p><p>Caught ${n} time${n === 1 ? '' : 's'}</p><p class="hint">"${f.desc}"</p>`;
+    },
+  });
+}
+function almanacCrops() {
   const list = [...DATA.crops].sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
   openMenu({
-    title: () => `Almanac · ${Object.keys(G.state.discovered).length}/${DATA.crops.length} discovered`, icon: 'item_carrot', columns: 6, cls: 'almanac',
+    title: () => `Crops · ${Object.keys(G.state.discovered).length}/${DATA.crops.length} discovered`, icon: 'item_carrot', columns: 6, cls: 'almanac',
     footer: 'Move with the stick · Ⓑ back',
     items: list.map(c => {
       const d = G.state.discovered[c.id];

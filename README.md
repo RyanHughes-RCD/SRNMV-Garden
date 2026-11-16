@@ -63,6 +63,7 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 3. **Plant.** Each plot grows the seed chosen for it. New plots start with whatever seed you're holding (your mystery seeds at first). Cats plant, and you can too (hold **A** on tilled soil).
    - **Growing takes a while:** a crop takes about **6 hours (commons) to 10 hours (mysticals)** to fully grow while it's kept watered, which the cats mostly handle. Left dry, it grows noticeably slower. These times are `growMinutes` in `data/crops.json`.
 4. **Wait for the moment.** When something grows, the game chimes: *"The garden grew!"*. Unknown plants show as **???** with a hint at each stage. Guess what they are!
+   - **The cats are slow and steady:** a job that takes you a second takes a cat about 30 seconds (each cat is faster or slower at different jobs). Tilling a tile takes a cat roughly a minute, and a big stump several minutes. Tune it with `cats.baseWorkRate` in `data/balance.json`.
 5. **Harvest.** Only you can do this. Harvesting reveals the crop, adds it to the Almanac, and gives back its seeds (usually 1, sometimes 2). The cats replant the plot automatically.
 6. **Sell and buy.** Drop crops in the **shipping crate** for coins. The **seed board** sells mystery packs by rarity: Common, Uncommon, Rare, Legendary and Mystical.
 7. **Make it yours.** Build paths, fences, lanterns, benches and more (*Menu → Build & decorate*), and recolour the cabin (walk up to it and press **A**).
@@ -101,7 +102,7 @@ Fishing unlocks when you build a **dock** (*Build & decorate → Paths & floors*
 2. **Cast** with **A**. The bobber tugs a few times. **Wait.** When it tugs hardest, a big **!** pops up over your head: press **A** to pull the fish in. Too early and it swims off, too late and it gets away (rarer fish give you less time). **B** reels in.
 3. Each fish caught uses one portion of bait.
 
-There are 16 fish, from minnows and perch up to the mystical Moonfish, Starfin and Ghost Koi. The first catch of each gets a discovery card, the inventory tracks your collection, and fish sell at the shipping crate.
+There are 16 fish, from minnows and perch up to the mystical Moonfish, Starfin and Ghost Koi. The first catch of each gets a discovery card, the **Almanac** has a Fish page (pictures, rarity, price and how many you've caught), and fish sell at the shipping crate.
 
 **The cats fish too.** When a dock has bait in it, they sometimes wander down, sit on the end with a line in the water, and now and then land a fish, using the same bait. Each cat has a *Fishing* speed and preference in the Workshop's Cats tab.
 

@@ -31,7 +31,7 @@
     "interactReachPx": 11
   },
   "cats": {
-    "baseWorkRate": 0.1,
+    "baseWorkRate": 0.035,
     "walkTilesPerSec": 1.6,
     "zoomiesSpeedMult": 3.2,
     "energyDrainPerWorkSec": 0.0012,
@@ -44,7 +44,8 @@
     "decideIntervalSec": [
       3,
       8
-    ]
+    ],
+    "_baseWorkRate": "How fast cats work compared to you (1.0 = your speed). 0.035 means a job that takes you 1 second takes a cat ~30 seconds, before each cat's own speed."
   },
   "work": {
     "till": 3,
