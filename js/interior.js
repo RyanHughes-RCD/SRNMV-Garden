@@ -9,7 +9,7 @@
 import { G, TILE, clamp } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
-import { drawSprite, iconHTML, animFrame } from './sprites.js';
+import { drawSprite, frameCanvas, iconHTML, animFrame } from './sprites.js';
 import { lighting, hourOfDay, clockLabel, phaseLabel } from './daytime.js';
 import { drawPlayer, anim } from './player.js';
 import { openMenu, closeMenu, closeAllMenus, toast, setModePanel } from './ui.js';
@@ -17,6 +17,9 @@ import { canAfford, pay, refund, costLabel, costHTML } from './economy.js';
 import { sfx } from './audio.js';
 
 const VOID = 0, FLOOR = 1, DOOR = 2, EXIT = 3;
+// Each room is drawn this many pixels wider on its left and right than its tile grid, so furniture
+// that's a little wider than its tiles still sits on the floor at the edge of a room.
+const EDGE = 3;
 const I = () => DATA.interior;
 
 /* ------------------------------------------------------------------ state */
@@ -399,21 +402,30 @@ export function renderInterior(ctx, t) {
     const k = L.kind[y * L.W + x];
     if (k === VOID) continue;
     const room = L.roomOf[y * L.W + x];
-    drawSprite(ctx, `in_floor_${h.floor[room] || 'oak'}_${(x * 7 + y * 3) % 5 === 0 ? 1 : 0}`, 0, x * TILE, y * TILE);
-    if (k === EXIT) drawSprite(ctx, 'in_exit', 0, x * TILE, y * TILE);
+    const fc = drawSprite(ctx, `in_floor_${h.floor[room] || 'oak'}_${(x * 7 + y * 3) % 5 === 0 ? 1 : 0}`, 0, x * TILE, y * TILE);
+    if (k === EXIT) { drawSprite(ctx, 'in_exit', 0, x * TILE, y * TILE); continue; }
+    if (cellKind(L, x - 1, y) === VOID) ctx.drawImage(fc, TILE - EDGE, 0, EDGE, TILE, x * TILE - EDGE, y * TILE, EDGE, TILE);
+    if (cellKind(L, x + 1, y) === VOID) ctx.drawImage(fc, 0, 0, EDGE, TILE, (x + 1) * TILE, y * TILE, EDGE, TILE);
   }
   // back walls, then the edges of each room
   for (const r of L.rooms) {
-    for (let x = r.x; x < r.x + r.w; x++) drawSprite(ctx, `in_wall_${h.wall[r.id] || 'cream'}`, 0, x * TILE, (r.y - 2) * TILE);
-    ctx.fillStyle = 'rgba(30,21,32,0.35)'; ctx.fillRect(r.x * TILE, r.y * TILE, r.w * TILE, 3);
+    const wy = (r.y - 2) * TILE, x0 = r.x * TILE - EDGE, x1 = (r.x + r.w) * TILE + EDGE;
+    let wc = null;
+    for (let x = r.x; x < r.x + r.w; x++) wc = drawSprite(ctx, `in_wall_${h.wall[r.id] || 'cream'}`, 0, x * TILE, wy);
+    ctx.drawImage(wc, TILE - EDGE, 0, EDGE, 2 * TILE, x0, wy, EDGE, 2 * TILE);
+    ctx.drawImage(wc, 0, 0, EDGE, 2 * TILE, x1 - EDGE, wy, EDGE, 2 * TILE);
+    ctx.fillStyle = '#5e3b2e'; ctx.fillRect(x0 - 2, wy, 2, 2 * TILE); ctx.fillRect(x1, wy, 2, 2 * TILE);
+    ctx.fillStyle = 'rgba(30,21,32,0.35)'; ctx.fillRect(x0, r.y * TILE, x1 - x0, 3);
   }
   ctx.fillStyle = '#5e3b2e';
   for (let y = 0; y < L.H; y++) for (let x = 0; x < L.W; x++) {
     const k = L.kind[y * L.W + x];
     if (k === VOID) continue;
-    if (cellKind(L, x - 1, y) === VOID) ctx.fillRect(x * TILE, y * TILE, 2, TILE);
-    if (cellKind(L, x + 1, y) === VOID) ctx.fillRect(x * TILE + TILE - 2, y * TILE, 2, TILE);
-    if (k !== EXIT && cellKind(L, x, y + 1) === VOID) ctx.fillRect(x * TILE, y * TILE + TILE - 2, TILE, 2);
+    if (k === EXIT) continue;
+    const lv = cellKind(L, x - 1, y) === VOID, rv = cellKind(L, x + 1, y) === VOID;
+    if (lv) ctx.fillRect(x * TILE - EDGE - 2, y * TILE, 2, TILE);
+    if (rv) ctx.fillRect((x + 1) * TILE + EDGE, y * TILE, 2, TILE);
+    if (cellKind(L, x, y + 1) === VOID) { const a = lv ? EDGE + 2 : 0, b = rv ? EDGE + 2 : 0; ctx.fillRect(x * TILE - a, y * TILE + TILE - 2, TILE + a + b, 2); }
   }
   // wall hangings (a window shows the sky)
   const sky = skyColour(hourOfDay());
