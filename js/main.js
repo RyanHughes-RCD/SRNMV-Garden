@@ -4,7 +4,8 @@ import { DATA, loadData, applyOverrides } from './data.js';
 import { input } from './input.js';
 import { resetSpriteCache, iconHTML } from './sprites.js';
 import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
-import { initRender, renderWorld, clampCamera } from './render.js';
+import { initRender, renderWorld, clampCamera, getCtx } from './render.js';
+import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
 import { syncCats, updateCats } from './cats.js';
@@ -278,7 +279,7 @@ function frame(now) {
   dt = Math.min(dt + pendingDt, 0.1); pendingDt = 0;
   G.realTime += dt;
   update(dt);
-  renderWorld(G.realTime);
+  if (G.state && isInside()) renderInterior(getCtx(), G.realTime); else renderWorld(G.realTime);
   input.afterFrame();
 }
 let pendingDt = 0;
@@ -299,15 +300,17 @@ function update(dt) {
     else if (G.mode === 'designate') updatePlan();
     else if (G.mode === 'place') updatePlace();
     else if (G.mode === 'plant') updatePlant();
+    else if (G.mode === 'iplace') updateDecorate();
     else if (G.mode === 'fishing') { updateFishing(dt); ui.setTooltip(fishingMessage()); }
     else if (G.mode === 'play') globalControls();
   }
-  updatePlayer(cardActive ? 0 : dt, decorHandlers);
+  if (isInside()) updateInside(cardActive ? 0 : dt); else updatePlayer(cardActive ? 0 : dt, decorHandlers);
   updateDecorFx(dt);
   updateParticles(dt);
   updateCamera(dt);
   const p = G.state.player, c = G.state.cabin;
-  updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE || nearFire(p.x, p.y), nearWater(p));
+  if (isInside()) updateAmbience(dt, true, false);
+  else updateAmbience(dt, Math.hypot(p.x - (c.x + 1.5) * TILE, p.y - (c.y + 1) * TILE) < 7 * TILE || nearFire(p.x, p.y), nearWater(p));
   hudT -= dt; if (hudT <= 0) { hudT = 0.25; updateHUD(); G.birdBoost = birdBoost(); }
   autosaveT += dt; if (autosaveT > B().tv.autosaveSec) { autosaveT = 0; if (!G.noSave) saveGame(); }
   updatePadOverlay();
@@ -317,8 +320,9 @@ let hudSwitchFired = false;
 function globalControls() {
   if ((input.pressed('debug')) || (input.down('seedPrev') && input.down('seedNext') && input.pressed('pause'))) { menus.debugMenu(); return; }
   if (input.pressed('pause')) { menus.pauseMenu(); return; }
-  if (input.pressed('designate')) { enterPlan(); return; }
   if (input.pressed('switchPlayer')) switchPlayer();
+  if (isInside()) { if (input.pressed('designate')) { furnitureMenu(); return; } hudControls(); return; } // Ⓨ decorates indoors; no tools or seeds
+  if (input.pressed('designate')) { enterPlan(); return; }
   if (input.pressed('tool') && fishSpot()) { menus.baitMenu(fishSpot().anchor); return; }
   if (input.pressed('tool')) {
     const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
@@ -328,6 +332,9 @@ function globalControls() {
     const k = cycleSeed(input.pressed('seedNext') ? 1 : -1);
     if (k) { sfx('move'); ui.toast(`${farm.seedLabel(k)} ×${farm.seedCount(k)}`, farm.seedIcon(k), 1400); } else { sfx('error'); ui.toast('No seeds yet', null, 1400); }
   }
+  hudControls();
+}
+function hudControls() {
   // Back/Share: tap toggles HUD, hold 1s switches player
   if (input.down('hud') && input.held('hud') > 1 && !hudSwitchFired) { hudSwitchFired = true; switchPlayer(); }
   if (input.released('hud')) { if (!hudSwitchFired) { G.hudHidden = !G.hudHidden; ui.toast(G.hudHidden ? 'HUD hidden (tap again to show)' : 'HUD shown', null, 1500); } hudSwitchFired = false; }
@@ -346,6 +353,7 @@ function idleCamera(dt, force) {
   clampCamera();
 }
 function updateCamera(dt) {
+  if (isInside()) return; // the interior keeps its own camera
   const idle = G.realTime - G.lastInput;
   if (G.mode === 'play' && G.settings.cameraDrift && idle > B().tv.idleDriftAfterSec && !ui.cardOpen()) return idleCamera(dt);
   let tgt;
@@ -374,7 +382,8 @@ function updateHUD() {
   });
   // tooltip for what Ⓐ will do
   let tip = G.mode === 'fishing' ? fishingMessage() : '';
-  if (G.mode === 'play' && !ui.cardOpen() && G.realTime - G.lastInput < B().tv.hudAutoHideSec) {
+  if (G.mode === 'play' && !ui.cardOpen() && isInside()) { const a = insideAction(); tip = a ? (a.kind === 'info' ? a.label : `Ⓐ ${a.label}`) : ''; }
+  else if (G.mode === 'play' && !ui.cardOpen() && G.realTime - G.lastInput < B().tv.hudAutoHideSec) {
     const a = currentAction();
     if (a) {
       const crop = a.crop || (a.tile != null ? st.crops[a.tile] : null);

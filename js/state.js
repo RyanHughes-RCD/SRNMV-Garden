@@ -2,6 +2,7 @@
 import { G, randInt, pickWeighted, hash2 } from './game.js';
 import { DATA, readLS, writeLS } from './data.js';
 import { DEFAULT_BINDINGS } from './input.js';
+import { homeDefaults, fixHome } from './interior.js';
 
 export const SAVE_KEY = 'srnmv.save';
 export const SETTINGS_KEY = 'srnmv.settings';
@@ -107,6 +108,7 @@ export function newGame() {
     discovered: {},
     map: { w, h, ground, obj },
     cabin: { x: cx, y: cy, ...CABIN_DEFAULTS },
+    home: homeDefaults(), // inside the cabin (interior.js)
     props: { crate, shop },
     plots: [],
     nextPlotId: 1,
@@ -152,6 +154,7 @@ function validate(s) {
   s.stats ||= {};
   s.decorState ||= {};
   s.cabin = { ...CABIN_DEFAULTS, ...s.cabin };
+  fixHome(s);
   for (let i = 0; i < s.map.obj.length; i++) { const o = s.map.obj[i]; if (o && o.startsWith('x:') && !DATA.decor[o.slice(2)]) s.map.obj[i] = null; }
   // drop crops/jobs that reference data that no longer exists
   for (const [k, c] of Object.entries(s.crops)) if (!DATA.cropById[c.id]) delete s.crops[k];

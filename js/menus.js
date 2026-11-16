@@ -16,6 +16,7 @@ import { switchPlayer, playerName, TOOLS } from './player.js';
 import { plotTiles } from './world.js';
 import { JOB_VERB } from './jobs.js';
 import * as brain from './catbrain.js';
+import { isInside, furnitureMenu, surfacesMenu, upgradesMenu, leaveCabin } from './interior.js';
 
 const pct = v => `${Math.round(v * 100)}%`;
 const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.round(Math.max(0, Math.min(100, (v / max) * 100)) / 5) * 5}%"></span></span>`;
@@ -28,7 +29,13 @@ export function pauseMenu() {
   openMenu({
     title: 'Garden menu', icon: 'tool_seeds',
     items: () => [
-      { label: 'Back to the garden', icon: 'tool_hand', onSelect: closeAllMenus },
+      ...(isInside() ? [
+        { label: 'Back to the cabin', icon: 'in_armchair', onSelect: closeAllMenus },
+        { label: 'Decorate the cabin', icon: 'in_sofa', sub: 'Furniture, rugs and things for the walls (or press Ⓨ)', onSelect: furnitureMenu },
+        { label: 'Floors & walls', icon: 'in_floor_oak_0', onSelect: surfacesMenu },
+        { label: 'Cabin rooms', icon: 'in_bed', sub: 'Bigger living room, kitchen, bedroom', onSelect: upgradesMenu },
+        { label: 'Go outside', icon: 'in_exit', onSelect: () => { closeAllMenus(); leaveCabin(); } },
+      ] : [{ label: 'Back to the garden', icon: 'tool_hand', onSelect: closeAllMenus }]),
       { label: 'Inventory', icon: 'tool_seeds', sub: 'Crops, seeds and materials', onSelect: inventoryMenu },
       { label: 'Garden plots', icon: 'tool_hoe', sub: 'Choose what each plot grows', onSelect: plotsMenu },
       { label: 'Seed shop', icon: 'shop', sub: 'Mystery seed packs', onSelect: shopMenu },
@@ -223,11 +230,11 @@ export function cabinMenu() {
   const opts = DATA.cabinOptions;
   openMenu({
     title: 'Cabin', icon: 'cabin_door_0', live: true,
-    items: () => Object.entries(opts).map(([key, o]) => {
+    items: () => [{ label: 'Rooms inside', icon: 'in_bed', sub: 'Bigger living room, kitchen and bedroom upgrades', onSelect: upgradesMenu }, { header: true, label: 'Outside' }, ...Object.entries(opts).map(([key, o]) => {
       const cur = G.state.cabin[key];
       const label = o.labels ? o.labels[o.options.indexOf(cur)] : String(cur);
       return { label: o.name, right: cap(label), onSelect: () => cabinChoice(key, o) };
-    }),
+    })],
   });
 }
 const cap = s => String(s).charAt(0).toUpperCase() + String(s).slice(1);

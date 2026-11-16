@@ -10,6 +10,8 @@ import { emit, floatIcon } from './particles.js';
 import { sfx } from './audio.js';
 import { catFurniture, nearestCatSpot, catHouseOf, catHouseDoorstep, catWorkMult } from './decorations.js';
 import { baitedDockNear, dockSeats, catFish } from './fishing.js';
+// a bed in the cabin's bedroom: the cats sneak in to nap and recover faster
+const bedBonus = () => (G.state.home?.items?.some(i => i.id === 'bed') ? DATA.interior?.bedNapMult || 1 : 1);
 
 const tileOf = c => idx(Math.floor(c.x / TILE), Math.floor((c.y - 2) / TILE));
 
@@ -273,7 +275,7 @@ export function updateCats(dt) {
       }
       case 'nap': {
         cat.timer -= dt;
-        cat.energy = Math.min(1, cat.energy + B.cats.energyRegenPerNapSec * (cat.napBonus || 1) * dt);
+        cat.energy = Math.min(1, cat.energy + B.cats.energyRegenPerNapSec * (cat.napBonus || 1) * bedBonus() * dt);
         if (!G.offline && rand() < dt * 0.25) floatIcon(cat.x + 2, cat.y - 10, 'icon_zzz');
         if (cat.timer <= 0) goIdle(cat, randRange(1, 3), 'sit', 'Waking up');
         break;

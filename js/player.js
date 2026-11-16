@@ -11,6 +11,7 @@ import { decorAction, gatherShell } from './decorations.js';
 import { treeAt, treeDef, needsWater, harvestTree } from './orchard.js';
 import { playerSpot as fishSpot, baitOf, startFishing } from './fishing.js';
 import { emit, poof, burst } from './particles.js';
+import { enterCabin } from './interior.js';
 import { sfx } from './audio.js';
 
 export const TOOLS = [
@@ -68,6 +69,7 @@ export function resolveAction(ignoreCats = false) {
   if (tool.id === 'hand') {
     if (o === 'crate') return { kind: 'crate', label: 'Shipping crate: sell crops' };
     if (o === 'shop') return { kind: 'shop', label: 'Seed shop' };
+    if (o === 'cabin' && t === idx(st.cabin.x + 1, st.cabin.y + 1) && st.player.dir === 'up') return { kind: 'enter', label: 'Go inside' };
     if (o === 'cabin') return { kind: 'cabin', label: 'Customize the cabin' };
     const da = decorAction(t);
     if (da) return da;
@@ -141,6 +143,7 @@ export function updatePlayer(dt, handlers) {
       case 'crate': handlers.crate(); return;
       case 'shop': handlers.shop(); return;
       case 'cabin': handlers.cabin(); return;
+      case 'enter': enterCabin(); return;
       case 'decor': act.run(handlers); return;
       case 'shell': gatherShell(act.tile); return;
       case 'fish': startFishing(act.spot); return;
@@ -172,8 +175,7 @@ export function switchPlayer() {
   G.emit('playerSwitched', playerCfg());
 }
 
-export function drawPlayer(push, ctx, t) {
-  const p = G.state.player;
+export function drawPlayer(push, ctx, t, p = G.state.player) {
   push(p.y, () => {
     const set = playerCfg()?.spriteSet || 'p1';
     const dir = p.dir === 'left' || p.dir === 'right' ? 'side' : p.dir;

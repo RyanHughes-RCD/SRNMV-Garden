@@ -1,0 +1,66 @@
+{
+  "_help": "The inside of the cabin. rooms: floor size in tiles per upgrade level. upgrades: big, expensive projects that add floor space. items: furniture. size = [w, h] floor tiles. room = only allowed in that room. back = must stand against the back wall. wall = hangs on the back wall. rug = flat, can be walked on and furniture can stand on it. light = glow radius at night. action = what pressing A does (cook, nap, look, lamp).",
+  "living": {
+    "sizes": [[9, 6], [12, 7], [15, 8]],
+    "names": ["Cozy living room", "Bigger living room", "Grand living room"]
+  },
+  "sideRooms": {
+    "bedroom": { "name": "Bedroom", "size": [7, 6], "side": "left" },
+    "kitchen": { "name": "Kitchen", "size": [7, 6], "side": "right" }
+  },
+  "upgrades": [
+    { "id": "living1", "name": "Bigger living room", "desc": "Knock out a wall: the living room grows to 12×7 tiles.", "cost": { "coins": 2500, "wood": 120, "stone": 40 } },
+    { "id": "kitchen", "name": "Kitchen", "desc": "A kitchen off the living room (7×6). Cook a feast for the cats on the stove: they work 25% faster for 6 hours.", "cost": { "coins": 4000, "wood": 150, "stone": 60 } },
+    { "id": "bedroom", "name": "Bedroom", "desc": "A bedroom off the living room (7×6). With a bed in it, the cats sneak in to nap and get their energy back 50% faster.", "cost": { "coins": 5000, "wood": 180, "fiber": 60 } },
+    { "id": "living2", "name": "Grand living room", "desc": "The living room grows again, to 15×8 tiles.", "cost": { "coins": 8000, "wood": 200, "stone": 100 }, "needs": "living1" }
+  ],
+  "surfaceCost": { "coins": 150 },
+  "floors": {
+    "oak": "Oak planks", "birch": "Birch planks", "walnut": "Walnut planks", "checker": "Checker tiles",
+    "stone": "Flagstones", "rose": "Rose carpet", "sage": "Sage carpet"
+  },
+  "walls": {
+    "cream": "Cream plaster", "log": "Log wall", "sage": "Sage wallpaper", "rose": "Rose wallpaper",
+    "sky": "Sky stripes", "butter": "Butter stripes"
+  },
+  "defaults": {
+    "floor": { "living": "oak", "kitchen": "checker", "bedroom": "birch" },
+    "wall": { "living": "cream", "kitchen": "cream", "bedroom": "rose" }
+  },
+  "feast": { "crops": 4, "hours": 6, "workMult": 1.25 },
+  "bedNapMult": 1.5,
+  "categories": ["Living room", "Bedroom", "Kitchen", "Walls", "Rugs"],
+  "items": {
+    "rug_round": { "name": "Round Rug", "cat": "Rugs", "size": [2, 2], "rug": true, "sprite": "in_rug_round", "cost": { "coins": 120, "fiber": 12 } },
+    "rug_long": { "name": "Long Rug", "cat": "Rugs", "size": [3, 2], "rug": true, "sprite": "in_rug_long", "cost": { "coins": 160, "fiber": 16 } },
+    "rug_cat": { "name": "Cat-Face Rug", "cat": "Rugs", "size": [2, 2], "rug": true, "sprite": "in_rug_cat", "cost": { "coins": 200, "fiber": 14 } },
+    "armchair": { "name": "Armchair", "cat": "Living room", "size": [1, 1], "sprite": "in_armchair", "cost": { "coins": 180, "wood": 8, "fiber": 10 } },
+    "sofa": { "name": "Sofa", "cat": "Living room", "size": [2, 1], "sprite": "in_sofa", "cost": { "coins": 320, "wood": 12, "fiber": 18 } },
+    "coffee_table": { "name": "Coffee Table", "cat": "Living room", "size": [2, 1], "sprite": "in_coffee_table", "cost": { "coins": 140, "wood": 14 } },
+    "bookshelf": { "name": "Bookshelf", "cat": "Living room", "size": [1, 1], "back": true, "sprite": "in_bookshelf", "cost": { "coins": 220, "wood": 20 } },
+    "floor_lamp": { "name": "Floor Lamp", "cat": "Living room", "size": [1, 1], "light": 44, "sprite": "in_floor_lamp", "cost": { "coins": 160, "stone": 4 } },
+    "fireplace": { "name": "Fireplace", "cat": "Living room", "size": [2, 1], "back": true, "light": 64, "sprite": "in_fireplace", "cost": { "coins": 600, "stone": 40 } },
+    "houseplant": { "name": "Houseplant", "cat": "Living room", "size": [1, 1], "sprite": "in_plant", "cost": { "coins": 80, "stone": 2, "fiber": 4 } },
+    "radio": { "name": "Radio Table", "cat": "Living room", "size": [1, 1], "sprite": "in_radio", "cost": { "coins": 260, "wood": 6 } },
+    "piano": { "name": "Piano", "cat": "Living room", "size": [2, 1], "back": true, "sprite": "in_piano", "cost": { "coins": 1200, "wood": 40 } },
+    "dining_table": { "name": "Dining Table", "cat": "Living room", "size": [2, 1], "sprite": "in_dining_table", "cost": { "coins": 200, "wood": 18 } },
+    "chair": { "name": "Chair", "cat": "Living room", "size": [1, 1], "sprite": "in_chair", "cost": { "coins": 60, "wood": 6 } },
+    "bed": { "name": "Bed", "cat": "Bedroom", "room": "bedroom", "size": [2, 2], "action": "nap", "sprite": "in_bed", "cost": { "coins": 500, "wood": 30, "fiber": 30 }, "desc": "The cats sneak in to nap here and recover 50% faster" },
+    "nightstand": { "name": "Nightstand", "cat": "Bedroom", "room": "bedroom", "size": [1, 1], "light": 26, "sprite": "in_nightstand", "cost": { "coins": 120, "wood": 10 } },
+    "dresser": { "name": "Dresser", "cat": "Bedroom", "room": "bedroom", "size": [2, 1], "back": true, "sprite": "in_dresser", "cost": { "coins": 280, "wood": 24 } },
+    "wardrobe": { "name": "Wardrobe", "cat": "Bedroom", "room": "bedroom", "size": [1, 1], "back": true, "sprite": "in_wardrobe", "cost": { "coins": 300, "wood": 28 } },
+    "stove": { "name": "Wood Stove", "cat": "Kitchen", "room": "kitchen", "size": [1, 1], "back": true, "light": 30, "action": "cook", "sprite": "in_stove", "cost": { "coins": 450, "stone": 20 }, "desc": "Cook a feast for the cats: they work 25% faster for 6 hours" },
+    "counter": { "name": "Counter", "cat": "Kitchen", "room": "kitchen", "size": [1, 1], "back": true, "sprite": "in_counter", "cost": { "coins": 120, "wood": 10, "stone": 2 } },
+    "sink": { "name": "Sink", "cat": "Kitchen", "room": "kitchen", "size": [1, 1], "back": true, "sprite": "in_sink", "cost": { "coins": 180, "wood": 6, "stone": 6 } },
+    "icebox": { "name": "Icebox", "cat": "Kitchen", "room": "kitchen", "size": [1, 1], "back": true, "sprite": "in_icebox", "cost": { "coins": 260, "wood": 10, "stone": 4 } },
+    "pantry": { "name": "Pantry Shelf", "cat": "Kitchen", "room": "kitchen", "size": [1, 1], "back": true, "sprite": "in_pantry", "cost": { "coins": 200, "wood": 16 } },
+    "window": { "name": "Window", "cat": "Walls", "wall": true, "action": "look", "sprite": "in_window", "cost": { "coins": 150, "wood": 6, "stone": 4 }, "desc": "Shows the sky outside" },
+    "painting_lake": { "name": "Lake Painting", "cat": "Walls", "wall": true, "sprite": "in_painting_lake", "cost": { "coins": 180 } },
+    "painting_cats": { "name": "Cat Portrait", "cat": "Walls", "wall": true, "sprite": "in_painting_cats", "cost": { "coins": 240 } },
+    "clock": { "name": "Wall Clock", "cat": "Walls", "wall": true, "action": "clock", "sprite": "in_clock", "cost": { "coins": 160, "wood": 4 } },
+    "wall_shelf": { "name": "Plant Shelf", "cat": "Walls", "wall": true, "sprite": "in_wall_shelf", "cost": { "coins": 100, "wood": 6 } },
+    "mirror": { "name": "Mirror", "cat": "Walls", "wall": true, "sprite": "in_mirror", "cost": { "coins": 200, "stone": 6 } },
+    "bunting": { "name": "Bunting", "cat": "Walls", "wall": true, "sprite": "in_bunting", "cost": { "coins": 60, "fiber": 8 } },
+    "wreath": { "name": "Wreath", "cat": "Walls", "wall": true, "sprite": "in_wreath", "cost": { "coins": 90, "fiber": 10 } }
+  }
+}
