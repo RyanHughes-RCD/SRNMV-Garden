@@ -643,7 +643,7 @@ function drawSpritePreviews() {
 }
 
 /* ============================================================= CATS */
-const JOB_NAMES = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering' };
+const JOB_NAMES = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering', fish: 'Fishing' };
 const COAT_SLOTS = [['coat', 'Coat'], ['shade', 'Shading'], ['marking', 'Markings'], ['belly', 'Belly & paws'], ['eye', 'Eyes']];
 const PRESETS = {
   'Orange tabby': { coat: '#f29b4b', shade: '#e5735a', marking: '#b8434a', belly: '#f6e7c8', eye: '#8cc65a' },

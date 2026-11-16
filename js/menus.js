@@ -11,6 +11,7 @@ import { enterPlace, enterPlant } from './modes.js';
 import { canAfford, pay, costHTML, costLabel } from './economy.js';
 import { decorState, catHouseLook, catHouseOf, drawCatHouse } from './decorations.js';
 import { buySapling, sellFruit, stageSec, fruitSec } from './orchard.js';
+import { baitOf, baitQuality, rarityOdds, baitItems, addBait, sellFish } from './fishing.js';
 import { switchPlayer, playerName, TOOLS } from './player.js';
 import { plotTiles } from './world.js';
 import { JOB_VERB } from './jobs.js';
@@ -64,6 +65,11 @@ export function inventoryMenu() {
       for (const [id, n] of saps) { const t = DATA.treeById[id]; out.push({ label: `${t.name} sapling`, icon: `sapling_${id}`, right: `×${n}`, sub: 'Plant it on grass with two free tiles between trees', onSelect: () => { closeAllMenus(); enterPlant(id); } }); }
       const fruit = Object.entries(st.inv.fruit || {}).filter(([, n]) => n > 0);
       if (fruit.length) { out.push({ header: true, label: 'Fruit' }); for (const [id, n] of fruit) { const t = DATA.treeById[id]; out.push({ label: t.fruit, icon: `fruit_${id}`, sub: `Sells for ${t.fruitPrice} each`, right: `×${n}`, onSelect: sellMenu }); } }
+      out.push({ header: true, label: `Fish (${Object.keys(st.fishFound || {}).length}/${DATA.fish.length} found)` });
+      for (const f of DATA.fish) {
+        const found = st.fishFound?.[f.id];
+        out.push({ label: found ? f.name : '???', iconHTML: iconHTML(`fish_${f.id}`, 'ico', { silhouette: !found }), sub: found ? `${rarityName(f.rarity)} · sells for ${f.price}` : `${rarityName(f.rarity)} · not caught yet`, right: `×${st.inv.fish?.[f.id] || 0}`, onSelect: found && st.inv.fish?.[f.id] ? sellMenu : undefined });
+      }
       out.push({ header: true, label: `Shells (${Object.keys(st.shellsFound).length}/${DATA.shells.length} found)` });
       for (const sh of DATA.shells) {
         const found = st.shellsFound[sh.id];
@@ -138,7 +144,7 @@ export function sellMenu() {
     empty: 'Nothing to sell yet. Harvest some crops first!',
     items: () => {
       const crops = Object.entries(G.state.inv.crops).filter(([, n]) => n > 0);
-      const shells = [...fruitSellItems(), ...shellSellItems()];
+      const shells = [...fishSellItems(), ...fruitSellItems(), ...shellSellItems()];
       if (!crops.length) return shells;
       const total = crops.reduce((a, [id, n]) => a + n * DATA.cropById[id].price, 0);
       return [
@@ -158,6 +164,29 @@ function sellShell(id, n) {
   inv[id] = have - n; if (!inv[id]) delete inv[id];
   G.state.coins += coins;
   return coins;
+}
+function fishSellItems() {
+  const list = Object.entries(G.state.inv.fish || {}).filter(([, n]) => n > 0);
+  if (!list.length) return [];
+  return [{ header: true, label: 'Fish' }, ...list.map(([id, n]) => { const f = DATA.fishById[id]; return { label: f.name, icon: `fish_${id}`, sub: `${f.price} each · Ⓐ sell one · Ⓧ sell all`, right: `×${n}`, xLabel: 'sell all', onSelect: () => { if (sellFish(id, 1)) sfx('coin'); }, onX: () => { const v = sellFish(id, n); if (v) { sfx('coin'); toast(`Sold ${n} ${f.name} for ${v} coins`, `fish_${id}`); } } }; })];
+}
+// Throw harvested crops or fruit into the water. Better bait, rarer fish.
+export function baitMenu(anchor) {
+  openMenu({
+    title: 'Bait the water', icon: 'fish_perch', live: true, cls: 'wide',
+    subtitle: () => {
+      const b = baitOf(anchor), q = baitQuality(b), odds = rarityOdds(q), max = DATA.fishCfg.bait.maxPortions;
+      const pct = r => `<span class="rar rar-${r}">${rarityName(r)} ${Math.round(odds[r] * 100)}%</span>`;
+      return `Bait in the water: <b>${b.portions}/${max}</b>${b.portions ? ` · average value ${Math.round(b.value / b.portions)}` : ''}. Each fish uses one portion.<br>Odds right now: ${RARITY_ORDER.map(pct).join(' ')}`;
+    },
+    empty: 'Nothing to use as bait. Harvest some crops or fruit first!',
+    footer: 'Ⓐ throw in one · Ⓧ throw in all of it · Ⓑ done',
+    items: () => baitItems().map(it => ({
+      label: it.name, icon: it.icon, sub: `worth ${it.price} each`, right: `×${it.n}`, xLabel: 'all',
+      onSelect: () => { if (addBait(anchor, it, 1)) sfx('plop'); else { sfx('error'); toast('The water is full of bait already'); } },
+      onX: () => { const n = addBait(anchor, it, it.n); if (n) { sfx('plop'); toast(`Threw in ${n} ${it.name.toLowerCase()}`, it.icon); } else { sfx('error'); toast('The water is full of bait already'); } },
+    })),
+  });
 }
 function fruitSellItems() {
   const list = Object.entries(G.state.inv.fruit || {}).filter(([, n]) => n > 0);

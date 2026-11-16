@@ -1123,6 +1123,45 @@ for (const t of TREES) {
   add(`sapling_${t.id}`, 'items', saplingItem(t));
 }
 
+/* ------------------------------------------------------------------ fish */
+// fish_<id>: 16x16 icon, facing right. fx_bobber: the float (2 frames: resting, dipping). icon_bang: the big "!".
+const FISH = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'fish.json'), 'utf8')).fish;
+function fishIcon(f) {
+  const g = new G(16, 16), b = col(f.body), be = col(f.belly), fi = col(f.fin), k = f.size || 1;
+  const rx = 4.6 * k + 0.4, ry = 2.6 * k + 0.3, cx = 8.5 - (1 - k) * 1.5, cy = 8;
+  // tail
+  const tx0 = Math.round(cx - rx);
+  g.rect(tx0, cy - 1, 1, 3, fi).rect(tx0 - 1, cy - 2, 1, 5, fi).rect(tx0 - 2, cy - 3, 1, 2, fi).rect(tx0 - 2, cy + 2, 1, 2, fi).set(tx0 - 3, cy - 3, fi).set(tx0 - 3, cy + 3, fi);
+  // body + belly
+  g.ellipse(cx, cy, rx, ry, b).ellipse(cx + 0.5, cy + ry * 0.45, rx * 0.8, ry * 0.45, be);
+  // fins
+  g.pts([[Math.round(cx) - 1, Math.round(cy - ry) - 1], [Math.round(cx), Math.round(cy - ry) - 1], [Math.round(cx) - 2, Math.round(cy - ry)]], fi);
+  g.pts([[Math.round(cx), Math.round(cy + ry) + 1], [Math.round(cx) - 1, Math.round(cy + ry)]], fi);
+  // patterns
+  const L = Math.round(cx - rx + 2), R = Math.round(cx + rx - 3);
+  if (f.pattern === 'stripes') for (let x = L + 1; x <= R - 1; x += 2) g.line(x, Math.round(cy - ry) + 1, x, Math.round(cy), col(f.fin));
+  if (f.pattern === 'spots') g.pts([[L + 1, cy - 1], [L + 3, cy], [L + 5, cy - 1], [L + 2, cy + 1]], fi);
+  if (f.pattern === 'scales') for (let x = L; x <= R; x += 2) g.set(x, cy - 1, col(f.fin)).set(x + 1, cy, col(f.fin));
+  if (f.pattern === 'whiskers') g.line(Math.round(cx + rx), cy + 1, Math.round(cx + rx) + 2, cy + 3, C.out).line(Math.round(cx + rx), cy, Math.round(cx + rx) + 2, cy - 1, C.out);
+  if (f.pattern === 'rainbow') g.line(L, cy, R + 1, cy, C.pink).line(L, cy - 1, R, cy - 1, C.yellow);
+  if (f.pattern === 'scutes') for (let x = L; x <= R; x += 2) g.set(x, Math.round(cy - ry) + 1, C.vlgray);
+  if (f.pattern === 'koi') g.pts([[L + 1, cy - 1], [L + 2, cy - 1], [L + 4, cy], [L + 5, cy - 1]], C.white).pts([[L + 3, cy - 2], [R - 1, cy]], C.red);
+  if (f.pattern === 'stars') g.pts([[L + 1, cy - 1], [L + 4, cy], [R - 1, cy - 1]], C.pyellow);
+  // eye + mouth
+  const ex = Math.round(cx + rx * 0.55), ey = Math.round(cy - ry * 0.25);
+  g.set(ex, ey, C.white).set(ex + 1, ey, C.out).set(Math.round(cx + rx), cy + 1, C.dgray);
+  g.outline();
+  if (f.pattern === 'glow' || f.pattern === 'stars') g.pts([[2, 2], [13, 3], [14, 12], [3, 13]], C.white);
+  return g;
+}
+for (const f of FISH) add(`fish_${f.id}`, 'items', fishIcon(f), 0, { fish: f.id });
+{
+  const bob = [0, 1].map(fr => { const g = new G(8, 8); const y = fr ? 3 : 1; g.ellipse(4, y + 2, 2.2, 2.2, C.red).rect(2, y + 2, 5, 2, C.white).set(3, y + 1, C.coral).line(4, y - 1, 4, y, C.dgray); if (!fr) g.pts([[1, 7], [6, 7]], C.pblue); return g.outline(); });
+  add('fx_bobber', 'fx', bob);
+  const bang = new G(8, 12); bang.rect(3, 0, 3, 7, C.yellow).rect(3, 0, 3, 1, C.pyellow).rect(3, 9, 3, 3, C.yellow);
+  add('icon_bang', 'ui', bang.outline());
+}
+
 /* ------------------------------------------------------- items + ui icons */
 {
   const wood = new G(16, 16);

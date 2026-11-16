@@ -5,7 +5,7 @@ export const OVERRIDE_KEYS = {
   cats: 'srnmv.override.cats',
   players: 'srnmv.override.players',
 };
-const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites', 'shells', 'trees'];
+const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites', 'shells', 'trees', 'fish'];
 
 export function readLS(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } }
 export function writeLS(key, value) { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
@@ -34,6 +34,9 @@ export function applyOverrides() {
   DATA.rarities = b.crops.rarities;
   DATA.cropById = Object.fromEntries(DATA.crops.map(c => [c.id, c]));
   DATA.debris = b.debris.debris;
+  DATA.fish = b.fish?.fish || [];
+  DATA.fishById = Object.fromEntries(DATA.fish.map(f => [f.id, f]));
+  DATA.fishCfg = b.fish || {};
   DATA.trees = b.trees?.trees || [];
   DATA.treeById = Object.fromEntries(DATA.trees.map(t => [t.id, t]));
   DATA.treeStageNames = b.trees?.stageNames || ['Sapling', 'Young tree', 'Small tree', 'Growing tree', 'Full-grown tree'];
@@ -49,6 +52,8 @@ export function applyOverrides() {
   DATA.sprites = mergeSprites(b.sprites, readLS(OVERRIDE_KEYS.sprites));
   const cats = readLS(OVERRIDE_KEYS.cats);
   DATA.catsConfig = cats && Array.isArray(cats.cats) ? cats : b.cats;
+  // cats saved by an older Workshop still learn new job types (e.g. fishing)
+  if (cats && Array.isArray(cats.jobTypes)) for (const j of b.cats.jobTypes) if (!cats.jobTypes.includes(j)) cats.jobTypes.push(j);
   const players = readLS(OVERRIDE_KEYS.players);
   if (players && Array.isArray(players.players) && (players.spritesVersion || 0) < (b.players.spritesVersion || 0)) {
     // The default character art changed since these profiles were saved in the Workshop:

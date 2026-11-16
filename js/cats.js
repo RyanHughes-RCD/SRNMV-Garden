@@ -9,6 +9,7 @@ import { hourOfDay, isNight } from './daytime.js';
 import { emit, floatIcon } from './particles.js';
 import { sfx } from './audio.js';
 import { catFurniture, nearestCatSpot, catHouseOf, catHouseDoorstep, catWorkMult } from './decorations.js';
+import { baitedDockNear, dockSeats, catFish } from './fishing.js';
 
 const tileOf = c => idx(Math.floor(c.x / TILE), Math.floor((c.y - 2) / TILE));
 
@@ -41,6 +42,7 @@ function setEmote(cat, sprite, sec = 2) { if (G.offline) return; cat.emote = spr
 
 function goIdle(cat, sec, anim = 'sit', activity) {
   release(cat);
+  cat.fishWater = null; cat.fishSeat = null;
   cat.state = 'idle'; cat.timer = sec ?? randRange(...DATA.balance.cats.decideIntervalSec); cat.anim = anim; cat.path = null;
   if (activity) cat.activity = activity;
 }
@@ -96,7 +98,7 @@ function decide(cat) {
   cat.perch = null; cat.napBonus = 1; cat.zoomCenter = null;
   const jobsAvailable = st.jobs.some(j => !j.reservedBy && brain.affinity(cfg, j.type) > 0);
   const here = tileOf(cat);
-  const w = brain.idleWeights(cfg, { energy: cat.energy, hour, jobsAvailable, furn: catFurniture(here) });
+  const w = brain.idleWeights(cfg, { energy: cat.energy, hour, jobsAvailable, furn: { ...catFurniture(here), dockBait: !!baitedDockNear(here) } });
   if (!G.state || G.offline) w.visit = 0;
   const choice = pickWeighted(Object.entries(w));
   if (choice === 'work' && pickJob(cat)) return;
@@ -129,6 +131,27 @@ function decide(cat) {
         if (choice === 'perch') { goIdle(cat, randRange(30, 70), 'sit', 'Perched on the cat tree'); cat.perch = { x: tx(spot.i) * TILE + 8, y: ty(spot.i) * TILE - 9, sortY: (ty(spot.i) + 1) * TILE + 1 }; }
         if (choice === 'snack') { goIdle(cat, 5, 'sit', 'Having a snack'); cat.energy = Math.min(1, cat.energy + 0.25); setEmote(cat, 'icon_heart', 1.5); }
       }, label)) return;
+      break;
+    }
+    case 'fish': {
+      const dock = baitedDockNear(here);
+      if (!dock) break;
+      const taken = new Set(G.cats.filter(c => c !== cat && (c.state === 'fishing' || c.fishSeat != null)).map(c => c.fishSeat));
+      const p = G.state.player, pt = idx(Math.floor(p.x / TILE), Math.floor((p.y - 3) / TILE));
+      const seats = dockSeats(dock.i).filter(s => !taken.has(s.tile) && s.tile !== pt);
+      if (!seats.length) break;
+      const seat = seats[Math.floor(rand() * seats.length)];
+      cat.fishSeat = seat.tile;
+      if (walkTo(cat, seat.tile, () => {
+        const F = DATA.fishCfg.cats, speed = cat.cfg.jobs?.fish?.speed ?? 1;
+        release(cat);
+        cat.state = 'fishing'; cat.anim = 'sit'; cat.path = null; cat.fishSeat = seat.tile;
+        cat.fishWater = seat.water; cat.fishDock = dock.i;
+        cat.timer = randRange(F.fishSec[0], F.fishSec[1]) / Math.max(0.2, speed);
+        const dx = tx(seat.water) - tx(seat.tile); cat.dir = dx > 0 ? 'right' : dx < 0 ? 'left' : 'down';
+        cat.activity = 'Fishing off the dock';
+      }, 'Off to go fishing')) return;
+      cat.fishSeat = null;
       break;
     }
     case 'sunbathe': {
@@ -253,6 +276,15 @@ export function updateCats(dt) {
         cat.energy = Math.min(1, cat.energy + B.cats.energyRegenPerNapSec * (cat.napBonus || 1) * dt);
         if (!G.offline && rand() < dt * 0.25) floatIcon(cat.x + 2, cat.y - 10, 'icon_zzz');
         if (cat.timer <= 0) goIdle(cat, randRange(1, 3), 'sit', 'Waking up');
+        break;
+      }
+      case 'fishing': {
+        cat.timer -= dt;
+        if (cat.timer <= 0) {
+          const id = catFish(cat, cat.fishDock);
+          if (id) { setEmote(cat, 'icon_heart', 2); goIdle(cat, randRange(2, 4), 'sit', `Caught a ${DATA.fishById[id]?.name}!`); }
+          else goIdle(cat, randRange(2, 4), 'sit', 'Nothing biting');
+        }
         break;
       }
       case 'pet':

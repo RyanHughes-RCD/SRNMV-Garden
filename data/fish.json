@@ -1,0 +1,24 @@
+{
+  "_help": "Fish caught from a dock. Bait the water with harvested crops or fruit: the higher the average value of the bait, the better the odds of rare fish. Each catch uses up one portion of bait. biteWindowSec = how long you have to press A when the '!' appears.",
+  "bait": { "qualityLowPrice": 8, "qualityHighPrice": 900, "maxPortions": 30 },
+  "minigame": { "waitSec": [2, 5], "tugs": [2, 4], "tugGapSec": [0.7, 1.5], "biteWindowSec": { "common": 1.0, "uncommon": 0.9, "rare": 0.8, "legendary": 0.7, "mystical": 0.6 } },
+  "cats": { "fishSec": [120, 300], "catchChance": 0.55 },
+  "fish": [
+    { "id": "minnow",    "name": "Minnow",        "rarity": "common",    "price": 10,   "body": "lgray",  "belly": "vlgray",  "fin": "gray",    "pattern": "none",    "size": 0.6, "desc": "Tiny and quick. A good start!" },
+    { "id": "perch",     "name": "Perch",         "rarity": "common",    "price": 14,   "body": "pgreen", "belly": "pyellow", "fin": "orange",  "pattern": "stripes", "size": 0.85, "desc": "Striped and always hungry." },
+    { "id": "sunfish",   "name": "Sunfish",       "rarity": "common",    "price": 13,   "body": "lgreen", "belly": "orange",  "fin": "green",   "pattern": "spots",   "size": 0.75, "desc": "Round, bright and cheerful." },
+    { "id": "bluegill",  "name": "Bluegill",      "rarity": "common",    "price": 16,   "body": "blue",   "belly": "pyellow", "fin": "dblue",   "pattern": "none",    "size": 0.8, "desc": "Look for the blue cheek." },
+    { "id": "trout",     "name": "Brook Trout",   "rarity": "uncommon",  "price": 34,   "body": "green1", "belly": "coral",   "fin": "orange",  "pattern": "spots",   "size": 0.95, "desc": "Speckled like a starry night." },
+    { "id": "carp",      "name": "Carp",          "rarity": "uncommon",  "price": 30,   "body": "tan",    "belly": "ltan",    "fin": "brown",   "pattern": "scales",  "size": 1.0, "desc": "Patient, golden-brown and big." },
+    { "id": "catfish",   "name": "Catfish",       "rarity": "uncommon",  "price": 40,   "body": "dgray",  "belly": "gray",    "fin": "plum",    "pattern": "whiskers","size": 1.0, "desc": "Has whiskers. The cats approve." },
+    { "id": "bass",      "name": "Bass",          "rarity": "rare",      "price": 90,   "body": "green",  "belly": "pgreen",  "fin": "green1",  "pattern": "stripes", "size": 1.05, "desc": "A proud lake fighter." },
+    { "id": "salmon",    "name": "Salmon",        "rarity": "rare",      "price": 110,  "body": "coral",  "belly": "ppink",   "fin": "red",     "pattern": "none",    "size": 1.05, "desc": "Swam all the way up the river." },
+    { "id": "pike",      "name": "Pike",          "rarity": "rare",      "price": 100,  "body": "green1", "belly": "pyellow", "fin": "dgreen",  "pattern": "spots",   "size": 1.1, "desc": "Long, sleek and full of teeth." },
+    { "id": "rainbow",   "name": "Rainbow Trout", "rarity": "legendary", "price": 300,  "body": "lblue",  "belly": "pink",    "fin": "violet",  "pattern": "rainbow", "size": 1.05, "desc": "Shimmers every colour in the light." },
+    { "id": "sturgeon",  "name": "Lake Sturgeon", "rarity": "legendary", "price": 340,  "body": "gray",   "belly": "lgray",   "fin": "dgray",   "pattern": "scutes",  "size": 1.15, "desc": "Older than the oldest tree in the woods." },
+    { "id": "goldkoi",   "name": "Golden Koi",    "rarity": "legendary", "price": 380,  "body": "yellow", "belly": "pyellow", "fin": "orange",  "pattern": "koi",     "size": 1.0, "desc": "Said to bring good luck to the garden." },
+    { "id": "moonfish",  "name": "Moonfish",      "rarity": "mystical",  "price": 1200, "body": "lav",    "belly": "white",   "fin": "pblue",   "pattern": "glow",    "size": 0.95, "desc": "Only bites when the moon is listening." },
+    { "id": "starfin",   "name": "Starfin",       "rarity": "mystical",  "price": 1300, "body": "dblue",  "belly": "blue",    "fin": "yellow",  "pattern": "stars",   "size": 1.0, "desc": "Its fins leave a trail of sparkles." },
+    { "id": "ghostkoi",  "name": "Ghost Koi",     "rarity": "mystical",  "price": 1500, "body": "vlgray", "belly": "white",   "fin": "pblue",   "pattern": "glow",    "size": 1.05, "desc": "You can almost see right through it." }
+  ]
+}

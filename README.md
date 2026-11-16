@@ -93,6 +93,20 @@ Times are while watered. Everything is tunable in `data/trees.json`.
 
 **How the tree art works:** each tree has a puffy, cloud-like canopy (round, tall, wide or soft, in its own leaf colours) on one of **5 trunk styles** shared by all trees: straight, leaning, forked, knotty and gnarled. Each planted tree keeps its style. In the Workshop: `ftree_<tree>` (sapling and canopy stages), `ftrunk_<shape>_0..4` (trunks) and `ffruit_<tree>` (blossom and fruit overlays).
 
+## Fishing
+
+Fishing unlocks when you build a **dock** (*Build & decorate → Paths & floors*).
+
+1. **Bait the water.** Stand on the dock facing open water and press **A**, then throw in harvested crops or fruit. **A** throws in one, **X** throws in all of that kind. The water holds up to 30 portions. **The more valuable the bait, the better the odds of rare fish.** The bait menu shows the odds live. Press **X** on the dock any time to add more.
+2. **Cast** with **A**. The bobber tugs a few times. **Wait.** When it tugs hardest, a big **!** pops up over your head: press **A** to pull the fish in. Too early and it swims off, too late and it gets away (rarer fish give you less time). **B** reels in.
+3. Each fish caught uses one portion of bait.
+
+There are 16 fish, from minnows and perch up to the mystical Moonfish, Starfin and Ghost Koi. The first catch of each gets a discovery card, the inventory tracks your collection, and fish sell at the shipping crate.
+
+**The cats fish too.** When a dock has bait in it, they sometimes wander down, sit on the end with a line in the water, and now and then land a fish, using the same bait. Each cat has a *Fishing* speed and preference in the Workshop's Cats tab.
+
+Fish, prices, bite timing and bait odds are in `data/fish.json`.
+
 ## Decorating
 
 *Menu → Build & decorate* lists everything by section. Pick an item and a ghost of it follows a cursor: **A** places (you can keep placing), **X** picks something up for a full refund, **LB/RB** switch items, **B** finishes. Bigger items (pond, hammock, cat houses, shed, greenhouse) show their full footprint.

@@ -11,6 +11,7 @@ import { drawModeOverlay } from './modes.js';
 import { jobsAtTile } from './jobs.js';
 import { drawDecor, overlaySprite, lightsFrom, drawFloorDecor } from './decorations.js';
 import { drawTree } from './orchard.js';
+import { drawFishing } from './fishing.js';
 
 let canvas, ctx, lightCanvas, lctx;
 export function initRender(c) {
@@ -133,6 +134,7 @@ export function renderWorld(t) {
   drawPlayer(pushDraw, ctx, t);
   drawList.sort((a, b) => a.y - b.y);
   for (const d of drawList) d.fn();
+  drawFishing(ctx, t);
 
   // job markers + progress
   for (const j of st.jobs) {

@@ -18,6 +18,7 @@ import * as menus from './menus.js';
 import { tx, ty } from './world.js';
 import { updateShells } from './decorations.js';
 import { updateTrees } from './orchard.js';
+import { updateFishing, fishingMessage, playerSpot as fishSpot } from './fishing.js';
 import * as tree from './orchard.js';
 import { updateDecor, updateMail, updateDecorFx, nearFire, birdBoost, decorState, readLetter, makeWish, markDirty } from './decorations.js';
 
@@ -113,6 +114,7 @@ function catchUp(seconds, summary) {
   const off = [
     G.on('stage', e => { stats.stages++; if (e.crop.stage >= 3) stats.ready++; }),
     G.on('treeGrew', e => { stats.stages++; if (e.tree.fruit === 3 && e.kind === 'fruit') stats.ready++; }),
+    G.on('fishCaught', e => { stats.fish = (stats.fish || 0) + 1; }),
     G.on('jobDone', e => { if (e.worker && e.worker !== 'player') { const c = (stats.jobs[e.worker] ||= {}); c[e.job.type] = (c[e.job.type] || 0) + 1; } if (e.job.type === 'clear') stats.cleared++; }),
   ];
   G.offline = true;
@@ -129,6 +131,7 @@ function catchUp(seconds, summary) {
     const did = j ? Object.entries(j).map(([t, n]) => `${JOB_VERB[t].toLowerCase()} ${n}×`).join(', ') : null;
     lines.push(`${ui.catPortrait(cat.cfg)} <b>${ui.esc(cat.cfg.name)}</b> ${did ? `was busy: ${did}.` : 'mostly napped. Very important work.'}`);
   }
+  if (stats.fish) lines.push(`${iconHTML('fish_perch')} The cats caught <b>${stats.fish}</b> fish off the dock.`);
   if (!lines.length) lines.push('It was a quiet time in the clearing.');
   ui.showCard(`<h2>While you were away</h2><p class="muted">${fmtTime(secs)}${seconds > cap ? ` (counted up to ${B().time.offlineCapHours}h)` : ''}</p>${lines.map(l => `<p>${l}</p>`).join('')}`, { cls: 'away' });
 }
@@ -193,6 +196,18 @@ function wireEvents() {
       ui.showCard(`<div class="disc">${iconHTML(`fruit_${r.id}`, 'ico huge')}</div><h2>First ${r.def.fruit.toLowerCase()} harvest!</h2><div class="disc-name">${r.def.name}</div><p>You picked ${r.n}. Each sells for ${r.def.fruitPrice} coins.</p><p class="muted">It will blossom again and grow more.</p>`, { cls: 'discover', ms: 12000 });
     } else ui.toast(`+${r.n} ${r.n === 1 ? r.def.fruit : r.def.fruitPlural || r.def.fruit}`, `fruit_${r.id}`, 2200);
   });
+  G.on('fishCaught', r => {
+    if (G.offline) return;
+    const who = r.by === 'player' ? null : G.cats.find(c => c.id === r.by)?.cfg.name;
+    if (r.first) { sfx('discover'); ui.showCard(`<div class="disc">${iconHTML(`fish_${r.id}`, 'ico huge')}</div><h2>${who ? `${ui.esc(who)} caught a new fish!` : 'New fish caught!'}</h2><div class="disc-name">${r.def.name}</div><span class="rar rar-${r.def.rarity}">${DATA.rarities[r.def.rarity]?.name || r.def.rarity}</span><p>${r.def.desc}</p><p class="muted">Sells for ${r.def.price} · Fish found: ${Object.keys(G.state.fishFound).length}/${DATA.fish.length}</p>`, { cls: 'discover', ms: 12000 }); }
+    else ui.toast(who ? `${ui.esc(who)} caught a ${r.def.name}!` : `Caught a ${r.def.name}!`, `fish_${r.id}`, 3000);
+  });
+  G.on('built', ({ id }) => {
+    if (DATA.decor[id]?.onWater && !G.state.fishingUnlocked) {
+      G.state.fishingUnlocked = true;
+      ui.showCard(`<div class="disc">${iconHTML('fish_perch', 'ico huge')}</div><h2>Fishing unlocked!</h2><p>Stand on the dock facing open water and press Ⓐ to bait it with crops or fruit, then Ⓐ again to cast.</p><p>Wait through the little tugs. When the big <b>!</b> pops up, press Ⓐ to pull the fish in. Better bait means rarer fish.</p><p class="muted">The cats will fish off the dock too, using the same bait.</p>`, { cls: 'discover' });
+    }
+  });
   G.on('shell', r => {
     sfx(r.first ? 'discover' : 'pop');
     if (r.first) ui.showCard(`<div class="disc">${iconHTML(`shell_${r.id}`, 'ico huge')}</div><h2>New shell found!</h2><div class="disc-name">${r.def?.name}</div><p>${r.def?.desc || ''}</p><p class="muted">Shells: ${Object.keys(G.state.shellsFound).length} of ${DATA.shells.length} kinds found</p>`, { cls: 'discover', ms: 12000 });
@@ -241,6 +256,7 @@ const decorHandlers = {
     ui.showCard(`<div class="disc">${iconHTML('decor_well', 'ico huge')}</div><h2>You made a wish...</h2><p>The well gives you <b>${g}</b>.</p><p class="muted">Come back tomorrow for another wish.</p>`, { cls: 'discover' });
   },
   catHouse: a => menus.catHouseMenu(a),
+  bait: a => menus.baitMenu(a),
 };
 
 /* ------------------------------------------------------------ wake lock */
@@ -283,6 +299,7 @@ function update(dt) {
     else if (G.mode === 'designate') updatePlan();
     else if (G.mode === 'place') updatePlace();
     else if (G.mode === 'plant') updatePlant();
+    else if (G.mode === 'fishing') { updateFishing(dt); ui.setTooltip(fishingMessage()); }
     else if (G.mode === 'play') globalControls();
   }
   updatePlayer(cardActive ? 0 : dt, decorHandlers);
@@ -302,6 +319,7 @@ function globalControls() {
   if (input.pressed('pause')) { menus.pauseMenu(); return; }
   if (input.pressed('designate')) { enterPlan(); return; }
   if (input.pressed('switchPlayer')) switchPlayer();
+  if (input.pressed('tool') && fishSpot()) { menus.baitMenu(fishSpot().anchor); return; }
   if (input.pressed('tool')) {
     const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
     ui.toast(`Tool: ${TOOLS[p.tool].name}`, TOOLS[p.tool].icon, 1400);
@@ -355,7 +373,7 @@ function updateHUD() {
     cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join(''),
   });
   // tooltip for what Ⓐ will do
-  let tip = '';
+  let tip = G.mode === 'fishing' ? fishingMessage() : '';
   if (G.mode === 'play' && !ui.cardOpen() && G.realTime - G.lastInput < B().tv.hudAutoHideSec) {
     const a = currentAction();
     if (a) {

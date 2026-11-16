@@ -94,6 +94,10 @@ export function sfx(name) {
       break;
     }
     case 'swap': [4, 2, 0, 4].forEach((n, i) => tone(PENTA[n], 0.12, { vol: 0.06, type: 'triangle', at: i * 0.05 })); break;
+    case 'cast': noise(0.18, { vol: 0.12, freq: 2200, q: 0.8, attack: 0.02 }); tone(900, 0.15, { vol: 0.04, type: 'sine', slide: 500 }); break;
+    case 'plop': tone(420, 0.09, { vol: 0.08, type: 'sine', slide: 220 }); noise(0.06, { vol: 0.06, freq: 900, q: 1 }); break;
+    case 'bite': noise(0.2, { vol: 0.25, freq: 700, q: 0.7 }); tone(1046, 0.12, { vol: 0.09, type: 'square' }); tone(1318, 0.16, { vol: 0.08, type: 'square', at: 0.1 }); break;
+    case 'reel': [0, 2, 4, 7].forEach((n, i) => tone(PENTA[n] * 1.5, 0.09, { vol: 0.07, type: 'triangle', at: i * 0.05 })); noise(0.25, { vol: 0.15, freq: 1500, q: 0.6, at: 0.15 }); break;
     case 'build': noise(0.1, { vol: 0.2, freq: 600 }); tone(330, 0.1, { vol: 0.07, type: 'triangle', at: 0.05 }); break;
   }
 }

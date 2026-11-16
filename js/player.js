@@ -9,6 +9,7 @@ import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
 import { decorAction, gatherShell } from './decorations.js';
 import { treeAt, treeDef, needsWater, harvestTree } from './orchard.js';
+import { playerSpot as fishSpot, baitOf, startFishing } from './fishing.js';
 import { emit, poof, burst } from './particles.js';
 import { sfx } from './audio.js';
 
@@ -70,6 +71,12 @@ export function resolveAction(ignoreCats = false) {
     if (o === 'cabin') return { kind: 'cabin', label: 'Customize the cabin' };
     const da = decorAction(t);
     if (da) return da;
+  }
+  const spot = fishSpot();
+  if (spot) {
+    const b = baitOf(spot.anchor);
+    if (b.portions > 0) return { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` };
+    return { kind: 'bait', spot, label: 'Bait the water with crops or fruit' };
   }
   const tree = treeAt(t);
   if (tree) {
@@ -136,6 +143,8 @@ export function updatePlayer(dt, handlers) {
       case 'cabin': handlers.cabin(); return;
       case 'decor': act.run(handlers); return;
       case 'shell': gatherShell(act.tile); return;
+      case 'fish': startFishing(act.spot); return;
+      case 'bait': handlers.bait(act.spot.anchor); return;
       case 'pickFruit': { const r = harvestTree(act.tile); if (r) sfx('harvest'); return; }
       case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
     }

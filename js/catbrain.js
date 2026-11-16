@@ -44,6 +44,7 @@ export function idleWeights(cfg, { energy, hour, jobsAvailable, furn = {} }) {
     snack: furn.bowls ? 0.35 * Math.max(0, 0.7 - energy) : 0,
     sunbathe: furn.cushion && hour >= 10 && hour < 17 ? 0.18 * t.napFrequency : 0,
     play: furn.yarn ? 0.08 * t.zoomies * (0.4 + energy) : 0,
+    fish: furn.dockBait ? 0.22 * affinity(cfg, 'fish') * (night ? 0.6 : 1) : 0,
   };
 }
 export const napSeconds = (cfg, B, sleepy = 1) => B.cats.baseNapSec * traits(cfg).napDuration * (0.6 + Math.random() * 0.8) * Math.min(2.5, sleepy);
@@ -72,7 +73,7 @@ export function simulateDay(cfg, B, jobTypes, startHour = 0) {
     if (energy < 0.15) { w.nap = 99; }
     const choice = pick(w);
     if (choice === 'work') {
-      const scored = jobTypes.map(type => [type, jobScore(cfg, type, 120, 3 + Math.random() * 10, B)]);
+      const scored = jobTypes.filter(j => amounts[j] != null).map(type => [type, jobScore(cfg, type, 120, 3 + Math.random() * 10, B)]);
       const tot = scored.reduce((a, [, s]) => a + s, 0);
       if (tot <= 0) { time.sit += 20; t += 20; continue; }
       let r = Math.random() * tot, type = scored[0][0];

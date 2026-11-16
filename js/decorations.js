@@ -81,17 +81,19 @@ export function placeProblem(id, anchor) {
 // Docks start on the shore and reach out over the water.
 function waterProblem(id, anchor) {
   const [w] = sizeOf(id), tiles = footprint(anchor, id);
-  let water = 0;
+  let water = 0, landTop = 0;
   for (let k = 0; k < tiles.length; k++) {
     const t = tiles[k];
     if (t < 0) return 'Out of bounds';
     const g = ground(t), o = obj(t);
     if (o && !o.startsWith('h:')) return 'Something is in the way';
     if (g === 'f') return 'Trees are in the way';
-    if (k < w) { if (g === 'w') return 'Start the dock on the shore (top row on land)'; if (g === 't') return 'Not on tilled soil'; }
-    else if (g === 'w') water++;
+    if (g === 't') return 'Not on tilled soil';
+    if (g === 'w') water++;
+    else if (k < w) landTop++;
     else if (g !== 's' && g !== 'g' && !def(g)?.ground) return 'Something is in the way';
   }
+  if (!landTop) return 'Start the dock on the shore (its top row must touch land)';
   if (water < tiles.length / 2) return 'Point it out over the water';
   return null;
 }

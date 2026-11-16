@@ -6,7 +6,7 @@ import * as farm from './farm.js';
 import { needsWater } from './orchard.js';
 
 export const JOB_TYPES = ['clear', 'till', 'plant', 'water'];
-export const JOB_VERB = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering' };
+export const JOB_VERB = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering', fish: 'Fishing' };
 const byKey = new Map();
 const key = (t, i) => t + ':' + i;
 
