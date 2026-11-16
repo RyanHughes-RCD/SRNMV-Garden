@@ -54,13 +54,13 @@
   },
   "farm": {
     "waterGrowthBonus": 0.6,
-    "waterDurationSec": 21600,
+    "waterDurationSec": 3600,
     "doubleSeedChance": 0.15,
     "cropYield": 1,
     "maxPlotSize": 10,
     "jobGenIntervalSec": 2,
     "growBannerCooldownSec": 45,
-    "_growth": "Crop growMinutes is the time to fully grow while kept watered (6-10 hours). A crop left dry grows (1 + waterGrowthBonus x waterMult) times slower. One watering lasts waterDurationSec."
+    "_growth": "Crop growMinutes is the time to fully grow while kept watered (8-12 hours). A crop left dry grows (1 + waterGrowthBonus x waterMult) times slower. One watering lasts waterDurationSec."
   },
   "economy": {
     "startCoins": 60,
