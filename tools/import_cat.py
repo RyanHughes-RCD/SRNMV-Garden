@@ -54,7 +54,23 @@ TRIMMED.update({
     'work':      ([(6, 6)], 1),                         # the second sweep frame is cut off
 })
 for k in ('sleep_other', 'type', 'read', 'eat', 'stretch'): TRIMMED.pop(k)
-LAYOUTS = {'full': ANIMS, 'trimmed': TRIMMED}
+# Spirit animals (data/spirits.json): side views face right; the game mirrors them for left.
+FOX = {
+    'walk_side':  ([(0, c) for c in range(8)], 8),
+    'idle_side':  ([(1, c) for c in range(8)], 6),
+    'walk_down':  ([(4, c) for c in range(8)], 8),
+    'idle_front': ([(5, c) for c in range(8)], 6),
+    'walk_up':    ([(6, c) for c in range(8)], 8),
+    'idle_back':  ([(7, c) for c in range(8)], 6),
+}
+MOOSE = {
+    'walk_side':  ([(0, c) for c in range(8)], 7),
+    'idle_side':  ([(4, c) for c in range(8)], 5),
+    'idle_front': ([(6, c) for c in range(8)], 5),
+    'vanish':     ([(7, 7)], 1),
+}
+LAYOUTS = {'full': ANIMS, 'trimmed': TRIMMED, 'fox': FOX, 'moose': MOOSE}
+CATEGORY = {'fox': 'spirits', 'moose': 'spirits'}
 
 def despeck(im, keep=8):
     """Drop little islands of pixels (bits of a neighbouring frame that leaked into the cell)."""
@@ -118,7 +134,7 @@ def main(path, set_name, grid=None, layout='full'):
                 if any(ch != '.' for ch in s): bottom = max(bottom, y)
             rows_per_frame.append(rows)
         # anchor: centre of the cell, on the lowest drawn row of the animation (the cat's feet)
-        out[f'{set_name}_{anim}'] = {'w': CELL, 'h': CELL, 'cat': 'cats', 'fps': fps, 'ax': CELL // 2, 'ay': bottom, 'pal': ['#%02x%02x%02x' % c for c in pal], 'frames': rows_per_frame}
+        out[f'{set_name}_{anim}'] = {'w': CELL, 'h': CELL, 'cat': CATEGORY.get(layout, 'cats'), 'fps': fps, 'ax': CELL // 2, 'ay': bottom, 'pal': ['#%02x%02x%02x' % c for c in pal], 'frames': rows_per_frame}
     p = os.path.join(ROOT, 'data', 'custom-sprites.json')
     data = json.load(open(p)) if os.path.exists(p) else {'sprites': {}}
     data['sprites'].update(out)

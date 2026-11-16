@@ -77,13 +77,14 @@ export function openMenu(m) {
   return m;
 }
 export function closeMenu() {
+  G.menuClosedAt = G.realTime; // the button that closed a menu shouldn't also act in the world
   const m = stack.pop();
   m?.onClose?.();
   if (!stack.length) { G.mode = G.menuReturn || 'play'; clearMenuRoot(); }
   else { fixSel(stack.at(-1)); renderMenu(); }
 }
 function clearMenuRoot() { const r = $('menus'); r.innerHTML = ''; r._menu = null; r._parts = null; }
-export function closeAllMenus() { while (stack.length) stack.pop()?.onClose?.(); G.mode = 'play'; clearMenuRoot(); }
+export function closeAllMenus() { G.menuClosedAt = G.realTime; while (stack.length) stack.pop()?.onClose?.(); G.mode = 'play'; clearMenuRoot(); }
 export function replaceMenu(m) { stack.pop(); m.sel ??= 0; stack.push(m); fixSel(m); renderMenu(); }
 export function refreshMenu() { if (stack.length) { fixSel(stack.at(-1)); renderMenu(); } }
 

@@ -105,6 +105,16 @@ node tools/gen-sprites.mjs
 
 Then set the cat's `"spriteSet": "vyke"` in `data/cats.json`. Big, detailed art can be drawn smaller with `"spriteScale"` (all three use 0.75). The game draws at the screen's full resolution, so the art keeps its detail. Which frames make which animation is listed at the top of `tools/import_cat.py`. Besides walking, sitting, sleeping and working (Vyke sweeps), a sheet can have extra poses the cat shows when it's doing something matching: eating a snack, stretching, sitting with its back to you while fishing, curled up in a cat bed, and belly-up when sunbathing.
 
+## The Great Stump and the spirit animals
+
+Somewhere in the forest, a few tiles deep, hides the **Great Stump** (2×2 tiles, in its own little glade). Chop your way to it, then face it and press **A** to leave a **fruit offering** (fruit comes from fruit trees).
+
+- **Every evening between 7 and 9pm** there's a chance a spirit animal answers: about 43% for an apple, up to about 63% for a fig. Finer fruit gives better odds. If no spirit comes, the offering stays for the next evening, and you can take it back.
+- **The Fox Spirit or the Moose Spirit** (rarer) wanders the open ground around the stump for **2 to 6 hours**, glowing in the dark. While it's there, **the cats work 25% faster**, and it shows in the cats' panel.
+- **When it leaves** it usually leaves a **gift** on the stump: coins, wood and stone, a rare (or even legendary) mystery seed, or a fruit tree sapling. The moose is more generous.
+
+Tuning is in `data/spirits.json`. The art: `art/great-stump.png`, `art/fox-spirit-sheet.png` and `art/moose-spirit-sheet.png`.
+
 ## Inside the cabin
 
 Stand in front of the cabin door, face it and press **A** to go in. Walk out through the doormat at the bottom to leave. The garden and the cats keep going while you're inside. (Customizing the outside of the cabin is in *Menu → Cabin*.)

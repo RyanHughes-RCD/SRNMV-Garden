@@ -7,6 +7,7 @@ import { drawSprite, animFrame, hasSprite, optionSwap, mergeSwaps } from './spri
 import { idx, tx, ty, inBounds, ground, obj, plotAt, debrisAt, blocks } from './world.js';
 import { addJob } from './jobs.js';
 import { emit } from './particles.js';
+import { spiritWorkMult } from './spirits.js';
 import { hourOfDay, isNight } from './daytime.js';
 
 export const def = id => DATA.decor[id];
@@ -53,7 +54,7 @@ export function anchors() {
 }
 export function growBonusAt(tile) { anchors(); return cache.bonus[tile] || 1; }
 // garden shed bonus, times the kitchen feast bonus while the cats are well fed
-export function catWorkMult() { anchors(); const h = G.state.home; return (1 + cache.work) * (h && h.feastUntil > G.state.simTime ? DATA.interior.feast.workMult : 1); }
+export function catWorkMult() { anchors(); const h = G.state.home; return (1 + cache.work) * (h && h.feastUntil > G.state.simTime ? DATA.interior.feast.workMult : 1) * spiritWorkMult(); }
 export const countOf = id => anchors().filter(a => a.id === id).length;
 
 /* ---------------------------------------------------------- placement */

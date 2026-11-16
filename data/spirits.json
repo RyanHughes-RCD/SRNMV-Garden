@@ -1,0 +1,21 @@
+{
+  "_help": "The Great Stump hides somewhere in the forest (2x2 tiles). Chop your way to it and leave a fruit offering: each evening between arriveHours there's a chance (better fruit, better odds) that a spirit animal comes to visit. While it's there the cats work faster; when it leaves it may leave a gift. Hours are the in-game clock (real time).",
+  "stump": { "sprite": "great_stump", "scale": 0.62, "minDepth": 4, "maxDepth": 9, "_depth": "How many forest tiles deep it hides from open ground when a world is made." },
+  "offering": { "base": 0.25, "perPrice": 0.008, "max": 0.7, "_chance": "Chance each evening = base + fruit price x perPrice (an apple, price 22, is about 43%; a fig, 48, about 63%). The offering stays until a spirit comes." },
+  "arriveHours": [19, 21],
+  "stayHours": [2, 6],
+  "workMult": 1.25,
+  "giftChance": 0.85,
+  "wanderTiles": 3,
+  "animals": {
+    "fox": { "name": "Fox Spirit", "weight": 1, "scale": 0.8, "speed": 20, "light": 44, "giftBonus": 1, "sprites": "spirit_fox", "desc": "A quick, curious spirit wreathed in blue flame." },
+    "moose": { "name": "Moose Spirit", "weight": 0.7, "scale": 1.15, "speed": 11, "light": 60, "giftBonus": 1.6, "sprites": "spirit_moose", "desc": "An ancient guardian of the woods. Rarer, and more generous." }
+  },
+  "gifts": [
+    { "kind": "coins", "weight": 3, "min": 150, "max": 400 },
+    { "kind": "mats", "weight": 2, "wood": [20, 40], "stone": [10, 25] },
+    { "kind": "seed", "weight": 2, "rarity": "rare" },
+    { "kind": "seed", "weight": 0.6, "rarity": "legendary" },
+    { "kind": "sapling", "weight": 1.2 }
+  ]
+}

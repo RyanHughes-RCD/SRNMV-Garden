@@ -3,10 +3,11 @@ import { G, randInt, pickWeighted, hash2 } from './game.js';
 import { DATA, readLS, writeLS } from './data.js';
 import { DEFAULT_BINDINGS } from './input.js';
 import { homeDefaults, fixHome } from './interior.js';
+import { spiritDefaults, placeStump } from './spirits.js';
 
 export const SAVE_KEY = 'srnmv.save';
 export const SETTINGS_KEY = 'srnmv.settings';
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 // Each migration upgrades a save from version i to i+1.
 const MIGRATIONS = [
@@ -14,6 +15,8 @@ const MIGRATIONS = [
   s => s,
   // 1 -> 2: clear a tile of riverbank on both sides of the river so a bridge can be built
   s => { clearRiverBanks(s.map); return s; },
+  // 2 -> 3: hide the Great Stump somewhere in the forest
+  s => { s.spirit = { ...spiritDefaults(), stump: placeStump(s.map) }; return s; },
 ];
 
 // Turns the forest (and any debris) on the tile either side of the river into open grass, so
@@ -109,6 +112,7 @@ export function newGame() {
     if (Math.random() < B.map.debrisDensity) obj[i] = 'd:' + pickWeighted(weights);
   }
   clearRiverBanks({ w, h, ground, obj });
+  const stump = placeStump({ w, h, ground, obj });
   const E = B.economy;
   const unknown = {};
   for (let p = 0; p < E.startMysteryPacks; p++) {
@@ -135,6 +139,7 @@ export function newGame() {
     map: { w, h, ground, obj },
     cabin: { x: cx, y: cy, ...CABIN_DEFAULTS },
     home: homeDefaults(), // inside the cabin (interior.js)
+    spirit: { ...spiritDefaults(), stump }, // the Great Stump and visiting spirits (spirits.js)
     props: { crate, shop },
     plots: [],
     nextPlotId: 1,
@@ -181,6 +186,8 @@ function validate(s) {
   s.decorState ||= {};
   s.cabin = { ...CABIN_DEFAULTS, ...s.cabin };
   fixHome(s);
+  s.spirit = { ...spiritDefaults(), ...(s.spirit || {}) };
+  if (s.spirit.visit && !DATA.spirits.animals[s.spirit.visit.animal]) s.spirit.visit = null;
   for (let i = 0; i < s.map.obj.length; i++) { const o = s.map.obj[i]; if (o && o.startsWith('x:') && !DATA.decor[o.slice(2)]) s.map.obj[i] = null; }
   // drop crops/jobs that reference data that no longer exists
   for (const [k, c] of Object.entries(s.crops)) if (!DATA.cropById[c.id]) delete s.crops[k];

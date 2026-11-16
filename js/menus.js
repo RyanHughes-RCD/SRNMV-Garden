@@ -17,6 +17,7 @@ import { plotTiles } from './world.js';
 import { JOB_VERB } from './jobs.js';
 import * as brain from './catbrain.js';
 import { isInside, furnitureMenu, surfacesMenu, upgradesMenu, leaveCabin } from './interior.js';
+import { arrive as spiritArrive } from './spirits.js';
 
 const pct = v => `${Math.round(v * 100)}%`;
 const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.round(Math.max(0, Math.min(100, (v / max) * 100)) / 5) * 5}%"></span></span>`;
@@ -470,6 +471,7 @@ export function debugMenu() {
       { label: '+1 unknown pack of each rarity', onSelect: () => { for (const r of RARITY_ORDER) { const pool = DATA.crops.filter(c => c.rarity === r); (G.state.inv.unknown[r] ||= []).push(pool[Math.floor(Math.random() * pool.length)].id); } } },
       { label: 'Grow every crop to ready', onSelect: () => { for (const c of Object.values(G.state.crops)) { c.g = 3 * farm.stageSeconds(c); } } },
       { label: '+1 sapling of every fruit tree', onSelect: () => { for (const t of DATA.trees) G.state.inv.saplings[t.id] = (G.state.inv.saplings[t.id] || 0) + 1; } },
+      { label: 'Summon a spirit to the Great Stump', sub: 'Fox or moose, as if an offering was answered', onSelect: () => { if (G.state.spirit?.stump >= 0) { G.state.spirit.visit = null; spiritArrive(); } } },
       { label: 'Grow every fruit tree to ripe', onSelect: () => { for (const t of Object.values(G.state.trees)) { t.stage = 4; t.g = 4 * stageSec(t); t.fruit = 3; t.fg = 3 * fruitSec(t); } } },
       { label: 'Reveal all crops', onSelect: () => { for (const c of DATA.crops) G.state.discovered[c.id] ||= { at: Date.now(), harvested: 0 }; } },
       { label: 'Toggle day/night speed', right: G.settings.timeMode, onSelect: () => { G.settings.timeMode = G.settings.timeMode === 'real' ? 'fast' : 'real'; } },

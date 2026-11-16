@@ -202,7 +202,7 @@ export function updateInside(dt) {
   }
   if (cellKind(L, Math.floor(me.x / TILE), Math.floor((me.y - 1) / TILE)) === EXIT) { leaveCabin(); return; }
   lastAction = resolveInside(L, occ);
-  if (!lastAction || !input.pressed('confirm')) return;
+  if (!lastAction || !input.pressed('confirm') || G.menuClosedAt === G.realTime) return;
   switch (lastAction.kind) {
     case 'exit': leaveCabin(); break;
     case 'cook': cookMenu(); break;

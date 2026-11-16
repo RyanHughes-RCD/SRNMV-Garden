@@ -5,6 +5,7 @@ import { input } from './input.js';
 import { resetSpriteCache, iconHTML } from './sprites.js';
 import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
 import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
+import { updateSpirits, spiritHUD } from './spirits.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
@@ -147,6 +148,7 @@ function simStep(dt) {
   updateMail();
   updateShells(dt);
   updateTrees(dt);
+  updateSpirits(dt);
 }
 
 /* ---------------------------------------------------------------- events */
@@ -379,7 +381,7 @@ function updateHUD() {
     res: `<span>${iconHTML('item_coin')}${st.coins}</span><span>${iconHTML('item_wood')}${st.mats.wood || 0}</span><span>${iconHTML('item_stone')}${st.mats.stone || 0}</span><span>${iconHTML('item_fiber')}${st.mats.fiber || 0}</span>`,
     clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div><div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
     tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${tool.name}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
-    cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join(''),
+    cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join('') + spiritHUD(),
   });
   // tooltip for what Ⓐ will do
   let tip = G.mode === 'fishing' ? fishingMessage() : '';

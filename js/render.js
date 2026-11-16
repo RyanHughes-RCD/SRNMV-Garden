@@ -12,6 +12,7 @@ import { jobsAtTile } from './jobs.js';
 import { drawDecor, overlaySprite, lightsFrom, drawFloorDecor } from './decorations.js';
 import { drawTree } from './orchard.js';
 import { drawFishing } from './fishing.js';
+import { drawSpirits, spiritLights } from './spirits.js';
 
 let canvas, ctx, lightCanvas, lctx, shadowCanvas, sctx;
 export function initRender(c) {
@@ -141,6 +142,7 @@ export function renderWorld(t) {
   pushDraw((cb.y + 2) * TILE - 1, () => drawCabin(t));
   drawDecor(pushDraw, ctx, t, x0, y0, x1, y1);
   drawCats(pushDraw, ctx, t);
+  drawSpirits(pushDraw, ctx, t);
   drawPlayer(pushDraw, ctx, t);
   drawList.sort((a, b) => a.y - b.y);
   renderShadows(ox, oy);
@@ -269,7 +271,7 @@ export function lightSources() {
   const st = G.state, out = [];
   const cb = st.cabin, sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   out.push({ x: sx + 11, y: sy + 33, r: 34, win: [sx + 7, sy + 28, 8, 8] }, { x: sx + 38, y: sy + 33, r: 34, win: [sx + 34, sy + 28, 8, 8] });
-  out.push(...lightsFrom());
+  out.push(...lightsFrom(), ...spiritLights());
   return out;
 }
 let lightsCache = [], lightsAt = -99;
@@ -291,7 +293,7 @@ function renderLighting(t, ox, oy) {
     const a = Math.min(1, L.dark * 1.6);
     ctx.globalCompositeOperation = 'lighter';
     for (const s of lightsCache) {
-      glow(s.x - ox, s.y - oy, s.r * 0.6 * (s.fire ? fireFlick : flick), (s.fire ? 0.3 : 0.18) * a, s.fire ? '255,150,60' : undefined);
+      glow(s.x - ox, s.y - oy, s.r * 0.6 * (s.fire ? fireFlick : flick), (s.fire ? 0.3 : s.col ? 0.28 : 0.18) * a, s.col || (s.fire ? '255,150,60' : undefined));
       if (s.win) { ctx.fillStyle = `rgba(255,205,110,${(0.55 * a).toFixed(3)})`; ctx.fillRect(s.win[0] - ox, s.win[1] - oy, s.win[2], s.win[3]); }
     }
     ctx.globalCompositeOperation = 'source-over';

@@ -12,6 +12,7 @@ import { treeAt, treeDef, needsWater, harvestTree } from './orchard.js';
 import { playerSpot as fishSpot, baitOf, startFishing } from './fishing.js';
 import { emit, poof, burst } from './particles.js';
 import { enterCabin } from './interior.js';
+import { spiritAction } from './spirits.js';
 import { sfx } from './audio.js';
 
 export const TOOLS = [
@@ -64,6 +65,8 @@ export function resolveAction(ignoreCats = false) {
   const cat = tool.id === 'hand' && !ignoreCats ? catNear(fp.x, fp.y) : null;
   if (cat) return { kind: 'pet', cat, label: `Pet ${cat.cfg.name}` };
   const t = facingTile();
+  const spa = spiritAction(t, fp);
+  if (spa) return spa;
   if (t < 0) return null;
   const o = obj(t);
   if (tool.id === 'hand') {
@@ -137,7 +140,7 @@ export function updatePlayer(dt, handlers) {
   const act = resolveAction(wasWorking);
   lastAction = act;
   if (!act) return;
-  if (input.pressed('confirm')) {
+  if (input.pressed('confirm') && G.menuClosedAt !== G.realTime) {
     switch (act.kind) {
       case 'pet': petCat(act.cat); return;
       case 'crate': handlers.crate(); return;

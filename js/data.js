@@ -5,7 +5,7 @@ export const OVERRIDE_KEYS = {
   cats: 'srnmv.override.cats',
   players: 'srnmv.override.players',
 };
-const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites', 'shells', 'trees', 'fish', 'interior'];
+const FILES = ['balance', 'crops', 'debris', 'decor', 'cats', 'players', 'sprites', 'shells', 'trees', 'fish', 'interior', 'spirits'];
 
 export function readLS(key) { try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; } }
 export function writeLS(key, value) { try { if (value == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } }
@@ -50,6 +50,7 @@ export function applyOverrides() {
   DATA.catHouse = b.decor.catHouse || {};
   DATA.cabinOptions = b.decor.cabin;
   DATA.interior = b.interior;
+  DATA.spirits = b.spirits;
   DATA.sprites = mergeSprites(b.sprites, readLS(OVERRIDE_KEYS.sprites));
   const cats = readLS(OVERRIDE_KEYS.cats);
   DATA.catsConfig = cats && Array.isArray(cats.cats) ? cats : b.cats;
