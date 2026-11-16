@@ -230,7 +230,10 @@ function drawCabin(t) {
   const cb = G.state.cabin;
   const sx = cb.x * TILE, sy = (cb.y + 2) * TILE - 48;
   const sw = cabinSwap();
-  drawSprite(ctx, 'cabin', 0, sx, sy, { swap: sw.swap, swapKey: sw.key });
+  // The door, windows and add-ons are placed for a 48x48 cabin. If the cabin sprite has been
+  // resized in the Workshop, keep its bottom-centre where a 48x48 one would sit so they still line up.
+  const cc = frameCanvas('cabin', 0, sw.swap, sw.key);
+  drawSprite(ctx, 'cabin', 0, sx - Math.round((cc.width - 48) / 2), sy - (cc.height - 48), { swap: sw.swap, swapKey: sw.key });
   drawSprite(ctx, `cabin_door_${cb.door}`, 0, sx + 19, sy + 30);
   if (cb.curtains && cb.curtains !== 'none') {
     const cols = DATA.cabinOptions.curtains?.colors?.[cb.curtains];
