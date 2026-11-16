@@ -111,7 +111,7 @@
       "id": "mochi",
       "name": "Mika",
       "spriteSet": "mika",
-      "spriteScale": 1,
+      "spriteScale": 0.75,
       "blurb": "Tabby. Strong rock-shover. Thinks water is a personal insult. Night owl.",
       "coat": {
         "coat": "#9c6f44",

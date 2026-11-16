@@ -96,14 +96,14 @@ Times are while watered. Everything is tunable in `data/trees.json`.
 
 ## Cat sprite sheets
 
-A cat can use its own imported sprite sheet (an 8x8 grid of 32x32 frames). All three cats have one: `art/vyke-sheet.png`, `art/noctis-sheet.png` and `art/mika-sheet.png`. (Mika's image was shrunk to about 80% and cropped at the edges, so it's read on a measured grid with `--grid` and `--layout trimmed`; her stretch and snack poses were cut off. The full-size original would give her those too.)
+A cat can use its own imported sprite sheet (an 8x8 grid of 32x32 frames). All three cats have one: `art/vyke-sheet.png`, `art/noctis-sheet.png` and `art/mika-sheet.png`. If a sheet was resized or cropped, `--grid` and `--layout trimmed` can still read it (see the top of `tools/import_cat.py`).
 
 ```
 python3 tools/import_cat.py art/vyke-sheet.png vyke
 node tools/gen-sprites.mjs
 ```
 
-Then set the cat's `"spriteSet": "vyke"` in `data/cats.json`. Big, detailed art can be drawn smaller with `"spriteScale"` (Vyke and Noctis use 0.75; Mika's smaller image uses 1). The game draws at the screen's full resolution, so the art keeps its detail. Which frames make which animation is listed at the top of `tools/import_cat.py`. Besides walking, sitting, sleeping and working (Vyke sweeps), a sheet can have extra poses the cat shows when it's doing something matching: eating a snack, stretching, sitting with its back to you while fishing, curled up in a cat bed, and belly-up when sunbathing.
+Then set the cat's `"spriteSet": "vyke"` in `data/cats.json`. Big, detailed art can be drawn smaller with `"spriteScale"` (all three use 0.75). The game draws at the screen's full resolution, so the art keeps its detail. Which frames make which animation is listed at the top of `tools/import_cat.py`. Besides walking, sitting, sleeping and working (Vyke sweeps), a sheet can have extra poses the cat shows when it's doing something matching: eating a snack, stretching, sitting with its back to you while fishing, curled up in a cat bed, and belly-up when sunbathing.
 
 ## Inside the cabin
 
