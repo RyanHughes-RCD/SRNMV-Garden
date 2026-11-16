@@ -996,6 +996,133 @@ for (const [r, band] of Object.entries(RARITY_COL)) {
   add(`seedpack_${r}`, 'items', packet(band, q));
 }
 
+/* ------------------------------------------------------------ fruit trees */
+// Each fruit tree is a puffy, cloud-like canopy on one of 5 shared trunk styles.
+//   ftree_<id>:   5 frames: sapling (with its stem), then canopy only for stages 2-5
+//   ftrunk_<shape>_<n>: 5 trunk styles per canopy shape (frame 0 is empty: the sapling has its own stem)
+//   ffruit_<id>:  4 overlay frames (blossom -> tiny fruit -> swelling -> ripe)
+//   fruit_<id>, sapling_<id>: the harvested fruit and the sapling you buy.
+const TREES = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'trees.json'), 'utf8')).trees;
+const CANOPY = { round: { cy: 18, rx: 13, ry: 12 }, upright: { cy: 17, rx: 10, ry: 15 }, spreading: { cy: 21, rx: 15.5, ry: 10 }, soft: { cy: 18, rx: 13, ry: 11.5 } };
+const STAGE_SCALE = [0, 0.38, 0.58, 0.8, 1];
+// Puff layouts per canopy shape: [x, y, radius] relative to the canopy size, drawn back to front.
+const PUFFS = {
+  round:     [[0, 0.05, 0.62], [-0.5, 0.25, 0.48], [0.5, 0.25, 0.48], [0, -0.48, 0.5], [-0.45, -0.25, 0.44], [0.45, -0.25, 0.44], [0, 0.5, 0.45], [-0.62, 0.5, 0.34], [0.62, 0.5, 0.34]],
+  upright:   [[0, 0.1, 0.55], [0, -0.45, 0.48], [-0.5, 0.35, 0.48], [0.5, 0.35, 0.48], [0, -0.82, 0.36], [-0.45, -0.15, 0.42], [0.45, -0.15, 0.42], [0, 0.62, 0.45]],
+  spreading: [[0, 0, 0.62], [-0.55, 0.15, 0.55], [0.55, 0.15, 0.55], [-0.3, -0.45, 0.5], [0.3, -0.45, 0.5], [-0.8, 0.35, 0.38], [0.8, 0.35, 0.38], [0, 0.5, 0.5]],
+  soft:      [[0, 0.05, 0.62], [-0.52, 0.2, 0.52], [0.52, 0.2, 0.52], [-0.25, -0.45, 0.48], [0.28, -0.42, 0.46], [0, 0.5, 0.48], [-0.7, -0.05, 0.36], [0.7, -0.05, 0.36]],
+};
+function canopyOf(shape, s) {
+  const c = CANOPY[shape] || CANOPY.round, k = STAGE_SCALE[s];
+  return { cx: 16, cy: 47 - (47 - c.cy) * (0.45 + 0.55 * k) - (s === 4 ? 0 : 1), rx: c.rx * k, ry: c.ry * k };
+}
+function fruitTree(t, s) {
+  const g = new G(32, 48), r = rng(t.id.length * 31 + s);
+  const leaf = col(t.leaf), dark = col(t.leafDark), hi = col(t.leafHi);
+  if (s === 0) {
+    g.line(16, 47, 16, 38, C.brown).pts([[15, 46], [17, 46], [14, 47], [18, 47]], C.dbrown);
+    g.ellipse(14, 39, 2, 1.2, leaf).ellipse(18, 37, 2, 1.2, leaf).ellipse(16, 36, 1.4, 1.4, hi);
+    return g.outline();
+  }
+  const cp = canopyOf(t.shape, s), layout = PUFFS[t.shape] || PUFFS.round;
+  const puffs = (s === 1 ? layout.slice(0, 3) : s === 2 ? layout.slice(0, 5) : layout).map(([ox, oy, pr]) => [cp.cx + ox * cp.rx, cp.cy + oy * cp.ry, pr * Math.min(cp.rx, cp.ry) * (s === 1 ? 1.25 : 1)]);
+  for (const [x, y, pr] of puffs) g.ellipse(x, y, pr + 0.6, pr * 0.92 + 0.6, dark);
+  for (const [x, y, pr] of puffs) g.ellipse(x - pr * 0.18, y - pr * 0.2, pr * 0.84, pr * 0.78, leaf);
+  for (const [x, y, pr] of puffs) g.ellipse(x - pr * 0.38, y - pr * 0.45, pr * 0.36, pr * 0.24, hi);
+  for (let k = 0, n = Math.round(3 + s * 2); k < n; k++) { const [x, y, pr] = puffs[Math.floor(r() * puffs.length)]; g.set(x + (r() - 0.3) * pr, y + (r() * 0.6 + 0.2) * pr, dark); }
+  return g.outline();
+}
+// Trunks: 0 straight, 1 leaning, 2 forked, 3 knotty, 4 gnarled. They run up under the canopy, which hides the top.
+const TRUNK_STYLES = 5;
+function trunk(shape, v, s) {
+  const g = new G(32, 48);
+  if (s === 0) return g;
+  const cp = canopyOf(shape, s), top = Math.round(cp.cy), tw = [0, 1, 2, 3, 4][s], span = 47 - top;
+  const bark = v === 3 ? C.dbrown : C.brown, light = v === 3 ? C.brown : C.tan;
+  const xAt = y => {
+    const f = (47 - y) / span; // 0 at the ground, 1 at the canopy
+    if (v === 1) return Math.round(f * (s >= 3 ? 3 : 2));
+    if (v === 4) return Math.round(Math.sin(f * Math.PI) * (s >= 3 ? 1.6 : 1));
+    return 0;
+  };
+  const forkY = 47 - Math.round(span * 0.38); // low enough that the Y shows under the canopy
+  for (let y = top; y <= 47; y++) {
+    if (v === 2 && y < forkY && s >= 2) continue; // the fork's branches are drawn below
+    let w = Math.max(1, tw);
+    if (v === 4 && y >= 44) w += 47 - y >= 2 ? 1 : 2; // flared base
+    const x0 = 16 - Math.floor(w / 2) + xAt(y);
+    g.rect(x0, y, w, 1, bark);
+    if (w > 1) g.set(x0, y, light);
+  }
+  if (v === 2 && s >= 2) { // a Y: two branches from the fork up into the canopy
+    const bw = Math.max(1, tw - 1), spread = 3 + s * 1.5;
+    for (const dir of [-1, 1]) for (let y = top; y < forkY; y++) {
+      const f = (forkY - y) / (forkY - top), x0 = 16 - Math.floor(bw / 2) + Math.round(dir * f * spread);
+      g.rect(x0, y, bw, 1, bark); if (bw > 1 && dir < 0) g.set(x0, y, light);
+    }
+  }
+  if (v === 3 && s >= 2) { const ky = top + Math.round(span * 0.6); g.rect(16 - Math.floor(tw / 2), ky, Math.max(1, tw), 2, C.plum); if (tw > 2) g.set(16, ky, C.out); g.set(16 + Math.ceil(tw / 2), ky + 3, C.brown); }
+  if (s >= 3) { // roots
+    const rs = v === 4 ? 3 : v === 3 ? 2 : 1;
+    for (let k = 1; k <= rs; k++) { g.set(16 - Math.floor(tw / 2) - k + xAt(47), 47, bark); g.set(16 + Math.ceil(tw / 2) - 1 + k + xAt(47), 47, bark); }
+  }
+  return g.outline();
+}
+// fruit positions: only on leaves, a little away from the canopy edge
+function fruitSpots(t) {
+  const cp = canopyOf(t.shape, 4), r = rng(t.id.length * 7 + 3), out = [], tree = fruitTree(t, 4);
+  const leafy = (x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const v = tree.get(x + dx, y + dy); if (v === -1 || v === C.out) return false; } return true; };
+  for (let tries = 0; out.length < 9 && tries < 600; tries++) {
+    const a = r() * Math.PI * 2, d = 0.15 + Math.sqrt(r()) * 0.75;
+    const x = Math.round(cp.cx + Math.cos(a) * cp.rx * d), y = Math.round(cp.cy + Math.sin(a) * cp.ry * d * 0.95 + 1);
+    if (leafy(x, y) && out.every(([px, py]) => Math.abs(px - x) + Math.abs(py - y) > 4)) out.push([x, y]);
+  }
+  return out;
+}
+function fruitOverlay(t, f) {
+  const g = new G(32, 48), spots = fruitSpots(t);
+  const fc = col(t.fruitColor), fd = col(t.fruitDark), fh = col(t.fruitHi), bl = col(t.blossom);
+  for (const [x, y] of spots) {
+    if (f === 0) g.pts([[x, y - 1], [x - 1, y], [x + 1, y], [x, y + 1]], bl).set(x, y, C.yellow);
+    if (f === 1) g.set(x, y, C.pgreen).set(x, y + 1, fd);
+    if (f === 2) g.rect(x, y, 2, 2, C.lgreen).set(x + 1, y + 1, fc).set(x, y + 1, fd);
+    if (f === 3) {
+      if (t.item === 'cherry') g.set(x, y - 1, C.green1).line(x, y - 1, x - 1, y, C.green1).line(x, y - 1, x + 2, y, C.green1).rect(x - 2, y, 2, 2, fc).rect(x + 1, y + 1, 2, 2, fc).set(x - 2, y, fh).set(x + 1, y + 1, fh);
+      else if (t.item === 'pear' || t.item === 'lemon' || t.item === 'fig') g.rect(x - 1, y - 1, 2, 2, fc).rect(x - 1, y + 1, 3, 2, fc).set(x - 1, y, fh).set(x + 1, y + 2, fd).set(x, y - 2, C.brown);
+      else g.ellipse(x + 0.5, y + 0.5, 1.7, 1.7, fc).set(x, y, fh).set(x + 1, y + 1, fd).set(x, y - 2, C.brown);
+    }
+  }
+  return g;
+}
+function fruitItem(t) {
+  const g = new G(16, 16), fc = col(t.fruitColor), fd = col(t.fruitDark), fh = col(t.fruitHi);
+  switch (t.item) {
+    case 'apple': g.ellipse(8, 9.5, 5.5, 5, fc).ellipse(6, 8, 1.8, 1.5, fh).set(8, 5, fd).line(8, 5, 8, 2, C.brown).ellipse(10.5, 3.5, 2, 1, C.green); break;
+    case 'pear': g.ellipse(8, 11, 5, 4.5, fc).ellipse(8, 6.5, 2.8, 3, fc).ellipse(6.5, 9, 1.5, 2, fh).line(8, 3, 8, 1, C.brown).ellipse(10, 2.5, 1.6, 0.9, C.green); break;
+    case 'cherry': g.line(6, 10, 8, 3, C.green1).line(11, 10, 8, 3, C.green1).ellipse(5.5, 11.5, 3, 3, fc).ellipse(11, 11.5, 3, 3, fc).set(4, 10, fh).set(10, 10, fh).ellipse(9.5, 2.5, 2, 1, C.green); break;
+    case 'peach': g.ellipse(8, 9, 5.5, 5.5, fc).ellipse(10, 10, 3, 3, fd).ellipse(6.5, 7.5, 2, 1.6, fh).line(8, 4, 7, 11, fd).ellipse(6, 3.5, 2, 1, C.green); break;
+    case 'plum': g.ellipse(8, 9, 4.5, 5.5, fc).ellipse(6.5, 7.5, 1.4, 2, fh).line(9, 4, 9, 13, fd).line(8, 4, 9, 2, C.brown); break;
+    case 'orange': g.ellipse(8, 9, 5.5, 5.5, fc).pts([[6, 7], [9, 8], [7, 11], [10, 11], [5, 10]], fd).ellipse(6, 7, 1.5, 1.2, fh).ellipse(9.5, 3.5, 2, 1, C.green1).set(8, 4, C.dgreen); break;
+    case 'lemon': g.ellipse(8, 9, 6, 4.5, fc).pts([[2, 9], [14, 9], [1, 9], [15, 9]], fc).ellipse(6, 7.5, 2, 1.2, fh).set(13, 10, fd).ellipse(9, 4, 2, 1, C.green); break;
+    case 'fig': g.ellipse(8, 10.5, 5, 4.5, fc).ellipse(8, 6, 2.5, 2.5, fc).rect(7, 2, 2, 3, C.green1).ellipse(6.5, 9, 1.5, 2, fh).set(9, 13, fd).set(10, 12, fd); break;
+  }
+  return g.outline();
+}
+function saplingItem(t) {
+  const g = new G(16, 16);
+  g.ellipse(8, 12.5, 4.5, 2.6, C.tan).ellipse(8, 12, 3.5, 1.6, C.ltan).line(5, 11, 11, 13, C.brown);
+  g.line(8, 11, 8, 4, C.brown).ellipse(6, 5, 2.4, 1.4, col(t.leaf)).ellipse(10.5, 3.5, 2.4, 1.4, col(t.leaf)).ellipse(8.5, 2, 1.4, 1.2, col(t.leafHi));
+  g.rect(11, 8, 3, 3, col(t.fruitColor)).set(11, 8, col(t.fruitHi)).line(10, 9, 9, 9, C.cream);
+  return g.outline();
+}
+for (const shape of Object.keys(CANOPY)) for (let v = 0; v < TRUNK_STYLES; v++) add(`ftrunk_${shape}_${v}`, 'trees', [0, 1, 2, 3, 4].map(s => trunk(shape, v, s)), 0, { ax: 16, ay: 47 });
+for (const t of TREES) {
+  add(`ftree_${t.id}`, 'trees', [0, 1, 2, 3, 4].map(s => fruitTree(t, s)), 0, { ax: 16, ay: 47 });
+  add(`ffruit_${t.id}`, 'trees', [0, 1, 2, 3].map(f => fruitOverlay(t, f)), 0, { ax: 16, ay: 47 });
+  add(`fruit_${t.id}`, 'items', fruitItem(t));
+  add(`sapling_${t.id}`, 'items', saplingItem(t));
+}
+
 /* ------------------------------------------------------- items + ui icons */
 {
   const wood = new G(16, 16);

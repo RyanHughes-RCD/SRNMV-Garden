@@ -74,6 +74,25 @@ The game autosaves every 30 seconds. While you're away (tab closed, TV off), it 
 
 ---
 
+## The orchard (fruit trees)
+
+Buy saplings at the **seed shop** (bottom section), then open your inventory and pick one to plant it. Plant on grass with two free tiles between trees. Each tree grows through **5 stages** (sapling to full-grown) and then fruits through **4 stages** (blossom, tiny fruit, swelling, ripe). Only you can pick the fruit (press A on the tree). It then blossoms again for the next crop. The cats water trees just like crops, and dry trees grow about 1.6x slower. In planting mode, X digs a tree up and gives you its sapling back.
+
+| Tree | Sapling | Full-grown | Then every | Fruit | Sells for |
+|---|---|---|---|---|---|
+| Apple | 300 | ~30h | ~10h | 3-5 apples | 22 |
+| Pear | 350 | ~34h | ~11h | 3-5 pears | 26 |
+| Cherry | 450 | ~38h | ~12h | 4-7 cherries | 30 |
+| Peach | 500 | ~40h | ~13h | 3-5 peaches | 34 |
+| Plum | 550 | ~42h | ~14h | 4-6 plums | 36 |
+| Orange | 650 | ~46h | ~15h | 3-6 oranges | 40 |
+| Lemon | 700 | ~50h | ~16h | 3-6 lemons | 42 |
+| Fig | 800 | ~56h | ~18h | 3-5 figs | 48 |
+
+Times are while watered. Everything is tunable in `data/trees.json`.
+
+**How the tree art works:** each tree has a puffy, cloud-like canopy (round, tall, wide or soft, in its own leaf colours) on one of **5 trunk styles** shared by all trees: straight, leaning, forked, knotty and gnarled. Each planted tree keeps its style. In the Workshop: `ftree_<tree>` (sapling and canopy stages), `ftrunk_<shape>_0..4` (trunks) and `ffruit_<tree>` (blossom and fruit overlays).
+
 ## Decorating
 
 *Menu → Build & decorate* lists everything by section. Pick an item and a ghost of it follows a cursor: **A** places (you can keep placing), **X** picks something up for a full refund, **LB/RB** switch items, **B** finishes. Bigger items (pond, hammock, cat houses, shed, greenhouse) show their full footprint.

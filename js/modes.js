@@ -10,6 +10,7 @@ import { sfx } from './audio.js';
 import { poof } from './particles.js';
 import { toast, setModePanel, confirmDialog } from './ui.js';
 import { placeProblem as decorProblem, placeDecor, removeDecorAt, sizeOf } from './decorations.js';
+import { treeAt, plantProblem, plantSapling, digUp } from './orchard.js';
 import { canAfford, pay, refund, costLabel } from './economy.js';
 import { selectedSeedKey } from './player.js';
 
@@ -30,6 +31,7 @@ function startCursor() {
   M.start = null;
 }
 export function enterPlan() { startCursor(); G.mode = 'designate'; sfx('confirm'); panel(); }
+export function enterPlant(id) { startCursor(); M.sapling = id; G.mode = 'plant'; sfx('confirm'); panel(); }
 export function enterPlace(decorId, from = 'play') { startCursor(); M.decor = decorId; G.mode = 'place'; returnTo = from; sfx('confirm'); panel(); }
 function exit() { G.mode = 'play'; M.start = null; setModePanel(null); }
 
@@ -153,8 +155,41 @@ export function updatePlace() {
   }
 }
 
+/* ------------------------------------------------------------ planting */
+export function updatePlant() {
+  moveCursor();
+  const owned = Object.keys(G.state.inv.saplings).filter(k => G.state.inv.saplings[k] > 0);
+  if ((input.pressed('seedPrev') || input.pressed('seedNext')) && owned.length) { const i = owned.indexOf(M.sapling); M.sapling = owned[(i + (input.pressed('seedNext') ? 1 : owned.length - 1) + owned.length) % owned.length]; sfx('move'); panel(); }
+  if (input.pressed('cancel') || input.pressed('pause') || input.pressed('designate')) { sfx('cancel'); exit(); return; }
+  const t = idx(M.cx, M.cy);
+  if (input.pressed('tool')) { // dig up a tree, getting its sapling back
+    const tr = treeAt(t);
+    if (!tr) { sfx('error'); return; }
+    confirmDialog(`Dig up this ${DATA.treeById[tr.id].name.toLowerCase()}? You'll get the sapling back${tr.stage > 0 ? ', but it starts growing again from scratch' : ''}.`, () => { digUp(t); poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('cancel'); panel(); });
+    return;
+  }
+  if (input.pressed('confirm')) {
+    if (!(G.state.inv.saplings[M.sapling] > 0)) { sfx('error'); toast('No saplings of that kind left. Buy more at the seed shop'); return; }
+    const why = plantProblem(t);
+    if (why) { sfx('error'); toast(why); return; }
+    plantSapling(M.sapling, t);
+    poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('plant');
+    toast(`Planted a ${DATA.treeById[M.sapling].name.toLowerCase()}. The cats will water it.`, `sapling_${M.sapling}`);
+    if (!(G.state.inv.saplings[M.sapling] > 0)) { const left = Object.keys(G.state.inv.saplings).find(k => G.state.inv.saplings[k] > 0); if (left) M.sapling = left; else { exit(); return; } }
+    panel();
+  }
+}
+
 /* ------------------------------------------------------------ overlay */
 export function drawModeOverlay(ctx, t) {
+  if (G.mode === 'plant') {
+    const ti = idx(M.cx, M.cy), ok = !plantProblem(ti) && G.state.inv.saplings[M.sapling] > 0;
+    const b = 0.55 + 0.45 * Math.sin(t * 6);
+    ctx.globalAlpha = 0.7; drawSprite(ctx, `ftree_${M.sapling}`, 0, M.cx * TILE + 8 - 16, (M.cy + 1) * TILE - 1 - 47); ctx.globalAlpha = 1;
+    ctx.strokeStyle = ok ? `rgba(140,198,90,${b})` : `rgba(229,115,90,${b})`;
+    ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, 15, 15);
+    return;
+  }
   if (G.mode !== 'designate' && G.mode !== 'place') return;
   const blink = 0.55 + 0.45 * Math.sin(t * 6);
   if (G.mode === 'designate') {
@@ -192,6 +227,9 @@ function panel() {
     const tab = PLAN_TABS[M.tab];
     const step = tab.id === 'removePlot' ? 'Ⓐ choose plot' : M.start ? 'Ⓐ second corner · Ⓑ restart' : 'Ⓐ first corner';
     setModePanel(`<div class="mp-title">Plan mode</div><div class="tabs"><span class="btn">LB</span>${tabs}<span class="btn">RB</span></div><div class="mp-help">${tab.help}</div><div class="mp-keys">${step} · Ⓨ/Ⓑ exit</div>`);
+  } else if (G.mode === 'plant') {
+    const d = DATA.treeById[M.sapling], n = G.state.inv.saplings[M.sapling] || 0;
+    setModePanel(`<div class="mp-title">Plant: ${d.name} (×${n})</div><div class="mp-help">Trees need two free tiles between them, on grass.</div><div class="mp-keys">Ⓐ plant · Ⓧ dig up a tree · LB/RB change sapling · Ⓑ done</div>`);
   } else if (G.mode === 'place') {
     const d = DATA.decor[M.decor];
     setModePanel(`<div class="mp-title">Build: ${d.name}</div><div class="mp-help">Cost: ${costLabel(d.cost)}${d.desc ? ' · ' + d.desc : ''}</div><div class="mp-keys">Ⓐ place · Ⓧ pick up · LB/RB change item · Ⓑ done</div>`);

@@ -40,6 +40,9 @@ const MINUTES = +(process.argv[3] || 3);
       const t = (cy + dy) * w + cx + dx; for (const f of D.footprint(t, id)) { st.map.ground[f] = 'g'; st.map.obj[f] = null; } D.markDirty();
       if (!D.placeProblem(id, t)) D.placeDecor(id, t);
     }
+    const O = await import('./js/orchard.js'), { DATA: DD } = await import('./js/data.js');
+    DD.trees.forEach((d, k) => { st.inv.saplings[d.id] = 1; const t = (cy + 10) * w + cx - 12 + k * 3; for (let yy = -1; yy <= 1; yy++) for (let xx = -1; xx <= 1; xx++) { st.map.ground[t + yy * w + xx] = 'g'; st.map.obj[t + yy * w + xx] = null; } O.plantSapling(d.id, t); });
+    window.__harvestTrees = () => { for (const k of Object.keys(st.trees)) O.harvestTree(+k); };
     G.timeScale = 1000;
   });
 
@@ -52,6 +55,7 @@ const MINUTES = +(process.argv[3] || 3);
       // act like a player: harvest everything ready, sell, buy a pack now and then
       let harvested = 0;
       for (const k of Object.keys(st.crops)) if (st.crops[k].stage >= 3 && farm.harvest(+k)) harvested++;
+      window.__harvestTrees?.();
       farm.sellAll();
       if (st.coins > 2000) farm.buyPack('rare');
       const { serialize, migrate } = await import('./js/state.js');
@@ -59,7 +63,7 @@ const MINUTES = +(process.argv[3] || 3);
       try { const raw = serialize(); saveKB = raw.length / 1024; migrate(JSON.parse(raw)); } catch { saveOk = false; }
       return {
         simHours: st.simTime / 3600, jobs: st.jobs.length, crops: Object.keys(st.crops).length, harvested,
-        debris: st.map.obj.filter(o => o?.startsWith('d:')).length, coins: st.coins, cats: G.cats.map(c => c.state).join(','),
+        debris: st.map.obj.filter(o => o?.startsWith('d:')).length, coins: st.coins, cats: G.cats.map(c => c.state).join(','), trees: Object.values(st.trees).map(t => t.stage + '/' + t.fruit).join(' '), fruit: Object.values(st.inv.fruit).reduce((a, b) => a + b, 0),
         dom: document.getElementsByTagName('*').length, saveOk, saveKB,
       };
     });
@@ -72,7 +76,7 @@ const MINUTES = +(process.argv[3] || 3);
     await page.waitForTimeout(15000);
     const r = await metric();
     rows.push(r);
-    console.log(`sim ${r.simHours.toFixed(1).padStart(6)}h | heap ${r.heapMB.toFixed(1).padStart(5)}MB | DOM ${r.dom} | jobs ${r.jobs} | debris ${r.debris} | crops ${r.crops} | harvested ${r.harvested} | coins ${r.coins} | save ${r.saveKB.toFixed(0)}KB ${r.saveOk ? 'ok' : 'BROKEN'} | cats ${r.cats}`);
+    console.log(`sim ${r.simHours.toFixed(1).padStart(6)}h | heap ${r.heapMB.toFixed(1).padStart(5)}MB | DOM ${r.dom} | jobs ${r.jobs} | debris ${r.debris} | crops ${r.crops} | harvested ${r.harvested} | coins ${r.coins} | save ${r.saveKB.toFixed(0)}KB ${r.saveOk ? 'ok' : 'BROKEN'} | trees ${r.trees} | fruit ${r.fruit}`);
   }
   await browser.close();
 

@@ -8,6 +8,7 @@ import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
 import { catNear, petCat } from './cats.js';
 import { decorAction, gatherShell } from './decorations.js';
+import { treeAt, treeDef, needsWater, harvestTree } from './orchard.js';
 import { emit, poof, burst } from './particles.js';
 import { sfx } from './audio.js';
 
@@ -70,6 +71,13 @@ export function resolveAction(ignoreCats = false) {
     const da = decorAction(t);
     if (da) return da;
   }
+  const tree = treeAt(t);
+  if (tree) {
+    const d = treeDef(tree.id);
+    if (tree.fruit === 3) return { kind: 'pickFruit', tile: t, tree, label: `Pick ${(d.fruitPlural || d.fruit).toLowerCase()}` };
+    if (needsWater(tree) && allow('water')) return { kind: 'work', type: 'water', tile: t, tree, label: `Water the ${d.name.toLowerCase()}` };
+    return { kind: 'inspect', tile: t, tree, label: d.name };
+  }
   const sh = shellAt(t);
   if (sh) return { kind: 'shell', tile: t, label: `Pick up ${DATA.shellById[sh]?.name || 'shell'}` };
   const crop = st.crops[t];
@@ -128,6 +136,7 @@ export function updatePlayer(dt, handlers) {
       case 'cabin': handlers.cabin(); return;
       case 'decor': act.run(handlers); return;
       case 'shell': gatherShell(act.tile); return;
+      case 'pickFruit': { const r = harvestTree(act.tile); if (r) sfx('harvest'); return; }
       case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
     }
   }

@@ -9,7 +9,7 @@ import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
 import { syncCats, updateCats } from './cats.js';
 import { updatePlayer, switchPlayer, cycleSeed, selectedSeedKey, TOOLS, currentAction, playerName, playerCfg } from './player.js';
-import { updatePlan, updatePlace, enterPlan, cursorPx } from './modes.js';
+import { updatePlan, updatePlace, updatePlant, enterPlan, cursorPx } from './modes.js';
 import { initAudio, applyVolumes, sfx, updateAmbience } from './audio.js';
 import { updateParticles, sparkle, burst, emit } from './particles.js';
 import { clockLabel, phaseLabel, hourOfDay } from './daytime.js';
@@ -17,6 +17,8 @@ import * as ui from './ui.js';
 import * as menus from './menus.js';
 import { tx, ty } from './world.js';
 import { updateShells } from './decorations.js';
+import { updateTrees } from './orchard.js';
+import * as tree from './orchard.js';
 import { updateDecor, updateMail, updateDecorFx, nearFire, birdBoost, decorState, readLetter, makeWish, markDirty } from './decorations.js';
 
 const $ = id => document.getElementById(id);
@@ -110,6 +112,7 @@ function catchUp(seconds, summary) {
   const stats = { stages: 0, ready: 0, jobs: {}, cleared: 0 };
   const off = [
     G.on('stage', e => { stats.stages++; if (e.crop.stage >= 3) stats.ready++; }),
+    G.on('treeGrew', e => { stats.stages++; if (e.tree.fruit === 3 && e.kind === 'fruit') stats.ready++; }),
     G.on('jobDone', e => { if (e.worker && e.worker !== 'player') { const c = (stats.jobs[e.worker] ||= {}); c[e.job.type] = (c[e.job.type] || 0) + 1; } if (e.job.type === 'clear') stats.cleared++; }),
   ];
   G.offline = true;
@@ -139,6 +142,7 @@ function simStep(dt) {
   updateDecor(dt);
   updateMail();
   updateShells(dt);
+  updateTrees(dt);
 }
 
 /* ---------------------------------------------------------------- events */
@@ -171,6 +175,23 @@ function wireEvents() {
       burst(x, y, { n: 5, sprite: e.debris === 'rock' || e.debris === 'boulder' ? 'fx_dirt' : 'fx_leaf' });
       if (e.worker === 'player' && e.drops) { const d = Object.entries(e.drops).map(([k, n]) => `+${n} ${k}`).join(' · '); if (d) ui.toast(d, `item_${Object.keys(e.drops)[0]}`, 1800); }
     }
+  });
+  G.on('treeGrew', ({ tile, tree: tr, kind }) => {
+    if (G.offline) return;
+    const d = DATA.treeById[tr.id], x = tx(tile) * TILE + 8, y = ty(tile) * TILE - 8;
+    sparkle(x, y, 4);
+    if (G.realTime - lastGrowBanner > B().farm.growBannerCooldownSec) {
+      lastGrowBanner = G.realTime; G.hudWake = G.realTime; sfx('grow');
+      const msg = kind === 'stage' ? (tr.stage === 4 ? `The ${d.name.toLowerCase()} is full-grown! Blossoms are coming.` : `The ${d.name.toLowerCase()} grew taller.`)
+        : tr.fruit === 0 ? `The ${d.name.toLowerCase()} is blossoming!` : tr.fruit === 3 ? `${d.fruitPlural || d.fruit} are ripe to pick!` : `Little ${(d.fruitPlural || d.fruit).toLowerCase()} ${tr.fruit === 1 ? 'are setting' : 'are swelling'} on the ${d.name.toLowerCase()}.`;
+      ui.banner(`${iconHTML(tr.stage === 4 && tr.fruit >= 2 ? `fruit_${tr.id}` : `sapling_${tr.id}`, 'ico big')}<div><b>The orchard grew!</b><small>${msg}</small></div>`);
+    }
+  });
+  G.on('fruitHarvest', r => {
+    if (r.first) {
+      sfx('discover');
+      ui.showCard(`<div class="disc">${iconHTML(`fruit_${r.id}`, 'ico huge')}</div><h2>First ${r.def.fruit.toLowerCase()} harvest!</h2><div class="disc-name">${r.def.name}</div><p>You picked ${r.n}. Each sells for ${r.def.fruitPrice} coins.</p><p class="muted">It will blossom again and grow more.</p>`, { cls: 'discover', ms: 12000 });
+    } else ui.toast(`+${r.n} ${r.n === 1 ? r.def.fruit : r.def.fruitPlural || r.def.fruit}`, `fruit_${r.id}`, 2200);
   });
   G.on('shell', r => {
     sfx(r.first ? 'discover' : 'pop');
@@ -261,6 +282,7 @@ function update(dt) {
     if (G.mode === 'menu') ui.updateMenus(dt);
     else if (G.mode === 'designate') updatePlan();
     else if (G.mode === 'place') updatePlace();
+    else if (G.mode === 'plant') updatePlant();
     else if (G.mode === 'play') globalControls();
   }
   updatePlayer(cardActive ? 0 : dt, decorHandlers);
@@ -309,7 +331,7 @@ function updateCamera(dt) {
   const idle = G.realTime - G.lastInput;
   if (G.mode === 'play' && G.settings.cameraDrift && idle > B().tv.idleDriftAfterSec && !ui.cardOpen()) return idleCamera(dt);
   let tgt;
-  if (G.mode === 'designate' || G.mode === 'place') tgt = cursorPx();
+  if (G.mode === 'designate' || G.mode === 'place' || G.mode === 'plant') tgt = cursorPx();
   else { const p = G.state.player; tgt = { x: p.x, y: p.y - 8 }; }
   const k = Math.min(1, dt * 6);
   G.camera.x += (tgt.x - G.view.w / 2 - G.camera.x) * k;
@@ -342,6 +364,10 @@ function updateHUD() {
       if (crop) {
         const wet = crop.wetUntil > st.simTime;
         extra = `<small>${crop.stage >= 3 ? '' : `Stage ${crop.stage + 1}/4 · next in ~${fmtTime(farm.timeToNextStage(crop, a.tile))}${wet ? ' · watered' : ''} · `}"${farm.stageHint(crop)}"</small>`;
+      }
+      if (a.tree) {
+        const tr = a.tree, nxt = tree.timeToNext(tr, a.tile);
+        extra = `<small>${tree.treeStatus(tr)}${nxt > 0 ? ` · next in ~${fmtTime(nxt)}` : ''}${tree.isWet(tr) ? ' · watered' : ''}</small>`;
       }
       if (a.kind === 'work') { const prog = st.jobs.find(j => j.type === a.type && j.tile === a.tile); tip = `Ⓐ hold: ${a.label}${prog ? ` (${Math.floor(prog.progress / prog.work * 100)}%)` : ''}${extra}`; }
       else if (a.kind === 'inspect' || a.kind === 'info') tip = `${a.label}${extra}`;

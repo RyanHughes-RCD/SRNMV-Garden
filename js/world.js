@@ -37,6 +37,7 @@ export function blocks(i) {
   if (gr === 'w') return !(o && (o.startsWith('x:') || o.startsWith('p:')) && DATA.decor[decorAt(i)]?.onWater); // docks are walkable
   if (!o) return false;
   if (o.startsWith('h:')) return false; // a seashell on the sand
+  if (o.startsWith('o:')) return true;  // a fruit tree
   if (o.startsWith('d:')) return !!DATA.debris[o.slice(2)]?.blocks;
   if (o.startsWith('x:') || o.startsWith('p:')) { const d = DATA.decor[decorAt(i)]; return !!d && !d.ground && d.blocks !== false; }
   return true; // cabin, crate, shop

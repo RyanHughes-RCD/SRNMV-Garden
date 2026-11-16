@@ -1,0 +1,31 @@
+{
+  "_help": "Fruit trees. growHours = sapling to full size (5 stages) while watered; fruitHours = blossom to ripe fruit (4 stages) while watered, repeating after each harvest. yield = fruit per harvest. shape: round | upright | spreading | soft.",
+  "stageNames": ["Sapling", "Young tree", "Small tree", "Growing tree", "Full-grown tree"],
+  "fruitStageNames": ["Blossoming", "Tiny fruit", "Fruit swelling", "Ripe!"],
+  "trees": [
+    { "id": "apple",  "name": "Apple Tree",  "fruit": "Apple", "fruitPlural": "Apples",  "shape": "round",     "saplingPrice": 300, "fruitPrice": 22, "yield": [3, 5], "growHours": 30, "fruitHours": 10,
+      "leaf": "green", "leafDark": "green1", "leafHi": "lgreen", "blossom": "white", "fruitColor": "red", "fruitDark": "dred", "fruitHi": "coral", "item": "apple",
+      "desc": "A classic. Crisp, sweet and generous." },
+    { "id": "pear",   "name": "Pear Tree",   "fruit": "Pear", "fruitPlural": "Pears",   "shape": "upright",   "saplingPrice": 350, "fruitPrice": 26, "yield": [3, 5], "growHours": 34, "fruitHours": 11,
+      "leaf": "green", "leafDark": "green1", "leafHi": "pgreen", "blossom": "white", "fruitColor": "pyellow", "fruitDark": "yellow", "fruitHi": "white", "item": "pear",
+      "desc": "Tall and tidy, with buttery golden-green pears." },
+    { "id": "cherry", "name": "Cherry Tree", "fruit": "Cherry", "fruitPlural": "Cherries", "shape": "spreading", "saplingPrice": 450, "fruitPrice": 30, "yield": [4, 7], "growHours": 38, "fruitHours": 12,
+      "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "blossom": "ppink", "fruitColor": "red", "fruitDark": "dred", "fruitHi": "coral", "item": "cherry",
+      "desc": "Covered in pink blossom, then little pairs of dark cherries." },
+    { "id": "peach",  "name": "Peach Tree",  "fruit": "Peach", "fruitPlural": "Peaches",  "shape": "soft",      "saplingPrice": 500, "fruitPrice": 34, "yield": [3, 5], "growHours": 40, "fruitHours": 13,
+      "leaf": "green", "leafDark": "green1", "leafHi": "lgreen", "blossom": "pink", "fruitColor": "orange", "fruitDark": "coral", "fruitHi": "ppink", "item": "peach",
+      "desc": "Fuzzy, blushing peaches that smell like summer." },
+    { "id": "plum",   "name": "Plum Tree",   "fruit": "Plum", "fruitPlural": "Plums",   "shape": "soft",      "saplingPrice": 550, "fruitPrice": 36, "yield": [4, 6], "growHours": 42, "fruitHours": 14,
+      "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "blossom": "white", "fruitColor": "violet", "fruitDark": "purple", "fruitHi": "lav", "item": "plum",
+      "desc": "Deep purple plums with a dusty bloom." },
+    { "id": "orange", "name": "Orange Tree", "fruit": "Orange", "fruitPlural": "Oranges", "shape": "round",     "saplingPrice": 650, "fruitPrice": 40, "yield": [3, 6], "growHours": 46, "fruitHours": 15,
+      "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "blossom": "white", "fruitColor": "orange", "fruitDark": "coral", "fruitHi": "yellow", "item": "orange",
+      "desc": "Glossy evergreen leaves and bright, juicy oranges." },
+    { "id": "lemon",  "name": "Lemon Tree",  "fruit": "Lemon", "fruitPlural": "Lemons",  "shape": "upright",   "saplingPrice": 700, "fruitPrice": 42, "yield": [3, 6], "growHours": 50, "fruitHours": 16,
+      "leaf": "green", "leafDark": "green1", "leafHi": "lgreen", "blossom": "white", "fruitColor": "yellow", "fruitDark": "orange", "fruitHi": "pyellow", "item": "lemon",
+      "desc": "Sunny lemons and the sweetest-smelling flowers." },
+    { "id": "fig",    "name": "Fig Tree",    "fruit": "Fig", "fruitPlural": "Figs",    "shape": "spreading", "saplingPrice": 800, "fruitPrice": 48, "yield": [3, 5], "growHours": 56, "fruitHours": 18,
+      "leaf": "green", "leafDark": "green1", "leafHi": "lgreen", "blossom": "lgreen", "fruitColor": "purple", "fruitDark": "plum", "fruitHi": "violet", "item": "fig",
+      "desc": "Big lobed leaves and soft, jammy figs." }
+  ]
+}

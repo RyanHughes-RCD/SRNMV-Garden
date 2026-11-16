@@ -99,7 +99,9 @@ export function newGame() {
     player: { x: (cx + 1) * 16 + 8, y: (cy + 3) * 16 + 12, dir: 'down', tool: 0, seedSel: 0 },
     coins: E.startCoins,
     mats: { wood: 0, stone: 0, fiber: 0 },
-    inv: { crops: {}, seeds: {}, unknown, shells: {} },
+    inv: { crops: {}, seeds: {}, unknown, shells: {}, saplings: {}, fruit: {} },
+    trees: {},
+    fruitFound: {},
     shellsFound: {},
     discovered: {},
     map: { w, h, ground, obj },
@@ -142,6 +144,9 @@ function validate(s) {
   if (!ok) throw new Error('Save file is damaged');
   s.jobs ||= []; s.plots ||= []; s.crops ||= {}; s.lastCrop ||= {}; s.discovered ||= {}; s.cats ||= {};
   s.inv.crops ||= {}; s.inv.seeds ||= {}; s.inv.unknown ||= {}; s.inv.shells ||= {}; s.shellsFound ||= {};
+  s.inv.saplings ||= {}; s.inv.fruit ||= {}; s.trees ||= {}; s.fruitFound ||= {};
+  for (const [k, t] of Object.entries(s.trees)) { if (t.v == null) t.v = Math.abs((+k * 2654435761) | 0) % 5; delete t.flip; }
+  for (const [k, t] of Object.entries(s.trees)) if (!DATA.treeById[t.id]) { delete s.trees[k]; if (s.map.obj[k]?.startsWith('o:')) s.map.obj[k] = null; }
   s.mats ||= { wood: 0, stone: 0, fiber: 0 };
   s.stats ||= {};
   s.decorState ||= {};

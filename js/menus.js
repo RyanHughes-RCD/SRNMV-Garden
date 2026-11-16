@@ -7,9 +7,10 @@ import { openMenu, closeMenu, closeAllMenus, confirmDialog, textInput, toast, re
 import * as farm from './farm.js';
 import { saveSettings, saveGame, exportSave, importSaveFile, deleteSave } from './state.js';
 import { applyVolumes, sfx } from './audio.js';
-import { enterPlace } from './modes.js';
+import { enterPlace, enterPlant } from './modes.js';
 import { canAfford, pay, costHTML, costLabel } from './economy.js';
 import { decorState, catHouseLook, catHouseOf, drawCatHouse } from './decorations.js';
+import { buySapling, sellFruit, stageSec, fruitSec } from './orchard.js';
 import { switchPlayer, playerName, TOOLS } from './player.js';
 import { plotTiles } from './world.js';
 import { JOB_VERB } from './jobs.js';
@@ -57,6 +58,12 @@ export function inventoryMenu() {
       const keys = farm.ownedSeedKeys();
       if (!keys.length) out.push({ label: 'No seeds - visit the shop!', disabled: true });
       for (const k of keys) out.push({ label: farm.seedLabel(k), icon: farm.seedIcon(k), right: `×${farm.seedCount(k)}`, sub: st.player.seedKey === k ? 'In your seed bag' : '', onSelect: () => { st.player.seedKey = k; st.player.tool = 0; toast(`Holding ${farm.seedLabel(k)}`, farm.seedIcon(k)); } });
+      const saps = Object.entries(st.inv.saplings || {}).filter(([, n]) => n > 0);
+      out.push({ header: true, label: 'Saplings (Ⓐ to plant)' });
+      if (!saps.length) out.push({ label: 'No saplings. The seed shop sells them', disabled: true });
+      for (const [id, n] of saps) { const t = DATA.treeById[id]; out.push({ label: `${t.name} sapling`, icon: `sapling_${id}`, right: `×${n}`, sub: 'Plant it on grass with two free tiles between trees', onSelect: () => { closeAllMenus(); enterPlant(id); } }); }
+      const fruit = Object.entries(st.inv.fruit || {}).filter(([, n]) => n > 0);
+      if (fruit.length) { out.push({ header: true, label: 'Fruit' }); for (const [id, n] of fruit) { const t = DATA.treeById[id]; out.push({ label: t.fruit, icon: `fruit_${id}`, sub: `Sells for ${t.fruitPrice} each`, right: `×${n}`, onSelect: sellMenu }); } }
       out.push({ header: true, label: `Shells (${Object.keys(st.shellsFound).length}/${DATA.shells.length} found)` });
       for (const sh of DATA.shells) {
         const found = st.shellsFound[sh.id];
@@ -105,7 +112,7 @@ export function shopMenu() {
   openMenu({
     title: 'Seed shop', icon: 'shop', live: true,
     subtitle: () => `Packs never say what's inside. Grow them to find out! · ${iconHTML('item_coin', 'ico sm')} ${G.state.coins}`,
-    items: () => RARITY_ORDER.map(r => {
+    items: () => [{ header: true, label: 'Mystery seed packs' }, ...RARITY_ORDER.map(r => {
       const price = farm.packPrice(r), R = DATA.rarities[r];
       const found = DATA.crops.filter(c => c.rarity === r && G.state.discovered[c.id]).length, total = DATA.crops.filter(c => c.rarity === r).length;
       return {
@@ -115,6 +122,13 @@ export function shopMenu() {
         onSelect: () => { const res = farm.buyPack(r); if (res) { sfx('coin'); toast(`Got ${res.n} unknown ${rarityName(r)} seeds!`, `seedpack_${r}`); } },
       };
     }),
+    { header: true, label: 'Fruit tree saplings' },
+    ...DATA.trees.map(t => ({
+      label: `${t.name} sapling`, icon: `sapling_${t.id}`,
+      sub: `Full-grown in ~${t.growHours}h, then ${t.yield[0]}-${t.yield[1]} ${(t.fruitPlural || t.fruit).toLowerCase()} every ~${t.fruitHours}h · own ${G.state.inv.saplings[t.id] || 0}`,
+      right: `${iconHTML('item_coin', 'ico sm')}${t.saplingPrice}`, disabled: G.state.coins < t.saplingPrice, why: `Not enough coins (need ${t.saplingPrice})`,
+      onSelect: () => { if (buySapling(t.id)) { sfx('coin'); toast(`Bought a ${t.name.toLowerCase()} sapling. Plant it from your inventory`, `sapling_${t.id}`); } },
+    }))],
   });
 }
 export function sellMenu() {
@@ -124,7 +138,7 @@ export function sellMenu() {
     empty: 'Nothing to sell yet. Harvest some crops first!',
     items: () => {
       const crops = Object.entries(G.state.inv.crops).filter(([, n]) => n > 0);
-      const shells = shellSellItems();
+      const shells = [...fruitSellItems(), ...shellSellItems()];
       if (!crops.length) return shells;
       const total = crops.reduce((a, [id, n]) => a + n * DATA.cropById[id].price, 0);
       return [
@@ -144,6 +158,11 @@ function sellShell(id, n) {
   inv[id] = have - n; if (!inv[id]) delete inv[id];
   G.state.coins += coins;
   return coins;
+}
+function fruitSellItems() {
+  const list = Object.entries(G.state.inv.fruit || {}).filter(([, n]) => n > 0);
+  if (!list.length) return [];
+  return [{ header: true, label: 'Fruit' }, ...list.map(([id, n]) => { const t = DATA.treeById[id]; return { label: t.fruit, icon: `fruit_${id}`, sub: `${t.fruitPrice} each · Ⓐ sell one · Ⓧ sell all`, right: `×${n}`, xLabel: 'sell all', onSelect: () => { if (sellFruit(id, 1)) sfx('coin'); }, onX: () => { const v = sellFruit(id, n); if (v) { sfx('coin'); toast(`Sold ${n} ${(n === 1 ? t.fruit : t.fruitPlural || t.fruit).toLowerCase()} for ${v} coins`, `fruit_${id}`); } } }; })];
 }
 function shellSellItems() {
   const list = Object.entries(G.state.inv.shells || {}).filter(([, n]) => n > 0);
@@ -385,6 +404,8 @@ export function debugMenu() {
       { label: '+3 seeds of every crop', onSelect: () => { for (const c of DATA.crops) G.state.inv.seeds[c.id] = (G.state.inv.seeds[c.id] || 0) + 3; } },
       { label: '+1 unknown pack of each rarity', onSelect: () => { for (const r of RARITY_ORDER) { const pool = DATA.crops.filter(c => c.rarity === r); (G.state.inv.unknown[r] ||= []).push(pool[Math.floor(Math.random() * pool.length)].id); } } },
       { label: 'Grow every crop to ready', onSelect: () => { for (const c of Object.values(G.state.crops)) { c.g = 3 * farm.stageSeconds(c); } } },
+      { label: '+1 sapling of every fruit tree', onSelect: () => { for (const t of DATA.trees) G.state.inv.saplings[t.id] = (G.state.inv.saplings[t.id] || 0) + 1; } },
+      { label: 'Grow every fruit tree to ripe', onSelect: () => { for (const t of Object.values(G.state.trees)) { t.stage = 4; t.g = 4 * stageSec(t); t.fruit = 3; t.fg = 3 * fruitSec(t); } } },
       { label: 'Reveal all crops', onSelect: () => { for (const c of DATA.crops) G.state.discovered[c.id] ||= { at: Date.now(), harvested: 0 }; } },
       { label: 'Toggle day/night speed', right: G.settings.timeMode, onSelect: () => { G.settings.timeMode = G.settings.timeMode === 'real' ? 'fast' : 'real'; } },
       { label: 'Reset save', cls: 'danger', onSelect: () => confirmDialog('Reset the save?', () => { deleteSave(); G.noSave = true; location.reload(); }) },
