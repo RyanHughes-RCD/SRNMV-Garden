@@ -443,7 +443,8 @@ export function renderInterior(ctx, t) {
   for (const { spot, cat } of nappers()) {
     const r = L.room(spot.room), [w, hh] = D.items[spot.id].size || [1, 1], cs = DATA.sprites.sprites.cat_sleep;
     const cx = (r.x + spot.x) * TILE + Math.round((w * TILE - (cs?.w ?? 16)) / 2), cy = (r.y + spot.y) * TILE + (hh > 1 ? 10 : Math.round((TILE - (cs?.h ?? 12)) / 2) - 1);
-    list.push({ y: (r.y + spot.y + hh) * TILE, fn: () => drawSprite(ctx, 'cat_sleep', animFrame('cat_sleep', t), cx, cy, { swap: cat.swap?.swap, swapKey: cat.swap?.key }) });
+    const sp = DATA.sprites.sprites[`${cat.cfg.spriteSet}_sleep`] ? `${cat.cfg.spriteSet}_sleep` : 'cat_sleep';
+    list.push({ y: (r.y + spot.y + hh) * TILE, fn: () => drawSprite(ctx, sp, animFrame(sp, t), cx, cy, { swap: cat.swap?.swap, swapKey: cat.swap?.key }) });
   }
   drawPlayer((y, fn) => list.push({ y, fn }), ctx, t, h.me);
   list.sort((a, b) => a.y - b.y);

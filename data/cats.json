@@ -9,20 +9,20 @@
   "cats": [
     {
       "id": "biscuit",
-      "name": "Biscuit",
-      "spriteSet": "cat",
+      "name": "Vyke",
+      "spriteSet": "biscuit",
       "blurb": "Orange tabby. Lives to dig. Will nap anywhere, any time.",
       "coat": {
-        "coat": "#f29b4b",
-        "shade": "#e5735a",
-        "marking": "#b8434a",
-        "belly": "#f6e7c8",
-        "eye": "#8cc65a"
+        "coat": "#fffaf0",
+        "shade": "#dcd6cf",
+        "marking": "#fffaf0",
+        "belly": "#fffaf0",
+        "eye": "#0099ff"
       },
       "jobs": {
         "clear": {
           "speed": 1.2,
-          "affinity": 1.0
+          "affinity": 1
         },
         "till": {
           "speed": 1.5,
@@ -58,7 +58,7 @@
     },
     {
       "id": "pepper",
-      "name": "Pepper",
+      "name": "Noctis",
       "spriteSet": "cat",
       "blurb": "Tuxedo. Neat, careful planter. Up with the sun, easily distracted by butterflies.",
       "coat": {
@@ -83,7 +83,7 @@
         },
         "water": {
           "speed": 1.1,
-          "affinity": 1.0
+          "affinity": 1
         },
         "fish": {
           "speed": 1.1,
@@ -107,27 +107,27 @@
     },
     {
       "id": "mochi",
-      "name": "Mochi",
+      "name": "Mika",
       "spriteSet": "cat",
       "blurb": "Fluffy grey. Strong rock-shover. Thinks water is a personal insult. Night owl.",
       "coat": {
-        "coat": "#b3aeb0",
-        "shade": "#7d7a80",
-        "marking": "#7d7a80",
-        "belly": "#fffaf0",
-        "eye": "#7fb3d5"
+        "coat": "#9c6f44",
+        "shade": "#be825b",
+        "marking": "#5e3b2e",
+        "belly": "#e0b98a",
+        "eye": "#ffea00"
       },
       "jobs": {
         "clear": {
           "speed": 1.6,
-          "affinity": 2.0
+          "affinity": 2
         },
         "till": {
-          "speed": 1.0,
-          "affinity": 1.0
+          "speed": 1,
+          "affinity": 1
         },
         "plant": {
-          "speed": 1.0,
+          "speed": 1,
           "affinity": 0.9
         },
         "water": {
@@ -140,10 +140,10 @@
         }
       },
       "traits": {
-        "energy": 1.0,
-        "napFrequency": 1.0,
-        "napDuration": 1.0,
-        "curiosity": 1.0,
+        "energy": 1,
+        "napFrequency": 1,
+        "napDuration": 1,
+        "curiosity": 1,
         "zoomies": 1.6,
         "lovesPlayer": 1.4,
         "schedule": "night"

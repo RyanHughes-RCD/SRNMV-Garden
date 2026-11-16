@@ -3,32 +3,32 @@
   "players": [
     {
       "id": "p1",
-      "name": "Player 1",
+      "name": "Ryan",
       "spriteSet": "hero",
       "colors": {
         "hair": "#5e3b2e",
         "hairHi": "#8a5a3b",
-        "skin": "#e0b98a",
+        "skin": "#eed1aa",
         "skinShade": "#b98352",
-        "shirt": "#4a6fa5",
-        "shirtShade": "#2b3a5a",
-        "pants": "#4d4a52",
+        "shirt": "#312f2f",
+        "shirtShade": "#343a46",
+        "pants": "#000000",
         "accent": "#5d9b4f"
       }
     },
     {
       "id": "p2",
-      "name": "Player 2",
+      "name": "Sam",
       "spriteSet": "hero2",
       "colors": {
-        "hair": "#6b2e3e",
-        "hairHi": "#b8434a",
-        "skin": "#e0b98a",
-        "skinShade": "#b98352",
-        "shirt": "#e88fb0",
-        "shirtShade": "#b8434a",
-        "pants": "#4a6fa5",
-        "accent": "#e88fb0"
+        "hair": "#231f20",
+        "hairHi": "#433738",
+        "skin": "#f2d7b6",
+        "skinShade": "#b06621",
+        "shirt": "#b46118",
+        "shirtShade": "#be630e",
+        "pants": "#1e314d",
+        "accent": "#ee86a0"
       }
     }
   ],
