@@ -96,7 +96,7 @@ Times are while watered. Everything is tunable in `data/trees.json`.
 
 ## Fishing
 
-Fishing unlocks when you build a **dock** (*Build & decorate → Paths & floors*).
+Fishing unlocks when you build a **dock** (*Build & decorate → Paths & floors*). The dock is a big goal: 1,000 coins, 250 wood and 60 stone, usually about two or three weeks in. Most of that wood comes from the cats chopping their way through the forest to the beach.
 
 1. **Bait the water.** Stand on the dock facing open water and press **A**, then throw in harvested crops or fruit. **A** throws in one, **X** throws in all of that kind. The water holds up to 30 portions. **The more valuable the bait, the better the odds of rare fish.** The bait menu shows the odds live. Press **X** on the dock any time to add more.
 2. **Cast** with **A**. The bobber tugs a few times. **Wait.** When it tugs hardest, a big **!** pops up over your head: press **A** to pull the fish in. Too early and it swims off, too late and it gets away (rarer fish give you less time). **B** reels in.
@@ -123,6 +123,8 @@ Fish, prices, bite timing and bait odds are in `data/fish.json`.
 | Resources | **Quarry Rock** grows a new rock beside it every ~25 min, and **Wild Meadow** regrows weeds and bushes every ~20 min. The cats clear them automatically, so stone and fiber never run out |
 | On the water | **Dock** (3 wide, 5 long): build it with its top row on the beach and the rest over the lake, then walk out to the end. Found under *Paths & floors* |
 | Big projects | Greenhouse (crops within 6 tiles grow 25% faster), garden shed (cats work 10% faster) |
+
+**Pacing:** the game runs all the time, so goals are spread over weeks. Paths, fences and flower beds cost only materials and come in the first few days. Small decor costs 30-120 coins (first week). Cat houses, the beehive, the gnome and the wishing well cost 360-900 coins (weeks 1-2). The dock comes around weeks 2-3, and the shed (3,000 coins) and greenhouse (5,000 coins) after a month or two. Twigs rarely grow back, so wood mostly comes from chopping trees. All prices are in `data/decor.json`.
 
 **Seashells:** five kinds (scallop, cowrie, conch, moon snail and the rare sand dollar) wash up on the sand next to the water, about one every 20 minutes and up to 4 at a time. Press A to pick one up. The first of each kind gets a "New shell found!" moment, the inventory tracks your collection, and you can sell spares at the shipping crate. Tuning is in `data/shells.json`.
 

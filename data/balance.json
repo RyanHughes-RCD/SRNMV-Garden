@@ -112,10 +112,11 @@
     "maxWild": 12,
     "debris": {
       "weeds": 5,
-      "twig": 3,
+      "twig": 1,
       "bush": 2,
       "rock": 2
-    }
+    },
+    "_wood": "Twigs regrow rarely so chopping trees is the main wood supply."
   },
   "wishingWell": {
     "everySec": 72000

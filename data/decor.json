@@ -89,7 +89,7 @@
    "ground": true,
    "overlay": true,
    "cost": {
-    "coins": 20,
+    "coins": 40,
     "fiber": 8
    },
    "sprite": "decor_picnic"
@@ -105,8 +105,9 @@
    "floor": true,
    "blocks": false,
    "cost": {
-    "wood": 60,
-    "stone": 4
+    "coins": 1000,
+    "wood": 250,
+    "stone": 60
    },
    "sprite": "decor_dock",
    "desc": "3 wide × 5 long. Build it from the beach out over the lake, then walk to the end"
@@ -158,7 +159,7 @@
    "name": "Flower Pot",
    "cat": "Garden",
    "cost": {
-    "coins": 25,
+    "coins": 50,
     "stone": 2
    },
    "sprite": "decor_flowerpot"
@@ -175,7 +176,7 @@
    "name": "Birdbath",
    "cat": "Garden",
    "cost": {
-    "coins": 60,
+    "coins": 120,
     "stone": 8
    },
    "sprite": "decor_birdbath"
@@ -185,7 +186,7 @@
    "cat": "Garden",
    "birds": true,
    "cost": {
-    "coins": 30,
+    "coins": 60,
     "wood": 4
    },
    "sprite": "decor_birdfeeder",
@@ -195,7 +196,7 @@
    "name": "Scarecrow",
    "cat": "Garden",
    "cost": {
-    "coins": 50,
+    "coins": 100,
     "wood": 6,
     "fiber": 6
    },
@@ -205,7 +206,7 @@
    "name": "Garden Gnome",
    "cat": "Garden",
    "cost": {
-    "coins": 150
+    "coins": 450
    },
    "sprite": "decor_gnome"
   },
@@ -218,8 +219,8 @@
     "mult": 1.15
    },
    "cost": {
-    "coins": 120,
-    "wood": 10
+    "coins": 360,
+    "wood": 15
    },
    "sprite": "decor_beehive",
    "desc": "Crops within 4 tiles grow 15% faster"
@@ -232,7 +233,7 @@
     2
    ],
    "cost": {
-    "coins": 60,
+    "coins": 120,
     "stone": 12
    },
    "sprite": "decor_pond",
@@ -243,8 +244,8 @@
    "cat": "Garden",
    "interact": "wish",
    "cost": {
-    "coins": 300,
-    "stone": 25
+    "coins": 900,
+    "stone": 40
    },
    "sprite": "decor_well",
    "desc": "Make a wish once a day for a little gift"
@@ -255,7 +256,7 @@
    "cats": "bed",
    "blocks": false,
    "cost": {
-    "coins": 30,
+    "coins": 60,
     "fiber": 6
    },
    "sprite": "decor_catbed",
@@ -277,9 +278,9 @@
    "cat": "For the cats",
    "cats": "tree",
    "cost": {
-    "coins": 80,
-    "wood": 20,
-    "fiber": 8
+    "coins": 240,
+    "wood": 30,
+    "fiber": 15
    },
    "sprite": "decor_cattree",
    "desc": "Cats perch on top and watch the garden"
@@ -289,7 +290,7 @@
    "cat": "For the cats",
    "cats": "bowls",
    "cost": {
-    "coins": 40,
+    "coins": 80,
     "stone": 3
    },
    "sprite": "decor_catbowls",
@@ -301,7 +302,7 @@
    "cats": "cushion",
    "blocks": false,
    "cost": {
-    "coins": 25,
+    "coins": 50,
     "fiber": 4
    },
    "sprite": "decor_cushion",
@@ -313,7 +314,7 @@
    "cats": "yarn",
    "blocks": false,
    "cost": {
-    "coins": 15,
+    "coins": 30,
     "fiber": 3
    },
    "sprite": "decor_yarn",
@@ -328,9 +329,9 @@
     2
    ],
    "cost": {
-    "coins": 120,
-    "wood": 25,
-    "fiber": 6
+    "coins": 360,
+    "wood": 40,
+    "fiber": 10
    },
    "sprite": "cathouse",
    "interact": "cathouse",
@@ -341,7 +342,7 @@
    "cat": "Lights",
    "light": 46,
    "cost": {
-    "coins": 40,
+    "coins": 80,
     "stone": 2
    },
    "sprite": "decor_lantern"
@@ -351,7 +352,7 @@
    "cat": "Lights",
    "light": 38,
    "cost": {
-    "coins": 60,
+    "coins": 120,
     "wood": 4
    },
    "sprite": "decor_stringlights",
@@ -385,7 +386,7 @@
     1
    ],
    "cost": {
-    "coins": 40,
+    "coins": 80,
     "wood": 6,
     "fiber": 10
    },
@@ -407,7 +408,7 @@
    "cat": "Cozy",
    "interact": "mail",
    "cost": {
-    "coins": 50,
+    "coins": 100,
     "wood": 5
    },
    "sprite": "decor_mailbox",
@@ -450,7 +451,7 @@
     "max": 3
    },
    "cost": {
-    "coins": 40,
+    "coins": 80,
     "wood": 10
    },
    "sprite": "decor_quarry",
@@ -468,7 +469,7 @@
     "max": 4
    },
    "cost": {
-    "coins": 30,
+    "coins": 60,
     "wood": 6
    },
    "sprite": "decor_meadow",
@@ -486,9 +487,9 @@
     "mult": 1.25
    },
    "cost": {
-    "coins": 1500,
-    "wood": 60,
-    "stone": 30
+    "coins": 5000,
+    "wood": 150,
+    "stone": 80
    },
    "sprite": "decor_greenhouse",
    "desc": "3×2 · crops within 6 tiles grow 25% faster"
@@ -502,9 +503,9 @@
    ],
    "catWorkBonus": 0.1,
    "cost": {
-    "coins": 800,
-    "wood": 80,
-    "stone": 10
+    "coins": 3000,
+    "wood": 200,
+    "stone": 40
    },
    "sprite": "decor_shed",
    "desc": "2×2 · tidy tools: cats work 10% faster"
@@ -514,7 +515,7 @@
   "roof": {
    "name": "Roof colour",
    "cost": {
-    "coins": 60
+    "coins": 120
    },
    "options": [
     "red",
@@ -544,7 +545,7 @@
   "door": {
    "name": "Door style",
    "cost": {
-    "coins": 40,
+    "coins": 80,
     "wood": 5
    },
    "options": [
@@ -567,7 +568,7 @@
   "chimney": {
    "name": "Chimney",
    "cost": {
-    "coins": 50,
+    "coins": 100,
     "stone": 6
    },
    "options": [
@@ -584,7 +585,7 @@
   "curtains": {
    "name": "Curtains",
    "cost": {
-    "coins": 30,
+    "coins": 60,
     "fiber": 6
    },
    "options": [
@@ -623,7 +624,7 @@
   "windowBoxes": {
    "name": "Window boxes",
    "cost": {
-    "coins": 30,
+    "coins": 60,
     "wood": 4,
     "fiber": 4
    },
@@ -639,7 +640,7 @@
   "welcomeMat": {
    "name": "Welcome mat",
    "cost": {
-    "coins": 15,
+    "coins": 30,
     "fiber": 5
    },
    "options": [
@@ -654,7 +655,7 @@
   "porchSwing": {
    "name": "Porch swing",
    "cost": {
-    "coins": 80,
+    "coins": 160,
     "wood": 12,
     "fiber": 6
    },
@@ -670,8 +671,8 @@
   "porch": {
    "name": "Porch deck (big project)",
    "cost": {
-    "coins": 600,
-    "wood": 50
+    "coins": 1800,
+    "wood": 120
    },
    "options": [
     false,
