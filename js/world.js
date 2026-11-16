@@ -34,7 +34,7 @@ export function blocks(i) {
   const gr = G.state.map.ground[i];
   const o = G.state.map.obj[i];
   if (gr === 'f') return true;
-  if (gr === 'w') return !(o && (o.startsWith('x:') || o.startsWith('p:')) && DATA.decor[decorAt(i)]?.onWater); // docks are walkable
+  if (gr === 'w') { const d = o && (o.startsWith('x:') || o.startsWith('p:')) && DATA.decor[decorAt(i)]; return !(d && (d.onWater || d.bridge)); } // docks and bridges are walkable
   if (!o) return false;
   if (o.startsWith('h:')) return false; // a seashell on the sand
   if (o.startsWith('o:')) return true;  // a fruit tree

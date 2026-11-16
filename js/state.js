@@ -6,13 +6,38 @@ import { homeDefaults, fixHome } from './interior.js';
 
 export const SAVE_KEY = 'srnmv.save';
 export const SETTINGS_KEY = 'srnmv.settings';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 // Each migration upgrades a save from version i to i+1.
 const MIGRATIONS = [
   // 0 -> 1: initial schema (nothing to do)
   s => s,
+  // 1 -> 2: clear a tile of riverbank on both sides of the river so a bridge can be built
+  s => { clearRiverBanks(s.map); return s; },
 ];
+
+// Turns the forest (and any debris) on the tile either side of the river into open grass, so
+// there's always room to build a bridge across. The river is the narrow run of water in each
+// row above the lake; the lake's own rows (and the few just above, where its shore wobbles)
+// are left alone.
+export function clearRiverBanks(map) {
+  const { w, h, ground, obj } = map;
+  let lakeStart = h;
+  for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) if (ground[y * w + x] === 'w') n++; if (n > w / 2) { lakeStart = y; break; } }
+  for (let y = 0; y < lakeStart - 3; y++) {
+    for (let x = 0; x < w; x++) {
+      if (ground[y * w + x] !== 'w' || (x > 0 && ground[y * w + x - 1] === 'w')) continue;
+      let len = 0; while (x + len < w && ground[y * w + x + len] === 'w') len++;
+      if (len > 4) continue;
+      for (const bx of [x - 1, x + len]) {
+        if (bx < 0 || bx >= w) continue;
+        const i = y * w + bx;
+        if (ground[i] === 'f') ground[i] = 'g';
+        if (obj[i] && obj[i].startsWith('d:')) obj[i] = null;
+      }
+    }
+  }
+}
 
 export const CABIN_DEFAULTS = { roof: 'red', wall: 'oak', door: 0, windowBoxes: false, chimney: 'stone', curtains: 'none', welcomeMat: false, porchSwing: false, porch: false };
 
@@ -83,6 +108,7 @@ export function newGame() {
     if (Math.abs(x - (cx + 1)) <= R && y >= cy - 1 && y <= cy + R) continue;
     if (Math.random() < B.map.debrisDensity) obj[i] = 'd:' + pickWeighted(weights);
   }
+  clearRiverBanks({ w, h, ground, obj });
   const E = B.economy;
   const unknown = {};
   for (let p = 0; p < E.startMysteryPacks; p++) {

@@ -150,6 +150,7 @@ Fish, prices, bite timing and bait odds are in `data/fish.json`.
 | Cozy | Bench, hammock, signpost (write a name on it), mailbox (letters, sometimes with a gift), wheelbarrow, watering can stand, crate of produce |
 | Resources | **Quarry Rock** grows a new rock beside it every ~25 min, and **Wild Meadow** regrows weeds and bushes every ~20 min. The cats clear them automatically, so stone and fiber never run out |
 | On the water | **Dock** (3 wide, 5 long): build it with its top row on the beach and the rest over the lake, then walk out to the end. Found under *Paths & floors* |
+| Paths & floors (extra) | **Bridge** (300 coins, 100 wood, 10 stone): build it across the river, with land at both ends and the 2 water tiles in between, to walk (and let the cats walk) to the other side. There's always a strip of open grass on both banks. |
 | Big projects | Greenhouse (crops within 6 tiles grow 25% faster), garden shed (cats work 10% faster) |
 
 **Pacing:** the game runs all the time, so goals are spread over weeks. Paths, fences and flower beds cost only materials and come in the first few days. Small decor costs 30-120 coins (first week). Cat houses, the beehive, the gnome and the wishing well cost 360-900 coins (weeks 1-2). The dock comes around weeks 2-3, and the shed (3,000 coins) and greenhouse (5,000 coins) after a month or two. Twigs rarely grow back, so wood mostly comes from chopping trees. All prices are in `data/decor.json`.

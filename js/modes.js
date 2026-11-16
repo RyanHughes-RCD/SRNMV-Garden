@@ -134,8 +134,8 @@ export function updatePlace() {
   if (input.pressed('cancel') || input.pressed('pause') || input.pressed('designate')) { sfx('cancel'); exit(); return; }
   const t = idx(M.cx, M.cy);
   if (input.pressed('tool')) { // pick up (full refund)
-    const onIt = DATA.decor[decorAt(t)]?.onWater && (() => { const p = G.state.player, pt = idx(Math.floor(p.x / TILE), Math.floor((p.y - 3) / TILE)); return decorAt(pt) === decorAt(t) && ground(pt) === 'w'; })();
-    if (onIt) { sfx('error'); toast('Step off the dock first'); return; }
+    const onIt = (DATA.decor[decorAt(t)]?.onWater || DATA.decor[decorAt(t)]?.bridge) && (() => { const p = G.state.player, pt = idx(Math.floor(p.x / TILE), Math.floor((p.y - 3) / TILE)); return decorAt(pt) === decorAt(t) && ground(pt) === 'w'; })();
+    if (onIt) { sfx('error'); toast(`Step off the ${DATA.decor[decorAt(t)].name.toLowerCase()} first`); return; }
     const id = removeDecorAt(t);
     if (id) { refund(DATA.decor[id]?.cost); poof(M.cx * TILE + 8, M.cy * TILE + 12); sfx('cancel'); toast(`Picked up ${DATA.decor[id]?.name}`); }
     else sfx('error');
@@ -210,7 +210,8 @@ export function drawModeOverlay(ctx, t) {
     const sd = DATA.sprites.sprites[d.sprite], sw = sd?.w ?? 16, sh = sd?.h ?? 16;
     ctx.globalAlpha = 0.65;
     if (d.overlay) drawSprite(ctx, `grass_0`, 0, M.cx * TILE, M.cy * TILE);
-    drawSprite(ctx, d.sprite, 0, M.cx * TILE + Math.round((w * TILE - sw) / 2), (M.cy + h) * TILE - sh);
+    if (d.drawOffset) drawSprite(ctx, d.sprite, 0, M.cx * TILE + d.drawOffset[0], M.cy * TILE + d.drawOffset[1]);
+    else drawSprite(ctx, d.sprite, 0, M.cx * TILE + Math.round((w * TILE - sw) / 2), (M.cy + h) * TILE - sh);
     ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? `rgba(140,198,90,${blink})` : `rgba(229,115,90,${blink})`;
     ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, w * TILE - 1, h * TILE - 1);

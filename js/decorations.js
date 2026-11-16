@@ -61,6 +61,7 @@ export function placeProblem(id, anchor) {
   const d = def(id);
   if (!d) return 'Unknown item';
   const p = G.state.player, c = G.state.cabin;
+  if (d.bridge) return bridgeProblem(id, anchor);
   if (d.onWater) return waterProblem(id, anchor);
   for (const t of footprint(anchor, id)) {
     if (t < 0) return 'Out of bounds';
@@ -76,6 +77,21 @@ export function placeProblem(id, anchor) {
       if (Math.floor(p.x / TILE) === tx(t) && Math.floor((p.y - 3) / TILE) === ty(t)) return 'You are standing there';
       for (const cat of G.cats) if (Math.floor(cat.x / TILE) === tx(t) && Math.floor((cat.y - 2) / TILE) === ty(t)) return `${cat.cfg.name} is sitting there`;
     }
+  }
+  return null;
+}
+// Bridges cross the river: solid ground at both ends, water in between.
+function bridgeProblem(id, anchor) {
+  const tiles = footprint(anchor, id);
+  for (let k = 0; k < tiles.length; k++) {
+    const t = tiles[k];
+    if (t < 0) return 'Out of bounds';
+    const g = ground(t), o = obj(t), end = k === 0 || k === tiles.length - 1;
+    if (o && !o.startsWith('h:')) return 'Something is in the way';
+    if (g === 'f') return 'Trees are in the way';
+    if (g === 't') return 'Not on tilled soil';
+    if (end && g === 'w') return 'Both ends need solid ground on the riverbank';
+    if (!end && g !== 'w') return 'Span the river: the middle goes over the water';
   }
   return null;
 }
@@ -351,7 +367,8 @@ export function drawFloorDecor(ctx, x0, y0, x1, y1) {
     if (!a.d.floor) continue;
     const ax = tx(a.i), ay = ty(a.i), [fw, fh] = sizeOf(a.id);
     if (ax + fw < x0 || ax > x1 || ay + fh < y0 || ay > y1) continue;
-    drawSprite(ctx, a.d.sprite, 0, ax * TILE, ay * TILE);
+    const [ox, oy] = a.d.drawOffset || [0, 0];
+    drawSprite(ctx, a.d.sprite, 0, ax * TILE + ox, ay * TILE + oy);
   }
 }
 

@@ -112,6 +112,28 @@
    "sprite": "decor_dock",
    "desc": "3 wide × 5 long. Build it from the beach out over the lake, then walk to the end"
   },
+  "bridge": {
+   "name": "Bridge",
+   "cat": "Paths & floors",
+   "size": [
+    4,
+    1
+   ],
+   "bridge": true,
+   "floor": true,
+   "blocks": false,
+   "drawOffset": [
+    4,
+    -4
+   ],
+   "cost": {
+    "coins": 300,
+    "wood": 100,
+    "stone": 10
+   },
+   "sprite": "decor_bridge",
+   "desc": "Crosses the river: land at both ends, the 2 water tiles in between"
+  },
   "fence": {
    "name": "Fence",
    "cat": "Fences & hedges",
