@@ -54,7 +54,7 @@
   },
   "farm": {
     "waterGrowthBonus": 0.6,
-    "waterDurationSec": 3600,
+    "waterDurationSec": 10800,
     "doubleSeedChance": 0.15,
     "cropYield": 1,
     "maxPlotSize": 10,
