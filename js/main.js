@@ -4,7 +4,7 @@ import { DATA, loadData, applyOverrides } from './data.js';
 import { input } from './input.js';
 import { resetSpriteCache, iconHTML } from './sprites.js';
 import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
-import { initRender, renderWorld, clampCamera, getCtx } from './render.js';
+import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
@@ -279,6 +279,7 @@ function frame(now) {
   dt = Math.min(dt + pendingDt, 0.1); pendingDt = 0;
   G.realTime += dt;
   update(dt);
+  beginFrame();
   if (G.state && isInside()) renderInterior(getCtx(), G.realTime); else renderWorld(G.realTime);
   input.afterFrame();
 }

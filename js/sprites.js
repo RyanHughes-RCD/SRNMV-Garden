@@ -69,17 +69,20 @@ export function animFrame(name, t, fpsOverride) {
 export const shadowPass = { ctx: null, foot: 0, sx: 0, sy: 0, ox: 0, oy: 0 };
 export function drawSprite(ctx, name, frame, x, y, opts = {}) {
   const c = frameCanvas(name, frame, opts.swap, opts.swapKey || '', opts.silhouette);
-  x = Math.round(x); y = Math.round(y);
+  // scale draws big art smaller (e.g. a detailed cat); it may land between game pixels
+  const s = opts.scale ?? 1;
+  if (s === 1) { x = Math.round(x); y = Math.round(y); } else { x = Math.round(x * 4) / 4; y = Math.round(y * 4) / 4; }
   const sp = shadowPass;
   if (sp.ctx) {
     if (opts.noShadow) return c;
-    const H = sp.foot, f = opts.flip ? -1 : 1;
-    sp.ctx.setTransform(f, 0, -sp.sx, -sp.sy, x + (opts.flip ? c.width : 0) + (H - y) * sp.sx - sp.ox, H + (H - y) * sp.sy - sp.oy);
+    const H = sp.foot, f = opts.flip ? -s : s;
+    sp.ctx.setTransform(f, 0, -sp.sx * s, -sp.sy * s, x + (opts.flip ? c.width * s : 0) + (H - y) * sp.sx - sp.ox, H + (H - y) * sp.sy - sp.oy);
     sp.ctx.drawImage(c, 0, 0);
     return c;
   }
   if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
-  if (opts.flip) { ctx.save(); ctx.translate(x + c.width, y); ctx.scale(-1, 1); ctx.drawImage(c, 0, 0); ctx.restore(); }
+  if (opts.flip) { ctx.save(); ctx.translate(x + c.width * s, y); ctx.scale(-s, s); ctx.drawImage(c, 0, 0); ctx.restore(); }
+  else if (s !== 1) ctx.drawImage(c, x, y, c.width * s, c.height * s);
   else ctx.drawImage(c, x, y);
   if (opts.alpha != null) ctx.globalAlpha = 1;
   return c;

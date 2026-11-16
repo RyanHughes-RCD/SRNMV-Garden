@@ -94,6 +94,17 @@ Times are while watered. Everything is tunable in `data/trees.json`.
 
 **How the tree art works:** each tree has a puffy, cloud-like canopy (round, tall, wide or soft, in its own leaf colours) on one of **5 trunk styles** shared by all trees: straight, leaning, forked, knotty and gnarled. Each planted tree keeps its style. In the Workshop: `ftree_<tree>` (sapling and canopy stages), `ftrunk_<shape>_0..4` (trunks) and `ffruit_<tree>` (blossom and fruit overlays).
 
+## Cat sprite sheets
+
+A cat can use its own imported sprite sheet (an 8x8 grid of 32x32 frames), like Vyke's in `art/vyke-sheet.png`:
+
+```
+python3 tools/import_cat.py art/vyke-sheet.png vyke
+node tools/gen-sprites.mjs
+```
+
+Then set the cat's `"spriteSet": "vyke"` in `data/cats.json`. Big, detailed art can be drawn smaller with `"spriteScale"` (Vyke uses 0.75). The game draws at the screen's full resolution, so the art keeps its detail. Which frames make which animation is listed at the top of `tools/import_cat.py`. Besides walking, sitting, sleeping and working (Vyke sweeps), a sheet can have extra poses the cat shows when it's doing something matching: eating a snack, stretching, sitting with its back to you while fishing, curled up in a cat bed, and belly-up when sunbathing.
+
 ## Inside the cabin
 
 Stand in front of the cabin door, face it and press **A** to go in. Walk out through the doormat at the bottom to leave. The garden and the cats keep going while you're inside. (Customizing the outside of the cabin is in *Menu → Cabin*.)

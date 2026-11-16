@@ -10,8 +10,9 @@
     {
       "id": "biscuit",
       "name": "Vyke",
-      "spriteSet": "biscuit",
-      "blurb": "Orange tabby. Lives to dig. Will nap anywhere, any time.",
+      "spriteSet": "vyke",
+      "spriteScale": 0.75,
+      "blurb": "Siamese. Lives to dig. Will nap anywhere, any time.",
       "coat": {
         "coat": "#fffaf0",
         "shade": "#dcd6cf",
@@ -154,5 +155,6 @@
         "refuses": []
       }
     }
-  ]
+  ],
+  "_spriteScale": "Optional per cat: draw the cat sprites at this size (0.75 = three quarters). Used for detailed imported art like Vyke's."
 }

@@ -228,7 +228,20 @@ export function catPortrait(cfg) {
   const set = cfg.spriteSet || 'cat';
   const name = DATA.sprites.sprites[`${set}_sit`] ? `${set}_sit` : 'cat_sit';
   const sw = slotSwap('cat', cfg.coat);
-  return iconHTML(name, 'ico portrait', { swap: sw.swap, swapKey: sw.key });
+  return `<img class="ico portrait" src="${trimmedURL(name, sw)}" alt="">`;
+}
+// A sprite's first frame cropped to its visible pixels (imported art has empty space around it).
+function trimmedURL(name, sw) {
+  const key = name + '|' + sw.key;
+  let url = portraitCache.get(key);
+  if (url) return url;
+  const src = frameCanvas(name, 0, sw.swap, sw.key), d = src.getContext('2d').getImageData(0, 0, src.width, src.height).data;
+  let x0 = src.width, y0 = src.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < src.height; y++) for (let x = 0; x < src.width; x++) if (d[(y * src.width + x) * 4 + 3]) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+  const c = document.createElement('canvas');
+  if (x1 < 0) { c.width = 1; c.height = 1; } else { const n = Math.max(x1 - x0, y1 - y0) + 1; c.width = n; c.height = n; c.getContext('2d').drawImage(src, -x0 + Math.floor((n - (x1 - x0 + 1)) / 2), -y0 + (n - (y1 - y0 + 1))); }
+  url = c.toDataURL(); portraitCache.set(key, url);
+  return url;
 }
 // Player portraits are trimmed to the visible character, so art with empty space around it
 // (like 32x32 imported frames) shows at a similar size to the built-in characters.

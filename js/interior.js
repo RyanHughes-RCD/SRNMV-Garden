@@ -12,6 +12,7 @@ import { input } from './input.js';
 import { drawSprite, frameCanvas, iconHTML, animFrame } from './sprites.js';
 import { lighting, hourOfDay, clockLabel, phaseLabel } from './daytime.js';
 import { drawPlayer, anim } from './player.js';
+import { drawCatSprite, catSpriteName } from './cats.js';
 import { openMenu, closeMenu, closeAllMenus, toast, setModePanel } from './ui.js';
 import { canAfford, pay, refund, costLabel, costHTML } from './economy.js';
 import { sfx } from './audio.js';
@@ -441,10 +442,9 @@ export function renderInterior(ctx, t) {
   const list = [];
   for (const it of h.items) { const d = D.items[it.id]; if (!d.rug && !d.wall) { const r = L.room(it.room); list.push({ y: (r.y + it.y + (d.size?.[1] || 1)) * TILE - 1, fn: () => drawItem(ctx, it, d, L, t) }); } }
   for (const { spot, cat } of nappers()) {
-    const r = L.room(spot.room), [w, hh] = D.items[spot.id].size || [1, 1], cs = DATA.sprites.sprites.cat_sleep;
-    const cx = (r.x + spot.x) * TILE + Math.round((w * TILE - (cs?.w ?? 16)) / 2), cy = (r.y + spot.y) * TILE + (hh > 1 ? 10 : Math.round((TILE - (cs?.h ?? 12)) / 2) - 1);
-    const sp = DATA.sprites.sprites[`${cat.cfg.spriteSet}_sleep`] ? `${cat.cfg.spriteSet}_sleep` : 'cat_sleep';
-    list.push({ y: (r.y + spot.y + hh) * TILE, fn: () => drawSprite(ctx, sp, animFrame(sp, t), cx, cy, { swap: cat.swap?.swap, swapKey: cat.swap?.key }) });
+    const r = L.room(spot.room), [w, hh] = D.items[spot.id].size || [1, 1], sp = catSpriteName(cat, 'sleep');
+    const fx = (r.x + spot.x) * TILE + w * 8, fy = (r.y + spot.y) * TILE + (hh > 1 ? 22 : 13);
+    list.push({ y: (r.y + spot.y + hh) * TILE, fn: () => drawCatSprite(ctx, cat, sp, animFrame(sp, t), fx, fy) });
   }
   drawPlayer((y, fn) => list.push({ y, fn }), ctx, t, h.me);
   list.sort((a, b) => a.y - b.y);

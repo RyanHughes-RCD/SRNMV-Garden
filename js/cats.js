@@ -317,6 +317,18 @@ export function petCat(cat) {
   G.emit('petted', { cat });
 }
 
+const POSES = {
+  'Having a snack': 'eat', 'Stretching': 'stretch', 'Catching their breath': 'stretch', 'Fishing off the dock': 'sit_back',
+  'Curled up in the cat bed': 'sleep_bed', 'Sunbathing on the cushion': 'sleep_belly', 'Looking around': 'sit_side',
+  'Watching a butterfly': 'sit_side', 'Grooming': 'sit_side2', 'Sitting on the porch': 'sit_side',
+};
+// Draw a cat sprite standing (or lying) with its feet at (fx, fy), at the cat's spriteScale.
+export function drawCatSprite(ctx, cat, name, frame, fx, fy, flip = false) {
+  const d = DATA.sprites.sprites[name], s = cat.cfg.spriteScale || 1;
+  drawSprite(ctx, name, frame, fx - (d?.ax ?? 8) * s, fy - (d?.ay ?? 15) * s, { flip, scale: s, swap: cat.swap.swap, swapKey: cat.swap.key });
+  return fy - (d?.ay ?? 15) * s;
+}
+export function catSpriteName(cat, kind) { const set = cat.cfg.spriteSet || 'cat'; return hasSprite(`${set}_${kind}`) ? `${set}_${kind}` : `cat_${kind}`; }
 function spriteName(cat) {
   const set = cat.cfg.spriteSet || 'cat';
   let n, flip = false;
@@ -325,6 +337,9 @@ function spriteName(cat) {
   } else if (cat.anim === 'work') { n = 'work'; flip = cat.dir === 'left'; }
   else if (cat.anim === 'sleep') { n = 'sleep'; flip = cat.dir === 'left'; }
   else { n = 'sit'; flip = cat.dir === 'left'; }
+  // sprite sets with extra poses (e.g. an imported cat sheet) show what the cat is up to
+  const pose = cat.state !== 'walk' && cat.state !== 'zoom' && POSES[cat.activity];
+  if (pose && hasSprite(`${set}_${pose}`)) n = pose;
   const name = hasSprite(`${set}_${n}`) ? `${set}_${n}` : `cat_${n}`;
   return { name, flip };
 }
@@ -334,8 +349,8 @@ export function drawCats(push, ctx, t) {
     push(cat.perch ? cat.perch.sortY : cat.y, () => {
       const { name, flip } = spriteName(cat);
       const fps = cat.state === 'zoom' ? 16 : undefined;
-      drawSprite(ctx, name, animFrame(name, cat.t, fps), at.x - 8, at.y - 15, { flip, swap: cat.swap.swap, swapKey: cat.swap.key });
-      if (cat.emote) drawSprite(ctx, cat.emote, 0, at.x - 4, at.y - 25 + Math.round(Math.sin(G.realTime * 5)));
+      const top = drawCatSprite(ctx, cat, name, animFrame(name, cat.t, fps), at.x, at.y, flip);
+      if (cat.emote) drawSprite(ctx, cat.emote, 0, at.x - 4, Math.min(at.y - 25, top - 6) + Math.round(Math.sin(G.realTime * 5)));
     });
   }
 }

@@ -26,7 +26,12 @@ export function resize() {
   const s = Math.max(1, Math.floor(Math.min(W / 480, H / 270)));
   G.view.scale = s;
   G.view.w = Math.floor(W / s); G.view.h = Math.floor(H / s);
-  canvas.width = G.view.w; canvas.height = G.view.h;
+  // Draw at the screen's own resolution (up to 4 canvas pixels per game pixel, always a whole
+  // number that divides the scale). The world looks the same, but big art drawn smaller (like a
+  // cat with a spriteScale) keeps its detail instead of being squashed onto the game's pixel grid.
+  let r = Math.min(s, 4); while (s % r) r--;
+  G.view.rs = r;
+  canvas.width = G.view.w * r; canvas.height = G.view.h * r;
   canvas.style.width = `${G.view.w * s}px`; canvas.style.height = `${G.view.h * s}px`;
   lightCanvas.width = G.view.w; lightCanvas.height = G.view.h;
   if (shadowCanvas) { shadowCanvas.width = G.view.w; shadowCanvas.height = G.view.h; }
@@ -76,6 +81,9 @@ const drawList = [];
 function pushDraw(y, fn) { drawList.push({ y, fn }); }
 
 export function cabinSwap() { const c = G.state.cabin; return mergeSwaps(optionSwap('roof', c.roof), optionSwap('wall', c.wall)); }
+
+// Call once per frame before drawing: game pixels -> canvas pixels.
+export function beginFrame() { ctx.setTransform(G.view.rs || 1, 0, 0, G.view.rs || 1, 0, 0); ctx.imageSmoothingEnabled = false; }
 
 export function renderWorld(t) {
   const st = G.state, cam = G.camera, vw = G.view.w, vh = G.view.h;
