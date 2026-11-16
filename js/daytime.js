@@ -4,6 +4,7 @@ import { DATA } from './data.js';
 
 // Returns hour of day as a float 0..24
 export function hourOfDay() {
+  if (G.debugHour != null) return G.debugHour;
   if (G.settings?.timeMode === 'fast') {
     const len = DATA.balance.time.fastDayLengthSec;
     return ((G.state.simTime / len) * 24 + 8) % 24;

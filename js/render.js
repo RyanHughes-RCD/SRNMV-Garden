@@ -1,7 +1,7 @@
 // World rendering: ground, y-sorted objects, entities, lighting.
 import { G, TILE, hash2, clamp } from './game.js';
 import { DATA } from './data.js';
-import { drawSprite, frameCanvas, optionSwap, mergeSwaps, animFrame, hasSprite } from './sprites.js';
+import { drawSprite, shadowPass, frameCanvas, optionSwap, mergeSwaps, animFrame, hasSprite } from './sprites.js';
 import { idx, tx, ty } from './world.js';
 import { lighting, isNight, hourOfDay } from './daytime.js';
 import { drawParticles, drawCritters, emit } from './particles.js';
@@ -13,10 +13,11 @@ import { drawDecor, overlaySprite, lightsFrom, drawFloorDecor } from './decorati
 import { drawTree } from './orchard.js';
 import { drawFishing } from './fishing.js';
 
-let canvas, ctx, lightCanvas, lctx;
+let canvas, ctx, lightCanvas, lctx, shadowCanvas, sctx;
 export function initRender(c) {
   canvas = c; ctx = c.getContext('2d', { alpha: false });
   lightCanvas = document.createElement('canvas'); lctx = lightCanvas.getContext('2d');
+  shadowCanvas = document.createElement('canvas'); sctx = shadowCanvas.getContext('2d');
   addEventListener('resize', resize);
   resize();
 }
@@ -28,6 +29,7 @@ export function resize() {
   canvas.width = G.view.w; canvas.height = G.view.h;
   canvas.style.width = `${G.view.w * s}px`; canvas.style.height = `${G.view.h * s}px`;
   lightCanvas.width = G.view.w; lightCanvas.height = G.view.h;
+  if (shadowCanvas) { shadowCanvas.width = G.view.w; shadowCanvas.height = G.view.h; }
   ctx.imageSmoothingEnabled = false;
   document.documentElement.style.setProperty('--scale', s);
 }
@@ -133,6 +135,7 @@ export function renderWorld(t) {
   drawCats(pushDraw, ctx, t);
   drawPlayer(pushDraw, ctx, t);
   drawList.sort((a, b) => a.y - b.y);
+  renderShadows(ox, oy);
   for (const d of drawList) d.fn();
   drawFishing(ctx, t);
 
@@ -155,6 +158,38 @@ export function renderWorld(t) {
 
   renderLighting(t, ox, oy);
   ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
+}
+
+// Sun shadows. Every y-sorted drawable is run once more with drawSprite redirected into a
+// shadow layer (slanted copies of each sprite, anchored at its ground line), then the layer
+// is flattened to one colour and laid over the ground at an even strength, so overlapping
+// shadows don't stack. The sun crosses from east to west: long shadows to the west in the
+// morning, short ones at noon, long ones to the east in the evening, none at night.
+export function sunShadow(h = hourOfDay()) {
+  const rise = 6, set = 20.5;
+  if (h <= rise || h >= set) return null;
+  const k = ((h - rise) / (set - rise)) * 2 - 1; // -1 sunrise .. 0 noon .. 1 sunset
+  const edge = Math.min(1, (h - rise) / 1.2, (set - h) / 1.2); // fade in after dawn / out at dusk
+  return { sx: -k * 1.25, sy: 0.32 + 0.22 * Math.abs(k), alpha: 0.34 * Math.max(0, edge) };
+}
+function renderShadows(ox, oy) {
+  const sun = G.settings?.shadows === false ? null : sunShadow();
+  if (!sun || sun.alpha < 0.01) return;
+  const vw = G.view.w, vh = G.view.h;
+  sctx.setTransform(1, 0, 0, 1, 0, 0);
+  sctx.clearRect(0, 0, vw, vh);
+  Object.assign(shadowPass, { ctx: sctx, sx: sun.sx, sy: sun.sy, ox, oy });
+  // Anything the drawables paint straight onto the main canvas is clipped away during this pass.
+  ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 0, 0); ctx.clip();
+  try { for (const d of drawList) { if (d.noShadow) continue; shadowPass.foot = d.y + 1; d.fn(); } }
+  finally { ctx.restore(); shadowPass.ctx = null; }
+  sctx.setTransform(1, 0, 0, 1, 0, 0);
+  sctx.globalCompositeOperation = 'source-in';
+  sctx.fillStyle = '#1c1430'; sctx.fillRect(0, 0, vw, vh);
+  sctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = sun.alpha;
+  ctx.drawImage(shadowCanvas, ox, oy);
+  ctx.globalAlpha = 1;
 }
 
 // Forest mix: round, pine, birch, wide cloud, tall cloud, spruce and old oak trees.

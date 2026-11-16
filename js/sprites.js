@@ -63,9 +63,21 @@ export function animFrame(name, t, fpsOverride) {
   return Math.floor(t * fps) % d.frames.length;
 }
 
+// While shadowPass.ctx is set, drawSprite paints a slanted copy of the sprite into the shadow
+// layer instead: rows above the ground line (shadowPass.foot) are pushed sideways (sx) and
+// down (sy) in proportion to their height, like a shadow lying on the grass.
+export const shadowPass = { ctx: null, foot: 0, sx: 0, sy: 0, ox: 0, oy: 0 };
 export function drawSprite(ctx, name, frame, x, y, opts = {}) {
   const c = frameCanvas(name, frame, opts.swap, opts.swapKey || '', opts.silhouette);
   x = Math.round(x); y = Math.round(y);
+  const sp = shadowPass;
+  if (sp.ctx) {
+    if (opts.noShadow) return c;
+    const H = sp.foot, f = opts.flip ? -1 : 1;
+    sp.ctx.setTransform(f, 0, -sp.sx, -sp.sy, x + (opts.flip ? c.width : 0) + (H - y) * sp.sx - sp.ox, H + (H - y) * sp.sy - sp.oy);
+    sp.ctx.drawImage(c, 0, 0);
+    return c;
+  }
   if (opts.alpha != null) ctx.globalAlpha = opts.alpha;
   if (opts.flip) { ctx.save(); ctx.translate(x + c.width, y); ctx.scale(-1, 1); ctx.drawImage(c, 0, 0); ctx.restore(); }
   else ctx.drawImage(c, x, y);
