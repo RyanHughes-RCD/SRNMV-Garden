@@ -1,0 +1,145 @@
+{
+  "jobTypes": [
+    "clear",
+    "till",
+    "plant",
+    "water"
+  ],
+  "cats": [
+    {
+      "id": "biscuit",
+      "name": "Vyke",
+      "spriteSet": "biscuit",
+      "blurb": "Orange tabby. Lives to dig. Will nap anywhere, any time.",
+      "coat": {
+        "coat": "#fffaf0",
+        "shade": "#dcd6cf",
+        "marking": "#fffaf0",
+        "belly": "#fffaf0",
+        "eye": "#0099ff"
+      },
+      "jobs": {
+        "clear": {
+          "speed": 1.2,
+          "affinity": 1
+        },
+        "till": {
+          "speed": 1.5,
+          "affinity": 2.2
+        },
+        "plant": {
+          "speed": 0.8,
+          "affinity": 0.6
+        },
+        "water": {
+          "speed": 0.9,
+          "affinity": 0.7
+        }
+      },
+      "traits": {
+        "energy": 0.8,
+        "napFrequency": 1.6,
+        "napDuration": 1.4,
+        "curiosity": 0.6,
+        "zoomies": 0.4,
+        "lovesPlayer": 0.9,
+        "schedule": "neutral"
+      },
+      "weaknesses": {
+        "distractible": false,
+        "hatesWater": false,
+        "refuses": []
+      }
+    },
+    {
+      "id": "pepper",
+      "name": "Noctis",
+      "spriteSet": "cat",
+      "blurb": "Tuxedo. Neat, careful planter. Up with the sun, easily distracted by butterflies.",
+      "coat": {
+        "coat": "#1a1423",
+        "shade": "#3b2a3a",
+        "marking": "#1a1423",
+        "belly": "#fffaf0",
+        "eye": "#f7cd5d"
+      },
+      "jobs": {
+        "clear": {
+          "speed": 0.8,
+          "affinity": 0.7
+        },
+        "till": {
+          "speed": 0.9,
+          "affinity": 0.8
+        },
+        "plant": {
+          "speed": 1.6,
+          "affinity": 2.4
+        },
+        "water": {
+          "speed": 1.1,
+          "affinity": 1
+        }
+      },
+      "traits": {
+        "energy": 1.2,
+        "napFrequency": 0.8,
+        "napDuration": 0.9,
+        "curiosity": 1.4,
+        "zoomies": 0.8,
+        "lovesPlayer": 0.6,
+        "schedule": "early"
+      },
+      "weaknesses": {
+        "distractible": true,
+        "hatesWater": false,
+        "refuses": []
+      }
+    },
+    {
+      "id": "mochi",
+      "name": "Mika",
+      "spriteSet": "cat",
+      "blurb": "Fluffy grey. Strong rock-shover. Thinks water is a personal insult. Night owl.",
+      "coat": {
+        "coat": "#9c6f44",
+        "shade": "#be825b",
+        "marking": "#5e3b2e",
+        "belly": "#e0b98a",
+        "eye": "#ffea00"
+      },
+      "jobs": {
+        "clear": {
+          "speed": 1.6,
+          "affinity": 2
+        },
+        "till": {
+          "speed": 1,
+          "affinity": 1
+        },
+        "plant": {
+          "speed": 1,
+          "affinity": 0.9
+        },
+        "water": {
+          "speed": 0.4,
+          "affinity": 0.2
+        }
+      },
+      "traits": {
+        "energy": 1,
+        "napFrequency": 1,
+        "napDuration": 1,
+        "curiosity": 1,
+        "zoomies": 1.6,
+        "lovesPlayer": 1.4,
+        "schedule": "night"
+      },
+      "weaknesses": {
+        "distractible": false,
+        "hatesWater": true,
+        "refuses": []
+      }
+    }
+  ]
+}
