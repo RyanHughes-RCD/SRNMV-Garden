@@ -79,10 +79,11 @@ export function openMenu(m) {
 export function closeMenu() {
   const m = stack.pop();
   m?.onClose?.();
-  if (!stack.length) { G.mode = G.menuReturn || 'play'; $('menus').innerHTML = ''; }
+  if (!stack.length) { G.mode = G.menuReturn || 'play'; clearMenuRoot(); }
   else { fixSel(stack.at(-1)); renderMenu(); }
 }
-export function closeAllMenus() { while (stack.length) stack.pop()?.onClose?.(); G.mode = 'play'; $('menus').innerHTML = ''; }
+function clearMenuRoot() { const r = $('menus'); r.innerHTML = ''; r._menu = null; r._parts = null; }
+export function closeAllMenus() { while (stack.length) stack.pop()?.onClose?.(); G.mode = 'play'; clearMenuRoot(); }
 export function replaceMenu(m) { stack.pop(); m.sel ??= 0; stack.push(m); fixSel(m); renderMenu(); }
 export function refreshMenu() { if (stack.length) { fixSel(stack.at(-1)); renderMenu(); } }
 
@@ -131,22 +132,44 @@ export function renderMenu() {
   const title = typeof m.title === 'function' ? m.title() : m.title;
   const sub = typeof m.subtitle === 'function' ? m.subtitle() : m.subtitle;
   const cur = its[m.sel];
-  let h = `<div class="menu ${m.cls || ''}">`;
-  h += `<div class="menu-title">${m.icon ? iconHTML(m.icon) : ''}<span>${title}</span></div>`;
-  if (sub) h += `<div class="menu-sub">${glyphs(sub)}</div>`;
-  h += `<div class="menu-body"><div class="menu-items ${cols > 1 ? 'grid' : ''}" style="--cols:${cols}">`;
-  its.forEach((it, i) => {
-    if (it.header) { h += `<div class="mi hdr">${it.label}</div>`; return; }
-    const cl = ['mi', i === m.sel ? 'sel' : '', it.disabled ? 'dis' : '', it.cls || ''].join(' ');
-    const ico = it.iconHTML || (it.icon ? iconHTML(it.icon, 'ico', it.iconOpts || {}) : '');
-    if (cols > 1) h += `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}</span></div>`;
-    else h += `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}${it.sub ? `<small>${glyphs(it.sub)}</small>` : ''}</span>${it.right != null ? `<span class="right">${it.onLeft ? '◂ ' : ''}${it.right}${it.onRight ? ' ▸' : ''}</span>` : ''}</div>`;
-  });
-  if (!its.length) h += `<div class="mi dis">${m.empty || 'Nothing here yet.'}</div>`;
-  h += `</div>`;
-  if (m.detail && cur) h += `<div class="menu-detail">${m.detail(cur)}</div>`;
-  h += `</div><div class="menu-foot">${glyphs(m.footer || (cur?.onX ? 'Ⓐ select · Ⓧ ' + (cur.xLabel || 'more') + ' · Ⓑ back' : 'Ⓐ select · Ⓑ back'))}</div></div>`;
-  root.innerHTML = h;
+  // build each part separately so a refresh can update just what changed
+  const P = {
+    title: `${m.icon ? iconHTML(m.icon) : ''}<span>${title}</span>`,
+    sub: sub ? glyphs(sub) : '',
+    items: its.map((it, i) => {
+      if (it.header) return `<div class="mi hdr">${it.label}</div>`;
+      const cl = ['mi', i === m.sel ? 'sel' : '', it.disabled ? 'dis' : '', it.cls || ''].join(' ');
+      const ico = it.iconHTML || (it.icon ? iconHTML(it.icon, 'ico', it.iconOpts || {}) : '');
+      if (cols > 1) return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}</span></div>`;
+      return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}${it.sub ? `<small>${glyphs(it.sub)}</small>` : ''}</span>${it.right != null ? `<span class="right">${it.onLeft ? '◂ ' : ''}${it.right}${it.onRight ? ' ▸' : ''}</span>` : ''}</div>`;
+    }),
+    detail: m.detail && cur ? m.detail(cur) : null,
+    foot: glyphs(m.footer || (cur?.onX ? 'Ⓐ select · Ⓧ ' + (cur.xLabel || 'more') + ' · Ⓑ back' : 'Ⓐ select · Ⓑ back')),
+  };
+  if (!its.length) P.items = [`<div class="mi dis">${m.empty || 'Nothing here yet.'}</div>`];
+  const prev = root._menu === m ? root._parts : null;
+  // Same menu, same layout: patch only the parts that changed, so nothing flashes or jumps.
+  if (prev && prev.items.length === P.items.length && !!prev.sub === !!P.sub && (prev.detail == null) === (P.detail == null)) {
+    const q = sel => root.querySelector(sel);
+    if (prev.title !== P.title) q('.menu-title').innerHTML = P.title;
+    if (prev.sub !== P.sub) q('.menu-sub').innerHTML = P.sub;
+    const rows = q('.menu-items').children;
+    P.items.forEach((html, i) => { if (prev.items[i] !== html && rows[i]) rows[i].outerHTML = html; });
+    if (P.detail != null && prev.detail !== P.detail) q('.menu-detail').innerHTML = P.detail;
+    if (prev.foot !== P.foot) q('.menu-foot').innerHTML = P.foot;
+    root._parts = P;
+  } else {
+    let h = `<div class="menu ${m.cls || ''}${prev || root._menu === m ? ' no-anim' : ''}">`;
+    h += `<div class="menu-title">${P.title}</div>`;
+    if (P.sub) h += `<div class="menu-sub">${P.sub}</div>`;
+    h += `<div class="menu-body"><div class="menu-items ${cols > 1 ? 'grid' : ''}" style="--cols:${cols}">${P.items.join('')}</div>`;
+    if (P.detail != null) h += `<div class="menu-detail">${P.detail}</div>`;
+    h += `</div><div class="menu-foot">${P.foot}</div></div>`;
+    const keep = root._menu === m ? root.querySelector('.menu-items')?.scrollTop ?? 0 : 0;
+    root.innerHTML = h;
+    root._menu = m; root._parts = P;
+    if (keep) root.querySelector('.menu-items').scrollTop = keep;
+  }
   const sel = root.querySelector('.mi.sel');
   if (sel) sel.scrollIntoView({ block: 'nearest' });
 }

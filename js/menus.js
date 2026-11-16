@@ -18,7 +18,7 @@ import { JOB_VERB } from './jobs.js';
 import * as brain from './catbrain.js';
 
 const pct = v => `${Math.round(v * 100)}%`;
-const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.max(0, Math.min(100, (v / max) * 100))}%"></span></span>`;
+const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.round(Math.max(0, Math.min(100, (v / max) * 100)) / 5) * 5}%"></span></span>`;
 const rarityName = r => DATA.rarities[r]?.name || r;
 const rarityTag = r => `<span class="rar rar-${r}">${rarityName(r)}</span>`;
 
