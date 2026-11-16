@@ -98,15 +98,15 @@ Times are while watered. Everything is tunable in `data/trees.json`.
 
 Stand in front of the cabin door, face it and press **A** to go in. Walk out through the doormat at the bottom to leave. The garden and the cats keep going while you're inside. (Customizing the outside of the cabin is in *Menu → Cabin*.)
 
-- **Decorate:** press **Y** (or *Menu → Decorate the cabin*). This works like building outside: **A** places, **X** picks up for a full refund, **LB/RB** change item, **B** finishes. There are sofas, armchairs, a fireplace, bookshelves, lamps, a piano, rugs, and things for the back wall: windows (they show the real sky), paintings, a clock, a mirror, bunting and a wreath. Some furniture has to stand against the back wall, and nothing can block a doorway or the way out.
+- **Decorate:** press **Y** (or *Menu → Decorate the cabin*). This works like building outside: **A** places, **X** picks up for a full refund, **LB/RB** change item, **B** finishes. There are about 70 pieces: five beds, three fireplaces, sofas and armchairs, tables, a piano, an old TV, a grandfather clock, chests, plants, eight rugs, kitchen appliances, and things for the back wall: windows (they show the real sky), paintings, a clock, a mirror, a hanging plant, bunting and a wreath. Napping cats curl up on the beds and in the cat basket. The furniture art is `art/interior-sheet.png`: run `python3 tools/import_interior.py` and then `node tools/gen-sprites.mjs` after changing it. Some furniture has to stand against the back wall, and nothing can block a doorway or the way out.
 - **Floors & walls:** each room has its own floor (planks, checker tiles, flagstones, carpet) and wallpaper. 150 coins per change.
 - **Cabin rooms (big, expensive projects):**
 
 | Upgrade | Cost | What it does |
 |---|---|---|
 | Bigger living room | 2,500 coins, 120 wood, 40 stone | Living room grows from 9×6 to 12×7 |
-| Kitchen | 4,000 coins, 150 wood, 60 stone | Unlocks the stove, counters, sink, icebox and pantry. **Cook a feast** on the stove from 4 of one crop: the cats work 25% faster for 6 hours |
-| Bedroom | 5,000 coins, 180 wood, 60 fiber | Unlocks the bed, nightstands, dresser and wardrobe. With a bed, the cats sneak in to nap (you'll see one curled up on it) and get their energy back 50% faster |
+| Kitchen | 4,000 coins, 150 wood, 60 stone | Unlocks the stoves and ovens, counters, sink, fridge and toaster. **Cook a feast** on any stove or oven from 4 of one crop: the cats work 25% faster for 6 hours |
+| Bedroom | 5,000 coins, 180 wood, 60 fiber | Unlocks the beds, nightstands, dresser, vanity and wardrobe. With a bed, the cats sneak in to nap (you'll see one curled up on it) and get their energy back 50% faster |
 | Grand living room | 8,000 coins, 200 wood, 100 stone | Living room grows again, to 15×8 (needs the bigger living room) |
 
 At night, lamps, the fireplace and the stove light up the rooms. All the numbers and furniture are in `data/interior.json`. The art is in the Workshop under the *interior* category.

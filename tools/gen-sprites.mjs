@@ -1297,116 +1297,7 @@ const clearRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let 
   mat.rect(2, 3, 12, 10, C.red).rect(3, 4, 10, 8, C.coral).rect(5, 6, 6, 4, C.orange).pts([[6, 7], [9, 8]], C.yellow);
   add('in_exit', 'interior', mat.outline());
 
-  // rugs
-  const rr = new G(32, 32);
-  rr.ellipse(16, 16, 15, 13, C.dred).ellipse(16, 16, 13, 11, C.red).ellipse(16, 16, 10, 8, C.orange).ellipse(16, 16, 7, 5.5, C.yellow).ellipse(16, 16, 4, 3, C.red);
-  add('in_rug_round', 'interior', rr.outline());
-  const rl = new G(48, 32);
-  rl.rect(2, 3, 44, 26, C.dblue).rect(4, 5, 40, 22, C.blue).rect(7, 8, 34, 16, C.lblue);
-  for (let k = 0; k < 4; k++) { const cx = 12 + k * 8; rl.pts([[cx, 13], [cx - 1, 14], [cx + 1, 14], [cx - 2, 15], [cx + 2, 15], [cx - 1, 16], [cx + 1, 16], [cx, 17]], C.pblue).set(cx, 15, C.white); }
-  for (let y = 4; y < 29; y += 2) rl.set(1, y, C.cream).set(0, y, C.cream).set(46, y, C.cream).set(47, y, C.cream);
-  add('in_rug_long', 'interior', rl);
-  const rc = new G(32, 32);
-  rc.ellipse(16, 18, 14, 11, C.orange);
-  for (let k = 0; k < 6; k++) { rc.line(4 + k, 12 - k, 4 + k, 12, C.orange); rc.line(27 - k, 12 - k, 27 - k, 12, C.orange); }
-  rc.pts([[6, 9], [7, 10], [25, 9], [24, 10]], C.ppink);
-  rc.ellipse(11, 16, 2, 2.5, C.out).ellipse(21, 16, 2, 2.5, C.out).pts([[11, 15], [21, 15]], C.white).pts([[15, 20], [16, 20], [17, 20], [16, 21]], C.pink);
-  rc.line(3, 20, 10, 21, C.cream).line(3, 23, 10, 22, C.cream).line(22, 21, 29, 20, C.cream).line(22, 22, 29, 23, C.cream);
-  add('in_rug_cat', 'interior', rc.outline());
-
-  // living room
-  const chair = (w, c1, c2, c3) => { const g = new G(w, 24); g.rect(2, 4, w - 4, 10, c1).rect(3, 5, w - 6, 3, c2).rect(1, 10, 3, 10, c3).rect(w - 4, 10, 3, 10, c3).rect(3, 13, w - 6, 6, c1).line(3, 13, w - 4, 13, c2).rect(2, 20, 2, 3, C.dbrown).rect(w - 4, 20, 2, 3, C.dbrown); if (w > 16) g.line(w / 2, 5, w / 2, 12, c3); return g.outline(); };
-  add('in_armchair', 'interior', chair(16, C.coral, C.orange, C.red));
-  add('in_sofa', 'interior', chair(32, C.green, C.lgreen, C.green1));
-  const ct = new G(32, 16);
-  ct.rect(1, 4, 30, 5, C.tan).line(1, 4, 30, 4, C.ltan).rect(1, 9, 30, 2, C.brown).rect(3, 11, 2, 4, C.brown).rect(27, 11, 2, 4, C.brown);
-  ct.rect(6, 5, 3, 3, C.white).set(9, 6, C.white).rect(18, 5, 7, 2, C.violet).line(18, 5, 24, 5, C.lav);
-  add('in_coffee_table', 'interior', ct.outline());
-  const bs = new G(16, 32), br = rng(77);
-  bs.rect(1, 2, 14, 29, C.brown).rect(3, 4, 10, 25, C.dbrown);
-  for (const sy of [11, 19, 27]) { bs.rect(3, sy, 10, 2, C.tan); let x = 3; while (x < 12) { const w = 1 + Math.floor(br() * 2), h = 4 + Math.floor(br() * 3); bs.rect(x, sy - h, w, h, [C.red, C.blue, C.green, C.yellow, C.violet, C.orange][Math.floor(br() * 6)]); x += w + (br() < 0.2 ? 1 : 0); } }
-  bs.rect(1, 2, 14, 1, C.tan);
-  add('in_bookshelf', 'interior', bs.outline());
-  const fl = new G(16, 32);
-  fl.rect(7, 11, 2, 18, C.dgray).ellipse(8, 29.5, 4.5, 1.6, C.dgray);
-  for (let y = 2; y < 11; y++) { const hw = 3 + Math.floor((y - 2) / 3); fl.rect(8 - hw, y, hw * 2, 1, y < 4 ? C.pyellow : C.yellow); }
-  fl.line(3, 10, 12, 10, C.orange);
-  add('in_floor_lamp', 'interior', fl.outline());
-  const fire = [0, 1].map(f => {
-    const g = new G(32, 32);
-    g.rect(1, 6, 30, 26, C.gray);
-    for (let y = 7; y < 31; y += 4) for (let x = (y % 8 ? 1 : 4); x < 31; x += 6) g.rect(x, y, 5, 3, (x + y) % 3 ? C.lgray : C.vlgray);
-    g.rect(0, 4, 32, 3, C.brown).line(0, 4, 31, 4, C.tan);
-    g.rect(8, 15, 16, 17, C.out); for (let k = 0; k < 4; k++) g.line(9 + k, 14 - Math.floor(k / 2), 22 - k, 14 - Math.floor(k / 2), C.out);
-    g.rect(10, 27, 12, 3, C.brown).line(10, 27, 21, 27, C.tan);
-    const fx = f ? 1 : 0;
-    g.ellipse(16 + fx, 23, 5, 5, C.red).ellipse(16 - fx, 24, 3.5, 3.5, C.orange).ellipse(16, 25, 2, 2, C.yellow).set(15 + fx * 2, 17, C.orange).set(17 - fx, 18, C.yellow);
-    g.pts([[5, 2], [6, 2], [5, 3], [6, 3]], C.green).pts([[26, 1], [26, 2], [27, 3], [25, 3]], C.cream);
-    return g.outline();
-  });
-  add('in_fireplace', 'interior', fire, 4);
-  const pl = new G(16, 24);
-  pl.rect(4, 16, 8, 7, C.coral).rect(3, 15, 10, 2, C.orange).line(5, 17, 5, 21, C.red);
-  pl.ellipse(8, 9, 3, 6, C.green1).ellipse(4, 11, 3, 3, C.green).ellipse(12, 10, 3, 3.5, C.green).ellipse(8, 6, 2, 3, C.lgreen).pts([[5, 9], [11, 8], [8, 3]], C.pgreen);
-  add('in_plant', 'interior', pl.outline());
-  const ra = new G(16, 24);
-  ra.rect(1, 13, 14, 3, C.tan).line(1, 13, 14, 13, C.ltan).rect(2, 16, 2, 7, C.brown).rect(12, 16, 2, 7, C.brown);
-  ra.rect(3, 5, 10, 8, C.brown).rect(3, 5, 10, 1, C.tan).rect(4, 7, 5, 5, C.ltan).pts([[5, 8], [7, 8], [6, 10], [4, 10], [8, 10]], C.tan).set(11, 8, C.yellow).set(11, 10, C.yellow).line(12, 1, 10, 5, C.dgray);
-  add('in_radio', 'interior', ra.outline());
-  const pi = new G(32, 32);
-  pi.rect(1, 3, 30, 22, C.plum).rect(1, 3, 30, 2, C.dbrown).rect(3, 7, 26, 8, C.dbrown).rect(2, 17, 28, 4, C.white);
-  for (let x = 4; x < 29; x += 3) if (x % 7) pi.rect(x, 17, 1, 2, C.out);
-  pi.rect(3, 25, 2, 6, C.plum).rect(27, 25, 2, 6, C.plum).rect(13, 26, 6, 2, C.dbrown).rect(6, 8, 6, 5, C.cream).line(7, 10, 10, 10, C.gray);
-  add('in_piano', 'interior', pi.outline());
-  const dt = new G(32, 24);
-  dt.rect(1, 6, 30, 6, C.tan).line(1, 6, 30, 6, C.ltan).rect(1, 12, 30, 2, C.brown).rect(3, 14, 2, 9, C.brown).rect(27, 14, 2, 9, C.brown);
-  dt.rect(10, 6, 12, 6, C.cream).line(10, 11, 21, 11, C.ltan).ellipse(16, 6, 4, 2, C.lblue).pts([[14, 4], [16, 3], [18, 4], [15, 5]], C.red).set(17, 5, C.orange).set(13, 5, C.yellow);
-  add('in_dining_table', 'interior', dt.outline());
-  const ch = new G(16, 24);
-  ch.rect(4, 3, 8, 10, C.tan); clearRect(ch, 5, 5, 6, 7); ch.line(6, 5, 6, 11, C.tan).line(9, 5, 9, 11, C.tan).rect(3, 13, 10, 3, C.ltan).rect(3, 16, 2, 7, C.brown).rect(11, 16, 2, 7, C.brown);
-  add('in_chair', 'interior', ch.outline());
-
-  // bedroom
-  const bed = new G(32, 40);
-  bed.rect(1, 1, 30, 12, C.brown).rect(3, 1, 26, 2, C.tan).rect(2, 9, 28, 29, C.cream);
-  bed.ellipse(10, 13, 6, 3, C.white).ellipse(22, 13, 6, 3, C.white).pts([[8, 12], [20, 12]], C.vlgray);
-  const q = [C.pink, C.ppink, C.lav, C.ppink];
-  for (let y = 18; y < 37; y += 5) for (let x = 2; x < 30; x += 7) bed.rect(x, y, 7, 5, q[((x / 7) | 0) + (((y - 18) / 5) | 0) & 3]);
-  bed.line(2, 18, 29, 18, C.violet).rect(1, 37, 30, 3, C.brown).line(1, 37, 30, 37, C.tan);
-  add('in_bed', 'interior', bed.outline());
-  const ns = new G(16, 24);
-  ns.rect(2, 12, 12, 11, C.tan).line(2, 12, 13, 12, C.ltan).line(3, 17, 12, 17, C.brown).set(8, 15, C.yellow).set(8, 20, C.yellow).rect(7, 9, 2, 3, C.brown);
-  for (let y = 4; y < 9; y++) ns.rect(5 - ((y - 4) >> 1), y, 6 + ((y - 4) >> 1) * 2, 1, y < 6 ? C.pyellow : C.yellow);
-  add('in_nightstand', 'interior', ns.outline());
-  const dr = new G(32, 24);
-  dr.rect(1, 6, 30, 17, C.tan).line(1, 6, 30, 6, C.ltan);
-  for (const y of [11, 16]) dr.line(2, y, 29, y, C.brown);
-  for (const y of [8, 13, 19]) dr.pts([[9, y], [22, y]], C.yellow);
-  dr.rect(5, 1, 4, 5, C.lblue).pts([[6, 0], [7, 0], [5, 0]], C.pink).rect(20, 3, 8, 3, C.cream);
-  add('in_dresser', 'interior', dr.outline());
-  const wd = new G(16, 32);
-  wd.rect(1, 3, 14, 28, C.brown).rect(0, 1, 16, 3, C.tan).line(8, 4, 8, 30, C.dbrown).pts([[6, 16], [10, 16]], C.yellow).rect(3, 6, 4, 8, C.tan).rect(10, 6, 3, 8, C.tan);
-  add('in_wardrobe', 'interior', wd.outline());
-
-  // kitchen
-  const stove = [0, 1].map(f => {
-    const g = new G(16, 32);
-    g.rect(10, 0, 3, 12, C.dgray).rect(2, 12, 12, 17, C.dgray).rect(1, 11, 14, 2, C.gray).rect(4, 17, 8, 7, C.out);
-    g.ellipse(8, 21 + f * 0.4, 3, 2.4, C.orange).ellipse(8, 22, 1.6, 1.4, C.yellow);
-    g.rect(3, 7, 6, 4, C.gray).line(3, 7, 8, 7, C.lgray).rect(2, 29, 2, 2, C.dgray).rect(12, 29, 2, 2, C.dgray);
-    return g.outline();
-  });
-  add('in_stove', 'interior', stove, 3);
-  const cab = top => { const g = new G(16, 24); g.rect(1, 9, 14, 14, C.tan).rect(3, 12, 10, 9, C.ltan).set(11, 16, C.brown).rect(0, 7, 16, 3, C.vlgray).line(0, 7, 15, 7, C.white); top(g); return g.outline(); };
-  add('in_counter', 'interior', cab(g => g.rect(3, 5, 7, 2, C.ltan).ellipse(12, 5, 2, 1.6, C.red).set(12, 3, C.green)));
-  add('in_sink', 'interior', cab(g => g.rect(3, 7, 10, 2, C.lgray).rect(4, 8, 8, 1, C.lblue).rect(7, 2, 2, 5, C.gray).rect(7, 2, 4, 1, C.gray)));
-  const ice = new G(16, 32);
-  ice.rect(2, 2, 12, 29, C.white).rect(2, 2, 12, 1, C.vlgray).line(2, 13, 13, 13, C.lgray).line(13, 3, 13, 30, C.vlgray).rect(11, 6, 1, 4, C.gray).rect(11, 17, 1, 5, C.gray);
-  add('in_icebox', 'interior', ice.outline());
-  const pa = new G(16, 32);
-  pa.rect(1, 2, 14, 29, C.tan).rect(3, 4, 10, 25, C.brown);
-  for (const sy of [12, 20, 28]) { pa.rect(3, sy, 10, 1, C.ltan); [[3, C.lav], [7, C.orange], [10, C.green]].forEach(([x, c], k) => pa.rect(x + (sy % 3), sy - 5, 3, 5, c).rect(x + (sy % 3), sy - 6, 3, 1, k % 2 ? C.red : C.cream)); }
-  add('in_pantry', 'interior', pa.outline());
+  // Furniture comes from art/interior-sheet.png (tools/import_interior.py -> data/custom-sprites.json).
 
   // wall hangings (16x16)
   const win = new G(16, 16);
@@ -1415,9 +1306,6 @@ const clearRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let 
   const pt = (inner) => { const g = new G(16, 16); g.rect(1, 2, 14, 12, C.orange).rect(2, 3, 12, 10, C.yellow).rect(3, 4, 10, 8, C.pblue); inner(g); return g.outline(); };
   add('in_painting_lake', 'interior', pt(g => g.rect(3, 8, 10, 2, C.green).rect(3, 10, 10, 2, C.blue).pts([[5, 7], [6, 6], [7, 7], [9, 7], [10, 6], [11, 7]], C.green1).set(11, 5, C.yellow)));
   add('in_painting_cats', 'interior', pt(g => { g.rect(3, 4, 10, 8, C.ppink).ellipse(8, 9, 3.5, 3, C.orange).pts([[5, 6], [5, 5], [11, 6], [11, 5]], C.orange).pts([[7, 9], [9, 9]], C.out).set(8, 10, C.pink); }));
-  const clk = new G(16, 16);
-  clk.ellipse(8, 8, 6.5, 6.5, C.tan).ellipse(8, 8, 5, 5, C.cream).line(8, 8, 8, 4, C.out).line(8, 8, 11, 8, C.out).pts([[8, 3], [13, 8], [8, 13], [3, 8]], C.brown);
-  add('in_clock', 'interior', clk.outline());
   const sh = new G(16, 16);
   sh.rect(1, 11, 14, 2, C.tan).pts([[2, 13], [13, 13], [2, 14], [13, 14]], C.brown).rect(3, 7, 4, 4, C.coral).ellipse(5, 5, 2.5, 2, C.green).rect(9, 8, 4, 3, C.lblue).ellipse(11, 6, 1.8, 2.5, C.lgreen);
   add('in_wall_shelf', 'interior', sh.outline());

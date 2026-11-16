@@ -11,7 +11,7 @@ import { sfx } from './audio.js';
 import { catFurniture, nearestCatSpot, catHouseOf, catHouseDoorstep, catWorkMult } from './decorations.js';
 import { baitedDockNear, dockSeats, catFish } from './fishing.js';
 // a bed in the cabin's bedroom: the cats sneak in to nap and recover faster
-const bedBonus = () => (G.state.home?.items?.some(i => i.id === 'bed') ? DATA.interior?.bedNapMult || 1 : 1);
+const bedBonus = () => (G.state.home?.items?.some(i => DATA.interior?.items?.[i.id]?.napBed) ? DATA.interior?.bedNapMult || 1 : 1);
 
 const tileOf = c => idx(Math.floor(c.x / TILE), Math.floor((c.y - 2) / TILE));
 

@@ -36,7 +36,7 @@ export function fixHome(s) {
 }
 const home = () => G.state.home;
 export const isInside = () => !!G.state?.home?.inside && G.mode !== 'title';
-export const hasBed = () => !!G.state?.home?.items?.some(i => i.id === 'bed');
+export const hasBed = () => !!G.state?.home?.items?.some(i => DATA.interior.items[i.id]?.napBed);
 export const feastActive = () => (G.state?.home?.feastUntil || 0) > (G.state?.simTime || 0);
 export const feastMult = () => (feastActive() ? I().feast.workMult : 1);
 export const bedNapMult = () => (hasBed() ? I().bedNapMult : 1);
@@ -175,7 +175,8 @@ function resolveInside(L, occ) {
   if (!it) return null;
   const d = I().items[it.id];
   if (d.action === 'cook') return { kind: 'cook', label: feastActive() ? `Stove · the cats are well fed for ${fmtLeft()}` : 'Cook a feast for the cats' };
-  if (d.action === 'nap') { const c = nappingCat(); return { kind: 'nap', label: c ? `${c.cfg.name} is napping here` : 'Bed · the cats nap here' }; }
+  if (d.action === 'nap') { const c = catOn(it); return { kind: 'nap', item: it, label: c ? `${c.cfg.name} is napping here` : `${d.name} · the cats nap here` }; }
+  if (it.id === 'cat_basket') { const c = catOn(it); return { kind: 'info', label: c ? `${c.cfg.name} is curled up in the basket` : 'Cat basket' }; }
   if (d.action === 'look') return { kind: 'look', label: 'Look outside' };
   if (d.action === 'clock') return { kind: 'info', label: `The clock says ${clockLabel(hourOfDay())}` };
   return { kind: 'info', label: d.name };
@@ -201,11 +202,14 @@ export function updateInside(dt) {
   switch (lastAction.kind) {
     case 'exit': leaveCabin(); break;
     case 'cook': cookMenu(); break;
-    case 'nap': sfx('pop'); toast(nappingCat() ? `Shh... ${nappingCat().cfg.name} is fast asleep` : 'A cozy bed. The cats sneak in here to nap and get their energy back faster', 'in_bed'); break;
+    case 'nap': { const c = catOn(lastAction.item); sfx('pop'); toast(c ? `Shh... ${c.cfg.name} is fast asleep` : 'A cozy bed. The cats sneak in here to nap and get their energy back faster', I().items[lastAction.item.id].sprite); break; }
     case 'look': { const hr = hourOfDay(); sfx('pop'); toast(`${phaseLabel(hr)} outside. ${G.cats.map(c => `${c.cfg.name}: ${c.activity.toLowerCase()}`).join(' · ')}`, 'in_window', 6000); break; }
   }
 }
-function nappingCat() { return hasBed() ? G.cats.find(c => c.state === 'nap') || null : null; }
+// Napping cats curl up on the beds and cat baskets indoors (one cat per spot).
+function napSpots() { return home().items.filter(i => I().items[i.id]?.napBed || i.id === 'cat_basket'); }
+function nappers() { const spots = napSpots(), cats = G.cats.filter(c => c.state === 'nap'); return spots.slice(0, cats.length).map((s, k) => ({ spot: s, cat: cats[k] })); }
+function catOn(it) { return nappers().find(n => n.spot === it)?.cat || null; }
 
 /* ------------------------------------------------------------ decorating */
 export const IM = { cx: 0, cy: 0, id: null };
@@ -415,7 +419,7 @@ export function renderInterior(ctx, t) {
   const sky = skyColour(hourOfDay());
   for (const it of h.items) {
     const d = D.items[it.id]; if (!d.wall) continue;
-    const r = L.room(it.room), x = (r.x + it.x) * TILE, y = (r.y - 2) * TILE + 6;
+    const { x, y } = wallPos(it, d, L);
     if (it.id === 'window') { ctx.fillStyle = sky; ctx.fillRect(x + 3, y + 3, 10, 9); }
     drawSprite(ctx, d.sprite, 0, x, y);
   }
@@ -424,14 +428,23 @@ export function renderInterior(ctx, t) {
   // furniture, a napping cat and you, sorted by depth
   const list = [];
   for (const it of h.items) { const d = D.items[it.id]; if (!d.rug && !d.wall) { const r = L.room(it.room); list.push({ y: (r.y + it.y + (d.size?.[1] || 1)) * TILE - 1, fn: () => drawItem(ctx, it, d, L, t) }); } }
-  const napper = nappingCat(), bed = napper && h.items.find(i => i.id === 'bed');
-  if (bed) { const r = L.room(bed.room); list.push({ y: (r.y + bed.y + 2) * TILE, fn: () => drawSprite(ctx, 'cat_sleep', animFrame('cat_sleep', t), (r.x + bed.x) * TILE + 9, (r.y + bed.y) * TILE + 14, { swap: napper.swap?.swap, swapKey: napper.swap?.key }) }); }
+  for (const { spot, cat } of nappers()) {
+    const r = L.room(spot.room), [w, hh] = D.items[spot.id].size || [1, 1], cs = DATA.sprites.sprites.cat_sleep;
+    const cx = (r.x + spot.x) * TILE + Math.round((w * TILE - (cs?.w ?? 16)) / 2), cy = (r.y + spot.y) * TILE + (hh > 1 ? 10 : Math.round((TILE - (cs?.h ?? 12)) / 2) - 1);
+    list.push({ y: (r.y + spot.y + hh) * TILE, fn: () => drawSprite(ctx, 'cat_sleep', animFrame('cat_sleep', t), cx, cy, { swap: cat.swap?.swap, swapKey: cat.swap?.key }) });
+  }
   drawPlayer((y, fn) => list.push({ y, fn }), ctx, t, h.me);
   list.sort((a, b) => a.y - b.y);
   for (const e of list) e.fn();
   if (G.mode === 'iplace') drawDecorateOverlay(ctx, t, L);
   ctx.restore();
   renderInsideLight(ctx, t, ox, oy, L);
+}
+// Wall hangings sit on the wall above the chair rail; tall ones (a hanging plant) stay under the ceiling.
+function wallPos(it, d, L) {
+  const r = L.room(it.room), def = DATA.sprites.sprites[d.sprite], sw = def?.w ?? 16, sh = def?.h ?? 16;
+  const top = (r.y - 2) * TILE, bottom = top + 22;
+  return { x: (r.x + it.x) * TILE + Math.round((TILE - sw) / 2), y: Math.max(top + 2, bottom - sh) };
 }
 function drawItem(ctx, it, d, L, t) {
   const r = L.room(it.room), [w, hh] = d.size || [1, 1];
@@ -445,7 +458,7 @@ function drawDecorateOverlay(ctx, t, L) {
   const ok = it && !itemProblem(it) && canAfford(d.cost);
   const [w, hh] = d.wall ? [1, 1] : d.size || [1, 1];
   ctx.globalAlpha = 0.65;
-  if (it) { if (d.wall) { const r = L.room(it.room); drawSprite(ctx, d.sprite, 0, (r.x + it.x) * TILE, (r.y - 2) * TILE + 6); } else drawItem(ctx, it, d, L, t); }
+  if (it) { if (d.wall) { const p = wallPos(it, d, L); drawSprite(ctx, d.sprite, 0, p.x, p.y); } else drawItem(ctx, it, d, L, t); }
   ctx.globalAlpha = 1;
   ctx.strokeStyle = ok ? `rgba(140,198,90,${blink})` : `rgba(229,115,90,${blink})`;
   const cy = d.wall ? 0 : IM.cy, ch = d.wall ? 2 : hh;
@@ -461,7 +474,7 @@ function renderInsideLight(ctx, t, ox, oy, L) {
   for (const it of home().items) {
     const d = I().items[it.id]; if (!d.light) continue;
     const r = L.room(it.room), [w] = d.size || [1, 1];
-    lights.push({ x: (r.x + it.x) * TILE + w * 8 - ox, y: (r.y + it.y) * TILE + (it.id === 'fireplace' ? 8 : -4) - oy, r: d.light, fire: it.id === 'fireplace' || it.id === 'stove' });
+    lights.push({ x: (r.x + it.x) * TILE + w * 8 - ox, y: (r.y + it.y) * TILE + (d.fire ? 6 : -4) - oy, r: d.light, fire: !!d.fire });
   }
   lctx.globalCompositeOperation = 'source-over'; lctx.clearRect(0, 0, vw, vh);
   lctx.fillStyle = `rgba(12,14,40,${dark.toFixed(3)})`; lctx.fillRect(0, 0, vw, vh);
