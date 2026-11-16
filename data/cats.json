@@ -60,8 +60,9 @@
     {
       "id": "pepper",
       "name": "Noctis",
-      "spriteSet": "cat",
-      "blurb": "Tuxedo. Neat, careful planter. Up with the sun, easily distracted by butterflies.",
+      "spriteSet": "noctis",
+      "spriteScale": 0.75,
+      "blurb": "Black cat. Neat, careful planter. Up with the sun, easily distracted by butterflies.",
       "coat": {
         "coat": "#1a1423",
         "shade": "#3b2a3a",
@@ -109,8 +110,9 @@
     {
       "id": "mochi",
       "name": "Mika",
-      "spriteSet": "cat",
-      "blurb": "Fluffy grey. Strong rock-shover. Thinks water is a personal insult. Night owl.",
+      "spriteSet": "mika",
+      "spriteScale": 1,
+      "blurb": "Tabby. Strong rock-shover. Thinks water is a personal insult. Night owl.",
       "coat": {
         "coat": "#9c6f44",
         "shade": "#be825b",

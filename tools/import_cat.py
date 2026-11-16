@@ -1,6 +1,11 @@
 """Import a 32x32-frame cat sheet (8x8 grid) as a cat sprite set.
 
     python3 tools/import_cat.py art/vyke-sheet.png vyke
+    python3 tools/import_cat.py art/mika-sheet.png mika --grid -7.4,-5.5,25.71,25.33 --layout trimmed
+
+--grid x,y,pitchX,pitchY reads a sheet that was resized or cropped: the top-left of cell (0,0)
+and the spacing between cells, in the image's pixels. --layout trimmed leaves out frames that
+were cut off at the edges of such a sheet (see LAYOUTS).
 
 Then run `node tools/gen-sprites.mjs`, and give the cat `"spriteSet": "vyke"` in data/cats.json
 (optionally "spriteScale" to draw big art smaller, e.g. 0.75). Frames keep the sheet's own
@@ -37,9 +42,54 @@ ANIMS = {
     'stretch':     ([(7, 6), (7, 7)], 2),
 }
 
-def main(path, set_name):
+# Mika's sheet lost its left column edge, the right edge and most of the bottom row.
+TRIMMED = dict(ANIMS)
+TRIMMED.update({
+    'walk_side': ([(2, c) for c in range(1, 7)], 8),
+    'sleep':     ([(5, 2), (5, 3)], 1),
+    'sleep_bed': ([(5, 6)], 1),
+    'laptop':    ([(6, 1)], 1),
+    'write':     ([(6, 2), (6, 3)], 2),
+    'type_side': ([(6, 4), (6, 5)], 4),
+    'work':      ([(6, 6)], 1),                         # the second sweep frame is cut off
+})
+for k in ('sleep_other', 'type', 'read', 'eat', 'stretch'): TRIMMED.pop(k)
+LAYOUTS = {'full': ANIMS, 'trimmed': TRIMMED}
+
+def despeck(im, keep=8):
+    """Drop little islands of pixels (bits of a neighbouring frame that leaked into the cell)."""
+    w, h = im.size; px = im.load(); seen = set()
+    for y in range(h):
+        for x in range(w):
+            if (x, y) in seen or px[x, y][3] < 128: continue
+            comp, stack = [], [(x, y)]; seen.add((x, y))
+            while stack:
+                cx, cy = stack.pop(); comp.append((cx, cy))
+                for nx, ny in ((cx + 1, cy), (cx - 1, cy), (cx, cy + 1), (cx, cy - 1), (cx + 1, cy + 1), (cx - 1, cy - 1), (cx + 1, cy - 1), (cx - 1, cy + 1)):
+                    if 0 <= nx < w and 0 <= ny < h and (nx, ny) not in seen and px[nx, ny][3] >= 128: seen.add((nx, ny)); stack.append((nx, ny))
+            if len(comp) < keep:
+                for cx, cy in comp: px[cx, cy] = (0, 0, 0, 0)
+    return im
+
+def main(path, set_name, grid=None, layout='full'):
+    global ANIMS, CELL
+    ANIMS = LAYOUTS[layout]
     sheet = Image.open(path).convert('RGBA')
-    cells = {rc: sheet.crop((rc[1] * CELL, rc[0] * CELL, rc[1] * CELL + CELL, rc[0] * CELL + CELL)) for frames, _ in ANIMS.values() for rc in frames}
+    if grid:
+        gx, gy, px_, py_ = grid
+        CELL = int(-(-max(px_, py_) // 1))
+        def cut(r, c):
+            x0, y0 = round(gx + c * px_), round(gy + r * py_)
+            im = Image.new('RGBA', (CELL, CELL), (0, 0, 0, 0))
+            im.paste(sheet.crop((x0, y0, x0 + CELL, y0 + CELL)), (0, 0))
+            # keep only this cell's pixels (the next cell starts one pitch along)
+            w, h = round(gx + (c + 1) * px_) - x0, round(gy + (r + 1) * py_) - y0
+            mask = Image.new('L', (CELL, CELL), 0); mask.paste(255, (0, 0, w, h))
+            out = Image.new('RGBA', (CELL, CELL), (0, 0, 0, 0)); out.paste(im, (0, 0), mask)
+            return out
+    else:
+        cut = lambda r, c: sheet.crop((c * CELL, r * CELL, c * CELL + CELL, r * CELL + CELL))
+    cells = {rc: despeck(cut(*rc)) for frames, _ in ANIMS.values() for rc in frames}
     cols = sorted({p[:3] for im in cells.values() for p in im.getdata() if p[3] >= 128})
     if len(cols) > len(CH):
         # weight colours by how often they're used, so the main colours stay exact
@@ -76,5 +126,9 @@ def main(path, set_name):
     print(f'imported {len(out)} animations as {set_name}_* ({len(pal)} colours)')
 
 if __name__ == '__main__':
-    if len(sys.argv) != 3: sys.exit(__doc__)
-    main(sys.argv[1], sys.argv[2])
+    args = sys.argv[1:]
+    grid = layout = None
+    if '--grid' in args: i = args.index('--grid'); grid = [float(v) for v in args[i + 1].split(',')]; del args[i:i + 2]
+    if '--layout' in args: i = args.index('--layout'); layout = args[i + 1]; del args[i:i + 2]
+    if len(args) != 2: sys.exit(__doc__)
+    main(args[0], args[1], grid, layout or 'full')
