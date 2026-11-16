@@ -1,0 +1,35 @@
+{
+  "players": [
+    {
+      "id": "p1",
+      "name": "Ryan",
+      "spriteSet": "hero",
+      "colors": {
+        "hair": "#5e3b2e",
+        "hairHi": "#8a5a3b",
+        "skin": "#eed1aa",
+        "skinShade": "#b98352",
+        "shirt": "#312f2f",
+        "shirtShade": "#343a46",
+        "pants": "#000000",
+        "accent": "#5d9b4f"
+      }
+    },
+    {
+      "id": "p2",
+      "name": "Sam",
+      "spriteSet": "hero2",
+      "colors": {
+        "hair": "#231f20",
+        "hairHi": "#433738",
+        "skin": "#f2d7b6",
+        "skinShade": "#b06621",
+        "shirt": "#b46118",
+        "shirtShade": "#be630e",
+        "pants": "#1e314d",
+        "accent": "#ee86a0"
+      }
+    }
+  ],
+  "spritesVersion": 2
+}
