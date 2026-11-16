@@ -2,7 +2,7 @@
   "_help": "Fish caught from a dock. Bait the water with harvested crops or fruit: the higher the average value of the bait, the better the odds of rare fish. Each catch uses up one portion of bait. biteWindowSec = how long you have to press A when the '!' appears.",
   "bait": { "qualityLowPrice": 8, "qualityHighPrice": 900, "maxPortions": 30 },
   "minigame": { "waitSec": [2, 5], "tugs": [2, 4], "tugGapSec": [0.7, 1.5], "biteWindowSec": { "common": 1.0, "uncommon": 0.9, "rare": 0.8, "legendary": 0.7, "mystical": 0.6 } },
-  "cats": { "fishSec": [300, 750], "catchChance": 0.55 },
+  "cats": { "fishSec": [1200, 3000], "catchChance": 0.55 },
   "fish": [
     { "id": "minnow",    "name": "Minnow",        "rarity": "common",    "price": 10,   "body": "lgray",  "belly": "vlgray",  "fin": "gray",    "pattern": "none",    "size": 0.6, "desc": "Tiny and quick. A good start!" },
     { "id": "perch",     "name": "Perch",         "rarity": "common",    "price": 14,   "body": "pgreen", "belly": "pyellow", "fin": "orange",  "pattern": "stripes", "size": 0.85, "desc": "Striped and always hungry." },
