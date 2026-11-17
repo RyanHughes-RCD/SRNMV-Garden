@@ -373,6 +373,7 @@ function idleCamera(dt, force) {
 }
 function updateCamera(dt) {
   if (isInside()) return; // the interior keeps its own camera
+  if (G.cameraOverride) { G.camera.x = G.cameraOverride.x; G.camera.y = G.cameraOverride.y; clampCamera(); return; } // for screenshots (set from the console)
   const idle = G.realTime - G.lastInput;
   if (G.mode === 'play' && G.settings.cameraDrift && idle > B().tv.idleDriftAfterSec && !ui.cardOpen()) return idleCamera(dt);
   let tgt;
