@@ -6,6 +6,7 @@ import { resetSpriteCache, iconHTML } from './sprites.js';
 import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
 import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
 import { updateSpirits, spiritHUD } from './spirits.js';
+import { initWeather, updateWeather, weatherHUD } from './weather.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
@@ -34,6 +35,7 @@ async function boot() {
   G.settings = loadSettings();
   input.setBindings(G.settings.bindings);
   initRender($('screen'));
+  initWeather();
   G.state = loadGame() || newGame();
   G.isNewGame = !G.state.simTime;
   rebuildJobIndex();
@@ -297,6 +299,7 @@ function update(dt) {
   const steps = Math.ceil(simDt / B().time.maxSimStepSec);
   for (let i = 0; i < steps; i++) simStep(simDt / steps);
 
+  updateWeather(dt);
   const cardActive = ui.updateCard(dt);
   if (!cardActive) {
     if (G.mode === 'menu') ui.updateMenus(dt);
@@ -379,7 +382,7 @@ function updateHUD() {
   ui.updateHUD({
     visible,
     res: `<span>${iconHTML('item_coin')}${st.coins}</span><span>${iconHTML('item_wood')}${st.mats.wood || 0}</span><span>${iconHTML('item_stone')}${st.mats.stone || 0}</span><span>${iconHTML('item_fiber')}${st.mats.fiber || 0}</span>`,
-    clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div><div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
+    clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div>${weatherHUD()}<div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
     tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${tool.name}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
     cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join('') + spiritHUD(),
   });

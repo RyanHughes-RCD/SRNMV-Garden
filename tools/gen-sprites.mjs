@@ -1321,6 +1321,26 @@ const clearRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let 
   add('in_wreath', 'interior', wr.outline());
 }
 
+/* ---------------------------------------------------------- weather icons */
+{
+  const cloud = (g, ox = 0, oy = 0, c = C.vlgray, sh = C.lgray) => { g.ellipse(5 + ox, 7 + oy, 3, 2.4, c).ellipse(8.5 + ox, 5.5 + oy, 3.2, 3, c).ellipse(11 + ox, 7.5 + oy, 2.6, 2, c).rect(3 + ox, 7 + oy, 10, 2, c).line(3 + ox, 9 + oy, 12 + ox, 9 + oy, sh); return g; };
+  const sun = new G(14, 14); sun.ellipse(7, 7, 3.2, 3.2, C.yellow).ellipse(6.5, 6.5, 1.6, 1.6, C.pyellow); for (const [x, y] of [[7, 1], [7, 12], [1, 7], [12, 7], [3, 3], [11, 3], [3, 11], [11, 11]]) sun.set(x, y, C.orange);
+  add('wx_sun', 'ui', sun.outline());
+  const moon = new G(14, 14); moon.ellipse(7, 7, 4.5, 4.5, C.pyellow); moon.ellipse(9, 5.5, 3.6, 3.6, null); for (let y = 0; y < 14; y++) for (let x = 0; x < 14; x++) if ((x + 0.5 - 9.5) ** 2 + (y + 0.5 - 5) ** 2 < 11) moon.p[y * 14 + x] = -1; moon.set(11, 10, C.white).set(3, 3, C.white);
+  add('wx_moon', 'ui', moon.outline());
+  const partly = new G(14, 14); partly.ellipse(5, 5, 3, 3, C.yellow).pts([[5, 0], [0, 5], [1, 1], [9, 1]], C.orange); cloud(partly, 1, 3);
+  add('wx_partly', 'ui', partly.outline());
+  add('wx_cloud', 'ui', cloud(new G(14, 14), 0, 1, C.lgray, C.gray).outline());
+  const rain = cloud(new G(14, 14), 0, -1, C.lgray, C.gray); for (const [x, y] of [[4, 10], [7, 11], [10, 10], [5, 12], [9, 13]]) rain.set(x, y, C.lblue).set(x, y + 1, C.blue);
+  add('wx_rain', 'ui', rain.outline());
+  const snow = cloud(new G(14, 14), 0, -1); for (const [x, y] of [[4, 11], [8, 12], [11, 10], [6, 13]]) snow.pts([[x, y], [x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]], C.white);
+  add('wx_snow', 'ui', snow.outline());
+  const storm = cloud(new G(14, 14), 0, -1, C.gray, C.dgray); storm.pts([[8, 9], [7, 10], [6, 11], [8, 11], [7, 12], [6, 13]], C.yellow);
+  add('wx_storm', 'ui', storm.outline());
+  const fog = new G(14, 14); for (const [y, x0, x1] of [[4, 2, 11], [7, 1, 12], [10, 3, 12]]) fog.line(x0, y, x1, y, C.vlgray).line(x0 + 1, y + 1, x1 - 1, y + 1, C.lgray);
+  add('wx_fog', 'ui', fog);
+}
+
 /* ------------------------------------------------------------ swap sets */
 const swaps = {
   roof: { indices: [17, 18, 19], options: { red: [17, 18, 19], blue: [13, 14, 15], green: [8, 9, 10], plum: [1, 23, 24], slate: [28, 29, 30], gold: [3, 20, 21], teal: [13, 15, 16], rose: [17, 26, 27], moss: [8, 9, 11] } },

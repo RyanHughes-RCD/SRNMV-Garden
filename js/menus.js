@@ -18,6 +18,7 @@ import { JOB_VERB } from './jobs.js';
 import * as brain from './catbrain.js';
 import { isInside, furnitureMenu, surfacesMenu, upgradesMenu, leaveCabin } from './interior.js';
 import { arrive as spiritArrive } from './spirits.js';
+import { DEBUG_WEATHERS } from './weather.js';
 
 const pct = v => `${Math.round(v * 100)}%`;
 const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.round(Math.max(0, Math.min(100, (v / max) * 100)) / 5) * 5}%"></span></span>`;
@@ -399,6 +400,7 @@ export function settingsMenu() {
     items: () => [
       { header: true, label: 'Time' },
       { label: 'Day / night', sub: S.timeMode === 'real' ? 'Follows your real clock' : `A full day every ${DATA.balance.time.fastDayLengthSec / 60} minutes`, right: S.timeMode === 'real' ? 'Real clock' : 'Fast', onLeft: () => { S.timeMode = S.timeMode === 'real' ? 'fast' : 'real'; saveSettings(); }, onRight: () => { S.timeMode = S.timeMode === 'real' ? 'fast' : 'real'; saveSettings(); } },
+      { label: `Live weather (${DATA.weather?.city || 'your city'})`, sub: 'Rain, snow, fog and storms follow the real weather. Rain waters the garden', ...tog('liveWeather') },
       { header: true, label: 'Sound' },
       { label: 'Master volume', ...vol('master') },
       { label: 'Ambience', ...vol('ambient') },
@@ -471,6 +473,7 @@ export function debugMenu() {
       { label: '+1 unknown pack of each rarity', onSelect: () => { for (const r of RARITY_ORDER) { const pool = DATA.crops.filter(c => c.rarity === r); (G.state.inv.unknown[r] ||= []).push(pool[Math.floor(Math.random() * pool.length)].id); } } },
       { label: 'Grow every crop to ready', onSelect: () => { for (const c of Object.values(G.state.crops)) { c.g = 3 * farm.stageSeconds(c); } } },
       { label: '+1 sapling of every fruit tree', onSelect: () => { for (const t of DATA.trees) G.state.inv.saplings[t.id] = (G.state.inv.saplings[t.id] || 0) + 1; } },
+      { label: 'Weather', sub: 'Force a weather to preview it (Live = the real weather)', right: G.weatherOverride || 'live', onLeft: () => { const L = DEBUG_WEATHERS; G.weatherOverride = L[(L.indexOf(G.weatherOverride || 'live') + L.length - 1) % L.length]; }, onRight: () => { const L = DEBUG_WEATHERS; G.weatherOverride = L[(L.indexOf(G.weatherOverride || 'live') + 1) % L.length]; } },
       { label: 'Summon a spirit to the Great Stump', sub: 'Fox or moose, as if an offering was answered', onSelect: () => { if (G.state.spirit?.stump >= 0) { G.state.spirit.visit = null; spiritArrive(); } } },
       { label: 'Grow every fruit tree to ripe', onSelect: () => { for (const t of Object.values(G.state.trees)) { t.stage = 4; t.g = 4 * stageSec(t); t.fruit = 3; t.fg = 3 * fruitSec(t); } } },
       { label: 'Reveal all crops', onSelect: () => { for (const c of DATA.crops) G.state.discovered[c.id] ||= { at: Date.now(), harvested: 0 }; } },

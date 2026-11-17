@@ -13,6 +13,7 @@ import { drawDecor, overlaySprite, lightsFrom, drawFloorDecor } from './decorati
 import { drawTree } from './orchard.js';
 import { drawFishing } from './fishing.js';
 import { drawSpirits, spiritLights } from './spirits.js';
+import { drawWeather, drawWeatherFlash, drawSnowGround, sunFactor } from './weather.js';
 
 let canvas, ctx, lightCanvas, lctx, shadowCanvas, sctx;
 export function initRender(c) {
@@ -111,6 +112,7 @@ export function renderWorld(t) {
     ctx.setLineDash([]);
   }
   drawCabinGround();
+  drawSnowGround(ctx, x0, y0, x1, y1);
   drawFloorDecor(ctx, x0, y0, x1, y1);
   for (const j of st.jobs) if (j.type === 'till') ctx.fillRect(tx(j.tile) * TILE + 1, ty(j.tile) * TILE + 1, 14, 14);
 
@@ -166,9 +168,12 @@ export function renderWorld(t) {
   drawModeOverlay(ctx, t);
   ctx.restore();
 
+  drawWeather(ctx, ox, oy, t, Math.min(0.1, Math.max(0, t - lastT))); lastT = t;
   renderLighting(t, ox, oy);
   ctx.save(); ctx.translate(-ox, -oy); drawCritters(ctx, t, true); drawParticles(ctx, t, 1); ctx.restore();
+  drawWeatherFlash(ctx);
 }
+let lastT = 0;
 
 // Sun shadows. Every y-sorted drawable is run once more with drawSprite redirected into a
 // shadow layer (slanted copies of each sprite, anchored at its ground line), then the layer
@@ -184,6 +189,7 @@ export function sunShadow(h = hourOfDay()) {
 }
 function renderShadows(ox, oy) {
   const sun = G.settings?.shadows === false ? null : sunShadow();
+  if (sun) sun.alpha *= Math.max(0, sunFactor()); // clouds soften the shadows
   if (!sun || sun.alpha < 0.01) return;
   const vw = G.view.w, vh = G.view.h;
   sctx.setTransform(1, 0, 0, 1, 0, 0);

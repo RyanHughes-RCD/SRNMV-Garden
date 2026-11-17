@@ -1,0 +1,11 @@
+{
+  "_help": "Live weather from Open-Meteo (free, no key): the game asks for the current conditions at this spot every refreshMinutes and shows them in the garden. Only the coordinates below are sent. Turn it off in Settings. Rain waters every crop and fruit tree (for rainWaterSec after it stops).",
+  "city": "Toronto",
+  "latitude": 43.6532,
+  "longitude": -79.3832,
+  "timezone": "America/Toronto",
+  "refreshMinutes": 15,
+  "rainWaterSec": 3600,
+  "snowDepthFull": 0.05,
+  "_snowDepthFull": "Metres of real snow on the ground that fully whitens the garden."
+}

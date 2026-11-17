@@ -3,7 +3,10 @@
 import { G } from './game.js';
 import { hourOfDay } from './daytime.js';
 
-let ac = null, master, ambBus, sfxBus, noiseBuf, wind, windGain, fireGain, waterGain;
+let ac = null, master, ambBus, sfxBus, noiseBuf, wind, windGain, fireGain, waterGain, rainGain, rainLp;
+let rainLevel = 0, rainIndoors = false;
+// Live weather (weather.js) tells the ambience how hard it's raining and whether you're indoors.
+export function setRain(level, indoors) { rainLevel = level; rainIndoors = indoors; }
 let nextBird = 0, nextCricket = 0, nextOwl = 0, nextCrackle = 0;
 
 export function initAudio() {
@@ -29,6 +32,14 @@ export function initAudio() {
   const wf = ac.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 420; wf.Q.value = 0.8;
   waterGain = ac.createGain(); waterGain.gain.value = 0;
   ws.connect(wf); wf.connect(waterGain); waterGain.connect(ambBus); ws.start();
+  // rain: brighter (white) noise, muffled by the cabin walls when you're inside
+  const white = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate), wd = white.getChannelData(0);
+  for (let i = 0; i < wd.length; i++) wd[i] = Math.random() * 2 - 1;
+  const rs = ac.createBufferSource(); rs.buffer = white; rs.loop = true;
+  const rhp = ac.createBiquadFilter(); rhp.type = 'highpass'; rhp.frequency.value = 700;
+  rainLp = ac.createBiquadFilter(); rainLp.type = 'lowpass'; rainLp.frequency.value = 6000;
+  rainGain = ac.createGain(); rainGain.gain.value = 0;
+  rs.connect(rhp); rhp.connect(rainLp); rainLp.connect(rainGain); rainGain.connect(ambBus); rs.start();
   applyVolumes();
 }
 export function applyVolumes() {
@@ -98,6 +109,7 @@ export function sfx(name) {
     case 'plop': tone(420, 0.09, { vol: 0.08, type: 'sine', slide: 220 }); noise(0.06, { vol: 0.06, freq: 900, q: 1 }); break;
     case 'bite': noise(0.2, { vol: 0.25, freq: 700, q: 0.7 }); tone(1046, 0.12, { vol: 0.09, type: 'square' }); tone(1318, 0.16, { vol: 0.08, type: 'square', at: 0.1 }); break;
     case 'reel': [0, 2, 4, 7].forEach((n, i) => tone(PENTA[n] * 1.5, 0.09, { vol: 0.07, type: 'triangle', at: i * 0.05 })); noise(0.25, { vol: 0.15, freq: 1500, q: 0.6, at: 0.15 }); break;
+    case 'thunder': noise(0.35, { vol: 0.18, freq: 900, q: 0.5, type: 'lowpass' }); noise(3.2, { vol: 0.5, freq: 120, q: 0.7, type: 'lowpass', attack: 0.15, at: 0.1 }); break;
     case 'build': noise(0.1, { vol: 0.2, freq: 600 }); tone(330, 0.1, { vol: 0.07, type: 'triangle', at: 0.05 }); break;
   }
 }
@@ -108,7 +120,10 @@ export function updateAmbience(dt, nearCabin, nearWater = false) {
   const now = ac.currentTime, h = hourOfDay();
   const night = h < 5.5 || h >= 20.5, day = h >= 6 && h < 19.5;
   windGain.gain.setTargetAtTime(0.035 + 0.025 * Math.sin(now / 9) + 0.015 * Math.sin(now / 3.7), now, 1.5);
-  if (day && now > nextBird) {
+  rainGain.gain.setTargetAtTime(rainLevel * (rainIndoors ? 0.05 : 0.11), now, 2);
+  rainLp.frequency.setTargetAtTime(rainIndoors ? 1400 : 6000, now, 0.5);
+  if (rainLevel > 0.1 && !rainIndoors && Math.random() < rainLevel * 0.25) noise(0.02, { vol: 0.03 + Math.random() * 0.04, freq: 2500 + Math.random() * 4000, q: 4, bus: ambBus });
+  if (day && rainLevel < 0.3 && now > nextBird) {
     nextBird = now + (2.5 + Math.random() * 7) / (G.birdBoost || 1);
     const base = 1800 + Math.random() * 1600, notes = 2 + Math.floor(Math.random() * 4), vol = 0.025 + Math.random() * 0.03;
     for (let i = 0; i < notes; i++) tone(base * (1 + (Math.random() - 0.5) * 0.25), 0.09, { vol, at: i * (0.1 + Math.random() * 0.05), slide: base * (1.2 + Math.random() * 0.4), bus: ambBus });

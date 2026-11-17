@@ -13,6 +13,7 @@ import { drawSprite, frameCanvas, iconHTML, animFrame } from './sprites.js';
 import { lighting, hourOfDay, clockLabel, phaseLabel } from './daytime.js';
 import { drawPlayer, anim } from './player.js';
 import { drawCatSprite, catSpriteName } from './cats.js';
+import { skyTint } from './weather.js';
 import { openMenu, closeMenu, closeAllMenus, toast, setModePanel } from './ui.js';
 import { canAfford, pay, refund, costLabel, costHTML } from './economy.js';
 import { sfx } from './audio.js';
@@ -429,7 +430,7 @@ export function renderInterior(ctx, t) {
     if (cellKind(L, x, y + 1) === VOID) { const a = lv ? EDGE + 2 : 0, b = rv ? EDGE + 2 : 0; ctx.fillRect(x * TILE - a, y * TILE + TILE - 2, TILE + a + b, 2); }
   }
   // wall hangings (a window shows the sky)
-  const sky = skyColour(hourOfDay());
+  const sky = skyTint(skyColour(hourOfDay()));
   for (const it of h.items) {
     const d = D.items[it.id]; if (!d.wall) continue;
     const { x, y } = wallPos(it, d, L);

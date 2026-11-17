@@ -105,6 +105,15 @@ node tools/gen-sprites.mjs
 
 Then set the cat's `"spriteSet": "vyke"` in `data/cats.json`. Big, detailed art can be drawn smaller with `"spriteScale"` (all three use 0.75). The game draws at the screen's full resolution, so the art keeps its detail. Which frames make which animation is listed at the top of `tools/import_cat.py`. Besides walking, sitting, sleeping and working (Vyke sweeps), a sheet can have extra poses the cat shows when it's doing something matching: eating a snack, stretching, sitting with its back to you while fishing, curled up in a cat bed, and belly-up when sunbathing.
 
+## Live weather
+
+The garden follows the **real weather in Toronto**. Every 15 minutes the game asks [Open-Meteo](https://open-meteo.com) (free, no account) for the current conditions there. Only the city's coordinates are sent.
+
+- **What you'll see:** drifting cloud shadows on partly cloudy days, an overcast grey, rain slanting with the real wind direction, falling snow, snow lying on the ground when there's real snow on the ground in Toronto, fog banks, and thunderstorms with lightning and thunder. Clouds also soften the sun shadows. Inside the cabin the windows go grey and the rain sounds muffled.
+- **Rain waters the garden:** every crop and fruit tree counts as watered while it rains, and for an hour after. The cats get a break from watering.
+- **The HUD** shows the temperature and conditions under the clock.
+- If the connection drops, the last report stays. **Settings → Live weather** turns it off, for fair weather always. The city and coordinates are in `data/weather.json`. The debug menu can force any weather to preview it.
+
 ## The Great Stump and the spirit animals
 
 Somewhere in the forest, a few tiles deep, hides the **Great Stump** (2×2 tiles, in its own little glade). Chop your way to it, then face it and press **A** to leave a **fruit offering** (fruit comes from fruit trees).
