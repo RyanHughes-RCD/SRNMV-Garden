@@ -1,5 +1,5 @@
 {
- "_help": "cat = build-menu section. blocks = can't walk through (default true). ground = replaces the floor tile (paths). overlay = a floor decoration drawn on grass. size = [w, h] in tiles. connect = joins neighbours of the same group. light = night glow radius. cats = what cats do with it. growBonus / catWorkBonus / spawn / interact = gameplay effects (see README).",
+ "_help": "cat = build-menu section. blocks = can't walk through (default true). ground = replaces the floor tile (paths). overlay = a floor decoration drawn on grass. size = [w, h] in tiles. connect = joins neighbours of the same group. light = night glow radius. cats = what cats do with it. growBonus / catWorkBonus / spawn / interact = gameplay effects (see README). scale = how big the picture is drawn. nightSprite = a different picture at night (a lit fire).",
  "categories": [
   "Paths & floors",
   "Fences & hedges",
@@ -174,8 +174,9 @@
     "wood": 15,
     "fiber": 6
    },
-   "sprite": "decor_arch",
-   "desc": "Walk underneath it"
+   "sprite": "decor2_rose_arch",
+   "desc": "Walk underneath it",
+   "scale": 0.85
   },
   "flowerpot": {
    "name": "Flower Pot",
@@ -201,7 +202,8 @@
     "coins": 120,
     "stone": 8
    },
-   "sprite": "decor_birdbath"
+   "sprite": "decor2_birdbath",
+   "scale": 0.65
   },
   "bird_feeder": {
    "name": "Bird Feeder",
@@ -211,8 +213,9 @@
     "coins": 60,
     "wood": 4
    },
-   "sprite": "decor_birdfeeder",
-   "desc": "Birds visit and sing more"
+   "sprite": "decor2_birdhouse",
+   "desc": "Birds visit and sing more",
+   "scale": 0.8
   },
   "scarecrow": {
    "name": "Scarecrow",
@@ -222,7 +225,8 @@
     "wood": 6,
     "fiber": 6
    },
-   "sprite": "decor_scarecrow"
+   "sprite": "decor2_scarecrow",
+   "scale": 0.85
   },
   "gnome": {
    "name": "Garden Gnome",
@@ -230,7 +234,8 @@
    "cost": {
     "coins": 450
    },
-   "sprite": "decor_gnome"
+   "sprite": "decor2_gnome",
+   "scale": 0.55
   },
   "beehive": {
    "name": "Beehive",
@@ -244,8 +249,9 @@
     "coins": 360,
     "wood": 15
    },
-   "sprite": "decor_beehive",
-   "desc": "Crops within 4 tiles grow 15% faster"
+   "sprite": "decor2_beehive",
+   "desc": "Crops within 4 tiles grow 15% faster",
+   "scale": 0.65
   },
   "pond": {
    "name": "Small Pond",
@@ -258,8 +264,9 @@
     "coins": 120,
     "stone": 12
    },
-   "sprite": "decor_pond",
-   "desc": "2×2 · lily pads and sparkles"
+   "sprite": "decor2_pond",
+   "desc": "2×2 · lily pads and sparkles",
+   "scale": 1.0
   },
   "wishing_well": {
    "name": "Wishing Well",
@@ -269,8 +276,9 @@
     "coins": 900,
     "stone": 40
    },
-   "sprite": "decor_well",
-   "desc": "Make a wish once a day for a little gift"
+   "sprite": "decor2_wishing_well",
+   "desc": "Make a wish once a day for a little gift",
+   "scale": 0.8
   },
   "cat_bed": {
    "name": "Cat Bed",
@@ -389,8 +397,9 @@
     "wood": 30,
     "stone": 6
    },
-   "sprite": "decor_campfire",
-   "desc": "Crackles; cats gather here at night"
+   "sprite": "decor2_campfire",
+   "desc": "Crackles; cats gather here at night",
+   "scale": 0.8
   },
   "bench": {
    "name": "Bench",
@@ -398,7 +407,8 @@
    "cost": {
     "wood": 8
    },
-   "sprite": "decor_bench"
+   "sprite": "decor2_bench",
+   "scale": 0.6
   },
   "hammock": {
    "name": "Hammock",
@@ -412,8 +422,9 @@
     "wood": 6,
     "fiber": 10
    },
-   "sprite": "decor_hammock",
-   "desc": "2×1"
+   "sprite": "decor2_hammock",
+   "desc": "2×1",
+   "scale": 1.0
   },
   "signpost": {
    "name": "Signpost",
@@ -433,8 +444,9 @@
     "coins": 100,
     "wood": 5
    },
-   "sprite": "decor_mailbox",
-   "desc": "Letters arrive now and then"
+   "sprite": "decor2_mailbox",
+   "desc": "Letters arrive now and then",
+   "scale": 0.65
   },
   "wheelbarrow": {
    "name": "Wheelbarrow",
@@ -442,7 +454,8 @@
    "cost": {
     "wood": 12
    },
-   "sprite": "decor_wheelbarrow"
+   "sprite": "decor2_wheelbarrow",
+   "scale": 0.6
   },
   "can_stand": {
    "name": "Watering Can Stand",
@@ -451,7 +464,8 @@
     "wood": 10,
     "stone": 2
    },
-   "sprite": "decor_canstand"
+   "sprite": "decor2_can_stand",
+   "scale": 0.6
   },
   "produce_crate": {
    "name": "Crate of Produce",
@@ -476,8 +490,9 @@
     "coins": 80,
     "wood": 10
    },
-   "sprite": "decor_quarry",
-   "desc": "A new rock appears beside it every ~25 min (cats clear them for stone)"
+   "sprite": "decor2_mossy_boulder",
+   "desc": "A new rock appears beside it every ~25 min (cats clear them for stone)",
+   "scale": 0.7
   },
   "meadow": {
    "name": "Wild Meadow",
@@ -513,8 +528,9 @@
     "wood": 150,
     "stone": 80
    },
-   "sprite": "decor_greenhouse",
-   "desc": "3×2 · crops within 6 tiles grow 25% faster"
+   "sprite": "decor2_greenhouse",
+   "desc": "3×2 · crops within 6 tiles grow 25% faster",
+   "scale": 1.5
   },
   "shed": {
    "name": "Garden Shed",
@@ -531,6 +547,555 @@
    },
    "sprite": "decor_shed",
    "desc": "2×2 · tidy tools: cats work 10% faster"
+  },
+  "fire_pit": {
+   "name": "Stone Fire Pit",
+   "cat": "Lights",
+   "nightSprite": "decor2_fire_pit_night",
+   "light": 56,
+   "fire": true,
+   "desc": "Lit at night; the cats love to warm up by it",
+   "cost": {
+    "wood": 20,
+    "stone": 20
+   },
+   "sprite": "decor2_fire_pit_day",
+   "scale": 0.75
+  },
+  "garden_torch": {
+   "name": "Garden Torch",
+   "cat": "Lights",
+   "light": 40,
+   "fire": true,
+   "cost": {
+    "wood": 6,
+    "fiber": 4
+   },
+   "sprite": "decor2_garden_torch",
+   "scale": 0.85
+  },
+  "lamp_post": {
+   "name": "Lamp Post",
+   "cat": "Lights",
+   "light": 52,
+   "cost": {
+    "coins": 140,
+    "stone": 6
+   },
+   "sprite": "decor2_lamp_post",
+   "scale": 0.9
+  },
+  "hanging_post": {
+   "name": "Lantern Post",
+   "cat": "Lights",
+   "light": 44,
+   "desc": "A lantern and a little bird box on a post",
+   "cost": {
+    "coins": 180,
+    "wood": 10
+   },
+   "sprite": "decor2_hanging_post",
+   "scale": 0.9
+  },
+  "roasting_spit": {
+   "name": "Roasting Spit",
+   "cat": "Cozy",
+   "light": 30,
+   "fire": true,
+   "cost": {
+    "coins": 120,
+    "wood": 20,
+    "stone": 6
+   },
+   "sprite": "decor2_roasting_spit",
+   "scale": 0.75
+  },
+  "stone_oven": {
+   "name": "Stone Oven",
+   "cat": "Cozy",
+   "light": 26,
+   "cost": {
+    "coins": 400,
+    "stone": 40
+   },
+   "sprite": "decor2_stone_oven",
+   "scale": 0.85
+  },
+  "grill": {
+   "name": "Barbecue Grill",
+   "cat": "Cozy",
+   "cost": {
+    "coins": 250,
+    "stone": 6
+   },
+   "sprite": "decor2_grill",
+   "scale": 0.65
+  },
+  "picnic_table": {
+   "name": "Picnic Table",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "wood": 30
+   },
+   "sprite": "decor2_picnic_table",
+   "scale": 0.95
+  },
+  "patio_table": {
+   "name": "Sunshade Table",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "coins": 200,
+    "wood": 30,
+    "fiber": 10
+   },
+   "sprite": "decor2_patio_table",
+   "scale": 0.95
+  },
+  "stone_bench": {
+   "name": "Mossy Stone Bench",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "stone": 30
+   },
+   "sprite": "decor2_stone_bench",
+   "scale": 0.95
+  },
+  "log_seat": {
+   "name": "Log Seat",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "wood": 16
+   },
+   "sprite": "decor2_log_seat",
+   "scale": 0.95
+  },
+  "garden_swing": {
+   "name": "Garden Swing",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "coins": 400,
+    "wood": 40
+   },
+   "sprite": "decor2_garden_swing",
+   "scale": 1.0
+  },
+  "bistro_set": {
+   "name": "Bistro Set",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "coins": 220,
+    "wood": 12
+   },
+   "sprite": "decor2_bistro_set",
+   "scale": 0.95
+  },
+  "clothesline": {
+   "name": "Clothesline",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "wood": 10,
+    "fiber": 12
+   },
+   "sprite": "decor2_clothesline",
+   "scale": 1.0
+  },
+  "tent": {
+   "name": "Camping Tent",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "coins": 300,
+    "fiber": 40
+   },
+   "sprite": "decor2_tent",
+   "scale": 1.0
+  },
+  "bedrolls": {
+   "name": "Bedrolls",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "blocks": false,
+   "cost": {
+    "fiber": 20
+   },
+   "sprite": "decor2_bedrolls",
+   "scale": 0.9
+  },
+  "tool_rack": {
+   "name": "Tool Rack",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 18
+   },
+   "sprite": "decor2_tool_rack",
+   "scale": 0.85
+  },
+  "tool_bin": {
+   "name": "Tool Bin",
+   "cat": "Cozy",
+   "cost": {
+    "coins": 60,
+    "wood": 8
+   },
+   "sprite": "decor2_tool_bin",
+   "scale": 0.65
+  },
+  "seed_sacks": {
+   "name": "Seed Sacks",
+   "cat": "Cozy",
+   "cost": {
+    "fiber": 20
+   },
+   "sprite": "decor2_seed_sacks",
+   "scale": 0.65
+  },
+  "garden_cart": {
+   "name": "Garden Cart",
+   "cat": "Cozy",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "wood": 30
+   },
+   "sprite": "decor2_garden_cart",
+   "scale": 0.95
+  },
+  "crate_stack": {
+   "name": "Crate Stack",
+   "cat": "Cozy",
+   "cost": {
+    "wood": 20
+   },
+   "sprite": "decor2_crate_stack",
+   "scale": 0.7
+  },
+  "hay_bale": {
+   "name": "Hay Bale",
+   "cat": "Cozy",
+   "cost": {
+    "fiber": 20
+   },
+   "sprite": "decor2_hay_bale",
+   "scale": 0.7
+  },
+  "haystack": {
+   "name": "Haystack",
+   "cat": "Cozy",
+   "cost": {
+    "fiber": 40
+   },
+   "sprite": "decor2_haystack",
+   "scale": 0.8
+  },
+  "painted_hive": {
+   "name": "Painted Beehive",
+   "cat": "Garden",
+   "bees": true,
+   "growBonus": {
+    "radius": 4,
+    "mult": 1.15
+   },
+   "cost": {
+    "coins": 420,
+    "wood": 15
+   },
+   "sprite": "decor2_painted_hive",
+   "scale": 0.65
+  },
+  "skep": {
+   "name": "Straw Skep",
+   "cat": "Garden",
+   "bees": true,
+   "growBonus": {
+    "radius": 4,
+    "mult": 1.15
+   },
+   "cost": {
+    "coins": 300,
+    "fiber": 20
+   },
+   "sprite": "decor2_skep",
+   "scale": 0.65
+  },
+  "pumpkin_scarecrow": {
+   "name": "Pumpkin Scarecrow",
+   "cat": "Garden",
+   "cost": {
+    "coins": 150,
+    "wood": 6,
+    "fiber": 8
+   },
+   "sprite": "decor2_pumpkin_scarecrow",
+   "scale": 0.85
+  },
+  "compost_bin": {
+   "name": "Compost Bin",
+   "cat": "Garden",
+   "cost": {
+    "wood": 20,
+    "fiber": 10
+   },
+   "sprite": "decor2_compost_bin",
+   "scale": 0.7
+  },
+  "wild_pond": {
+   "name": "Wild Pond",
+   "cat": "Garden",
+   "size": [
+    2,
+    2
+   ],
+   "cost": {
+    "coins": 150,
+    "stone": 6,
+    "fiber": 10
+   },
+   "sprite": "decor2_wild_pond",
+   "scale": 1.0
+  },
+  "bird_fountain": {
+   "name": "Bird Fountain",
+   "cat": "Garden",
+   "birds": true,
+   "cost": {
+    "coins": 300,
+    "stone": 16
+   },
+   "sprite": "decor2_bird_fountain",
+   "scale": 0.7
+  },
+  "ivy_well": {
+   "name": "Ivy Well",
+   "cat": "Garden",
+   "interact": "wish",
+   "desc": "An old well wrapped in ivy. Make a wish once a day",
+   "cost": {
+    "coins": 1100,
+    "stone": 50
+   },
+   "sprite": "decor2_ivy_well",
+   "scale": 0.8
+  },
+  "water_pump": {
+   "name": "Water Pump",
+   "cat": "Garden",
+   "cost": {
+    "coins": 200,
+    "stone": 10
+   },
+   "sprite": "decor2_water_pump",
+   "scale": 0.65
+  },
+  "rain_barrel": {
+   "name": "Rain Barrel",
+   "cat": "Garden",
+   "cost": {
+    "coins": 120,
+    "wood": 16
+   },
+   "sprite": "decor2_rain_barrel",
+   "scale": 0.65
+  },
+  "raised_bed": {
+   "name": "Raised Veg Bed",
+   "cat": "Garden",
+   "cost": {
+    "wood": 16,
+    "fiber": 6
+   },
+   "sprite": "decor2_raised_bed",
+   "scale": 0.7
+  },
+  "flower_planter": {
+   "name": "Flower Planter",
+   "cat": "Garden",
+   "cost": {
+    "wood": 12,
+    "fiber": 10
+   },
+   "sprite": "decor2_flower_planter",
+   "scale": 0.7
+  },
+  "flower_barrow": {
+   "name": "Flower Barrow",
+   "cat": "Garden",
+   "cost": {
+    "coins": 80,
+    "wood": 12,
+    "fiber": 6
+   },
+   "sprite": "decor2_flower_barrow",
+   "scale": 0.65
+  },
+  "statue": {
+   "name": "Garden Statue",
+   "cat": "Garden",
+   "cost": {
+    "coins": 800,
+    "stone": 30
+   },
+   "sprite": "decor2_statue",
+   "scale": 0.85
+  },
+  "sundial": {
+   "name": "Sundial",
+   "cat": "Garden",
+   "cost": {
+    "coins": 350,
+    "stone": 20
+   },
+   "sprite": "decor2_sundial",
+   "scale": 0.65
+  },
+  "windmill": {
+   "name": "Little Windmill",
+   "cat": "Garden",
+   "cost": {
+    "coins": 300,
+    "wood": 24
+   },
+   "sprite": "decor2_windmill",
+   "scale": 0.9
+  },
+  "weathervane": {
+   "name": "Weathervane",
+   "cat": "Garden",
+   "cost": {
+    "coins": 250,
+    "stone": 6
+   },
+   "sprite": "decor2_weathervane",
+   "scale": 0.85
+  },
+  "old_stump": {
+   "name": "Old Stump",
+   "cat": "Garden",
+   "cost": {
+    "wood": 12
+   },
+   "sprite": "decor2_old_stump",
+   "scale": 0.75
+  },
+  "chopping_block": {
+   "name": "Chopping Block",
+   "cat": "Resources",
+   "cost": {
+    "wood": 10
+   },
+   "sprite": "decor2_chopping_block",
+   "scale": 0.6
+  },
+  "woodshed": {
+   "name": "Firewood Store",
+   "cat": "Resources",
+   "size": [
+    2,
+    1
+   ],
+   "cost": {
+    "wood": 40
+   },
+   "sprite": "decor2_woodshed",
+   "scale": 0.95
+  },
+  "trellis": {
+   "name": "Vine Trellis",
+   "cat": "Fences & hedges",
+   "cost": {
+    "wood": 12,
+    "fiber": 8
+   },
+   "sprite": "decor2_trellis",
+   "scale": 0.85
+  },
+  "stone_arch": {
+   "name": "Stone Arch",
+   "cat": "Fences & hedges",
+   "blocks": false,
+   "cost": {
+    "stone": 30,
+    "fiber": 6
+   },
+   "sprite": "decor2_stone_arch",
+   "scale": 0.9
+  },
+  "rustic_gate": {
+   "name": "Rustic Gate",
+   "cat": "Fences & hedges",
+   "blocks": false,
+   "cost": {
+    "wood": 10
+   },
+   "sprite": "decor2_rustic_gate",
+   "scale": 0.85
+  },
+  "kennel": {
+   "name": "Kennel",
+   "cat": "For the cats",
+   "cats": "bed",
+   "desc": "Built for a dog; the cats have other ideas",
+   "cost": {
+    "coins": 200,
+    "wood": 30
+   },
+   "sprite": "decor2_kennel",
+   "scale": 0.8
+  },
+  "glasshouse": {
+   "name": "Glass Potting House",
+   "cat": "Big projects",
+   "size": [
+    2,
+    2
+   ],
+   "growBonus": {
+    "radius": 3,
+    "mult": 1.15
+   },
+   "desc": "Crops within 3 tiles grow 15% faster",
+   "cost": {
+    "coins": 1800,
+    "wood": 60,
+    "stone": 30
+   },
+   "sprite": "decor2_glasshouse",
+   "scale": 1.1
   }
  },
  "cabin": {

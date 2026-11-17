@@ -224,11 +224,11 @@ export function drawModeOverlay(ctx, t) {
   } else {
     const d = DATA.decor[M.decor], ti = idx(M.cx, M.cy), [w, h] = sizeOf(M.decor);
     const ok = !decorProblem(M.decor, ti) && canAfford(d.cost);
-    const sd = DATA.sprites.sprites[d.sprite], sw = sd?.w ?? 16, sh = sd?.h ?? 16;
+    const sd = DATA.sprites.sprites[d.sprite], sc = d.scale || 1, sw = (sd?.w ?? 16) * sc, sh = (sd?.h ?? 16) * sc;
     ctx.globalAlpha = 0.65;
     if (d.overlay) drawSprite(ctx, `grass_0`, 0, M.cx * TILE, M.cy * TILE);
     if (d.drawOffset) drawSprite(ctx, d.sprite, 0, M.cx * TILE + d.drawOffset[0], M.cy * TILE + d.drawOffset[1]);
-    else drawSprite(ctx, d.sprite, 0, M.cx * TILE + Math.round((w * TILE - sw) / 2), (M.cy + h) * TILE - sh);
+    else drawSprite(ctx, d.sprite, 0, M.cx * TILE + (w * TILE - sw) / 2, (M.cy + h) * TILE - sh, { scale: sc });
     ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? `rgba(140,198,90,${blink})` : `rgba(229,115,90,${blink})`;
     ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, w * TILE - 1, h * TILE - 1);

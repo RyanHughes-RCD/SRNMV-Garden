@@ -272,7 +272,7 @@ const decorHandlers = {
   wish: a => {
     const g = makeWish(a); sfx('discover');
     sparkle(tx(a) * TILE + 8, ty(a) * TILE + 4, 8);
-    ui.showCard(`<div class="disc">${iconHTML('decor_well', 'ico huge')}</div><h2>You made a wish...</h2><p>The well gives you <b>${g}</b>.</p><p class="muted">Come back tomorrow for another wish.</p>`, { cls: 'discover' });
+    ui.showCard(`<div class="disc">${iconHTML(DATA.decor[G.state.map.obj[a]?.slice(2)]?.sprite || 'decor_well', 'ico huge')}</div><h2>You made a wish...</h2><p>The well gives you <b>${g}</b>.</p><p class="muted">Come back tomorrow for another wish.</p>`, { cls: 'discover' });
   },
   catHouse: a => menus.catHouseMenu(a),
   bait: a => menus.baitMenu(a),

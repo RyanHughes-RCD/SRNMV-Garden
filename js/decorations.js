@@ -8,7 +8,7 @@ import { idx, tx, ty, inBounds, ground, obj, plotAt, debrisAt, blocks } from './
 import { addJob } from './jobs.js';
 import { emit } from './particles.js';
 import { spiritWorkMult } from './spirits.js';
-import { hourOfDay, isNight } from './daytime.js';
+import { hourOfDay, isNight, lighting } from './daytime.js';
 
 export const def = id => DATA.decor[id];
 export const sizeOf = id => def(id)?.size || [1, 1];
@@ -284,7 +284,7 @@ function giveMysterySeed() {
 
 /* ------------------------------------------------------ ambient fx */
 const birds = new Map();
-export const birdBoost = () => 1 + 0.5 * Math.min(4, countOf('bird_feeder'));
+export const birdBoost = () => 1 + 0.5 * Math.min(4, anchors().filter(a => a.d.birds).length); // bird feeders, fountains...
 export function nearFire(px, py) {
   for (const a of anchors()) if (a.d.fire && Math.hypot(tx(a.i) * TILE + 8 - px, ty(a.i) * TILE + 8 - py) < 6 * TILE) return true;
   return false;
@@ -338,10 +338,11 @@ export function drawDecor(push, ctx, t, x0, y0, x1, y1) {
   for (const a of anchors()) {
     const ax = tx(a.i), ay = ty(a.i), [fw, fh] = sizeOf(a.id);
     if (ax + fw < x0 || ax > x1 || ay + fh < y0 || ay - 2 > y1) continue;
-    const spr = a.d.sprite;
-    const sd = DATA.sprites.sprites[spr];
-    const sw = sd?.w ?? 16, sh = sd?.h ?? 16;
-    const px = ax * TILE + Math.round((fw * TILE - sw) / 2), py = (ay + fh) * TILE - sh;
+    // some pieces have a night picture (a fire pit that's lit after dark); imported art is drawn at its own scale
+    const spr = a.d.nightSprite && lighting().dark > 0.15 ? a.d.nightSprite : a.d.sprite;
+    const sd = DATA.sprites.sprites[spr], sc = a.d.scale || 1;
+    const sw = (sd?.w ?? 16) * sc, sh = (sd?.h ?? 16) * sc;
+    const px = ax * TILE + (fw * TILE - sw) / 2, py = (ay + fh) * TILE - sh;
     const baseY = (ay + fh) * TILE - 3;
     let frame = animFrame(spr, t + hash2(ax, ay, 3) * 5);
     if (a.d.interact === 'mail') frame = decorState(a.i).letter ? 1 : 0;
@@ -354,7 +355,7 @@ export function drawDecor(push, ctx, t, x0, y0, x1, y1) {
     if (a.d.floor) continue; // drawn with the ground (drawFloorDecor)
     if (a.d.interact === 'cathouse') { push(baseY, () => drawCatHouse(ctx, a.i, px, py)); continue; }
     push(baseY, () => {
-      drawSprite(ctx, spr, frame, px, py);
+      drawSprite(ctx, spr, frame, px, py, { scale: sc });
       if (a.d.interact === 'mail' && decorState(a.i).letter) drawSprite(ctx, 'icon_exclaim', 0, px + 4, py - 10 + Math.round(Math.sin(t * 4)));
       if (a.d.interact === 'wish' && st.simTime >= (decorState(a.i).next ?? 0)) { if (Math.sin(t * 2 + ax) > 0.95) emit({ x: px + 4 + rand() * 8, y: py + 10, vy: -6, life: 0.8, sprite: 'fx_sparkle', frameRate: 6, fade: false }); }
     });
