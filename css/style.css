@@ -147,3 +147,22 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 .panel:empty { display: none; }
 .mi.cant .right { opacity: 0.55; }
 .letter { font-style: italic; line-height: 1.5; display: block !important; }
+
+/* inventory and chest: a toolbar row, then a grid of item slots */
+.menu.inventory { width: min(66rem, 96vw); }
+.inventory .menu-items.grid { gap: 0.4rem; }
+.inventory .grid .mi { aspect-ratio: 1; position: relative; justify-content: center; padding: 0.2rem; background: rgba(0, 0, 0, 0.2); border-color: rgba(255, 255, 255, 0.07); }
+.inventory .grid .mi .ico { width: 3.2em; height: 3.2em; }
+.inventory .grid .mi .lbl { flex: none; }
+.inventory .mi .cnt { position: absolute; right: 0.35rem; bottom: 0.2rem; font-size: 0.9rem; color: var(--ink); text-shadow: 0 0.1rem 0 #000, 0 -0.1rem 0 #000, 0.1rem 0 0 #000, -0.1rem 0 0 #000; }
+.inventory .mi.blank { background: rgba(0, 0, 0, 0.12); border: 0.12rem dashed rgba(255, 255, 255, 0.07); cursor: default; }
+.inventory .mi.gap { visibility: hidden; }
+.inventory .mi.tool { background: rgba(247, 205, 93, 0.09); border-color: rgba(247, 205, 93, 0.25); }
+.inventory .mi.tool.equipped { border-color: var(--good); background: rgba(140, 198, 90, 0.18); }
+.inventory .mi.tool.equipped::after { content: 'equipped'; position: absolute; bottom: 0.15rem; left: 0; right: 0; font-size: 0.65rem; color: var(--good); }
+.inventory .grid .mi.sel { border-color: var(--hi); background: rgba(247, 205, 93, 0.2); }
+.inv-detail .ico.huge { width: 4.5em; height: 4.5em; }
+.inv-detail h3 { margin: 0.3rem 0; color: var(--hi); }
+.inv-detail p { margin: 0.25rem 0; }
+.inv-detail .muted { color: var(--muted); font-size: 0.9rem; }
+.inv-detail .act { color: var(--good); }

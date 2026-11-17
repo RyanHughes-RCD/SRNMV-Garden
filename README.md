@@ -126,6 +126,12 @@ Somewhere in the forest, a few tiles deep, hides the **Great Stump** (2×2 tiles
 
 Tuning is in `data/spirits.json`. The art: `art/great-stump.png`, `art/fox-spirit-sheet.png` and `art/moose-spirit-sheet.png`.
 
+## Inventory and the chest
+
+*Menu → Inventory* shows your **tools in a toolbar** along the top (A equips one) and **everything in your bag in a grid** below, with the selected item's details on the right. A on seeds puts them in your seed bag, and A on a sapling lets you plant it.
+
+Every cabin has a **chest** (it's in the living room to start; move it anywhere with Ⓨ). Face it and press A to open it: **LB/RB** switch between your bag and the chest, **A** moves one, **X** moves the whole stack. Stored things are safe from selling and baiting.
+
 ## Inside the cabin
 
 Stand in front of the cabin door, face it and press **A** to go in. Walk out through the doormat at the bottom to leave. The garden and the cats keep going while you're inside. (Customizing the outside of the cabin is in *Menu → Cabin*.)

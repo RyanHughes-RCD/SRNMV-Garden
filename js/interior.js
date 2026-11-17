@@ -14,6 +14,7 @@ import { lighting, hourOfDay, clockLabel, phaseLabel } from './daytime.js';
 import { drawPlayer, anim } from './player.js';
 import { drawCatSprite, catSpriteName } from './cats.js';
 import { skyTint } from './weather.js';
+import { chestScreen } from './inventory.js';
 import { openMenu, closeMenu, closeAllMenus, toast, setModePanel } from './ui.js';
 import { canAfford, pay, refund, costLabel, costHTML } from './economy.js';
 import { sfx } from './audio.js';
@@ -28,7 +29,7 @@ const I = () => DATA.interior;
 export function homeDefaults() {
   const d = DATA.interior?.defaults || { floor: {}, wall: {} };
   // a new cabin comes with a chair, a rug and a window so the first look inside isn't bare
-  const items = [{ id: 'window', room: 'living', x: 2, y: -1 }, { id: 'window', room: 'living', x: 6, y: -1 }, { id: 'armchair', room: 'living', x: 1, y: 1 }, { id: 'rug_round', room: 'living', x: 3, y: 2 }].filter(it => DATA.interior?.items?.[it.id]);
+  const items = [{ id: 'chest', room: 'living', x: 7, y: 0 }, { id: 'window', room: 'living', x: 2, y: -1 }, { id: 'window', room: 'living', x: 6, y: -1 }, { id: 'armchair', room: 'living', x: 1, y: 1 }, { id: 'rug_round', room: 'living', x: 3, y: 2 }].filter(it => DATA.interior?.items?.[it.id]);
   return { inside: false, me: null, living: 0, kitchen: false, bedroom: false, floor: { ...d.floor }, wall: { ...d.wall }, items, feastUntil: 0 };
 }
 export function fixHome(s) {
@@ -36,7 +37,15 @@ export function fixHome(s) {
   s.home = { ...d, ...(s.home || {}) };
   s.home.floor = { ...d.floor, ...s.home.floor };
   s.home.wall = { ...d.wall, ...s.home.wall };
-  s.home.items = (s.home.items || []).filter(it => DATA.interior?.items?.[it.id]);
+  // the small and treasure chests became the one Chest every cabin has: keep the first, refund the rest
+  const OLD_CHESTS = { small_chest: { coins: 100, wood: 10 }, treasure_chest: { coins: 500, wood: 20, stone: 10 } };
+  let chest = (s.home.items || []).some(it => it.id === 'chest');
+  s.home.items = (s.home.items || []).map(it => {
+    if (!OLD_CHESTS[it.id]) return it;
+    if (!chest) { chest = true; return { ...it, id: 'chest' }; }
+    for (const [k, v] of Object.entries(OLD_CHESTS[it.id])) { if (k === 'coins') s.coins += v; else s.mats[k] = (s.mats[k] || 0) + v; }
+    return null;
+  }).filter(it => it && DATA.interior?.items?.[it.id]);
   s.home.living = clamp(s.home.living | 0, 0, (DATA.interior?.living?.sizes?.length || 1) - 1);
 }
 const home = () => G.state.home;
@@ -119,6 +128,7 @@ function connected(L, occ) {
 export function itemProblem(it, skip = null) {
   const L = layout(), d = I().items[it.id], r = L.room(it.room);
   if (!d || !r) return 'Not inside a room';
+  if (d.unique && home().items.some(o => o !== skip && o.id === it.id && o !== it)) return `There's only one ${d.name.toLowerCase()}. Pick it up (Ⓧ) to move it`;
   if (d.room && d.room !== it.room) return `This goes in the ${I().sideRooms[d.room]?.name.toLowerCase() || d.room}`;
   const occ = occupancy(L, skip);
   if (d.wall) {
@@ -143,7 +153,15 @@ export function itemProblem(it, skip = null) {
 }
 
 /* ------------------------------------------------------- entering, leaving */
+// Every cabin has a chest. If there isn't one (an older save, or it was picked up), put one back.
+export function ensureChest() {
+  const h = home();
+  if (!h || h.items.some(i => i.id === 'chest')) return;
+  const r = layout().room('living');
+  for (let y = 0; y < r.h; y++) for (let x = r.w - 1; x >= 0; x--) { const it = { id: 'chest', room: 'living', x, y }; if (!itemProblem(it)) { h.items.push(it); return; } }
+}
 export function enterCabin() {
+  ensureChest();
   const h = home(), L = layout();
   h.inside = true;
   h.me = { x: L.exit.x * TILE + 8, y: (L.exit.y - 1) * TILE + 12, dir: 'up' };
@@ -183,6 +201,7 @@ function resolveInside(L, occ) {
   if (d.action === 'nap') { const c = catOn(it); return { kind: 'nap', item: it, label: c ? `${c.cfg.name} is napping here` : `${d.name} · the cats nap here` }; }
   if (it.id === 'cat_basket') { const c = catOn(it); return { kind: 'info', label: c ? `${c.cfg.name} is curled up in the basket` : 'Cat basket' }; }
   if (d.action === 'look') return { kind: 'look', label: 'Look outside' };
+  if (d.action === 'chest') return { kind: 'chest', label: 'Open the chest' };
   if (d.action === 'clock') return { kind: 'info', label: `The clock says ${clockLabel(hourOfDay())}` };
   return { kind: 'info', label: d.name };
 }
@@ -208,6 +227,7 @@ export function updateInside(dt) {
     case 'exit': leaveCabin(); break;
     case 'cook': cookMenu(); break;
     case 'nap': { const c = catOn(lastAction.item); sfx('pop'); toast(c ? `Shh... ${c.cfg.name} is fast asleep` : 'A cozy bed. The cats sneak in here to nap and get their energy back faster', I().items[lastAction.item.id].sprite); break; }
+    case 'chest': chestScreen(); break;
     case 'look': { const hr = hourOfDay(); sfx('pop'); toast(`${phaseLabel(hr)} outside. ${G.cats.map(c => `${c.cfg.name}: ${c.activity.toLowerCase()}`).join(' · ')}`, 'in_window', 6000); break; }
   }
 }
@@ -462,10 +482,11 @@ function wallPos(it, d, L) {
 }
 function drawItem(ctx, it, d, L, t) {
   const r = L.room(it.room), [w, hh] = d.size || [1, 1];
-  const def = DATA.sprites.sprites[d.sprite], sw = def?.w ?? 16, sh = def?.h ?? 16;
+  const spr = d.openSprite && G.chestOpen ? d.openSprite : d.sprite; // the chest opens while you use it
+  const def = DATA.sprites.sprites[spr], sw = def?.w ?? 16, sh = def?.h ?? 16;
   const x = (r.x + it.x) * TILE + Math.round((w * TILE - sw) / 2), y = (r.y + it.y + hh) * TILE - sh;
   // rugs are centred on their tiles; everything else stands on the bottom of its footprint
-  drawSprite(ctx, d.sprite, def?.fps ? animFrame(d.sprite, t) : 0, x, d.rug ? (r.y + it.y) * TILE + Math.round((hh * TILE - sh) / 2) : y);
+  drawSprite(ctx, spr, def?.fps ? animFrame(spr, t) : 0, x, d.rug ? (r.y + it.y) * TILE + Math.round((hh * TILE - sh) / 2) : y);
 }
 function drawDecorateOverlay(ctx, t, L) {
   const d = I().items[IM.id], it = placementAt(L), blink = 0.55 + 0.45 * Math.sin(t * 6);

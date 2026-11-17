@@ -92,7 +92,8 @@ function fixSel(m) {
   const its = itemsOf(m);
   if (!its.length) { m.sel = 0; return; }
   m.sel = clamp(m.sel, 0, its.length - 1);
-  if (its[m.sel].header) { const n = its.findIndex((it, i) => i > m.sel && !it.header); m.sel = n >= 0 ? n : its.findIndex(it => !it.header); if (m.sel < 0) m.sel = 0; }
+  const skip = it => it.header || it.blank; // headings and empty grid slots can't be selected
+  if (skip(its[m.sel])) { const n = its.findIndex((it, i) => i > m.sel && !skip(it)); m.sel = n >= 0 ? n : its.findIndex(it => !skip(it)); if (m.sel < 0) m.sel = 0; }
 }
 
 export function updateMenus(dt) {
@@ -103,7 +104,8 @@ export function updateMenus(dt) {
   const step = d => {
     if (!its.length) return;
     let i = m.sel;
-    for (let k = 0; k < its.length; k++) { i = cols > 1 ? clamp(i + d, 0, its.length - 1) : (i + d + its.length) % its.length; if (!its[i].header) break; }
+    for (let k = 0; k < its.length; k++) { i = cols > 1 ? clamp(i + d, 0, its.length - 1) : (i + d + its.length) % its.length; if (!its[i].header && !its[i].blank) break; }
+    if (its[i].header || its[i].blank) return;
     if (i !== m.sel) { m.sel = i; sfx('move'); renderMenu(); }
   };
   if (input.nav('up')) step(-cols);
@@ -119,6 +121,8 @@ export function updateMenus(dt) {
     else if (it.onSelect) { it.onSelect(it); if (stack.includes(m)) refreshMenu(); }
     else if (it.onRight) { it.onRight(it); sfx('move'); refreshMenu(); }
   }
+  if (input.pressed('seedPrev') && m.onPrev) { m.onPrev(); sfx('move'); refreshMenu(); }
+  if (input.pressed('seedNext') && m.onNext) { m.onNext(); sfx('move'); refreshMenu(); }
   if (input.pressed('tool') && it?.onX) { it.onX(it); if (stack.includes(m)) refreshMenu(); }
   if (input.pressed('cancel') || (input.pressed('pause') && !m.noPauseClose)) { sfx('cancel'); if (m.onBack) m.onBack(); else closeMenu(); }
   m._t = (m._t || 0) + dt;
@@ -139,13 +143,14 @@ export function renderMenu() {
     sub: sub ? glyphs(sub) : '',
     items: its.map((it, i) => {
       if (it.header) return `<div class="mi hdr">${it.label}</div>`;
+      if (it.blank) return `<div class="mi blank ${it.cls || ''}"></div>`;
       const cl = ['mi', i === m.sel ? 'sel' : '', it.disabled ? 'dis' : '', it.cls || ''].join(' ');
       const ico = it.iconHTML || (it.icon ? iconHTML(it.icon, 'ico', it.iconOpts || {}) : '');
       if (cols > 1) return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}</span></div>`;
       return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}${it.sub ? `<small>${glyphs(it.sub)}</small>` : ''}</span>${it.right != null ? `<span class="right">${it.onLeft ? '◂ ' : ''}${it.right}${it.onRight ? ' ▸' : ''}</span>` : ''}</div>`;
     }),
     detail: m.detail && cur ? m.detail(cur) : null,
-    foot: glyphs(m.footer || (cur?.onX ? 'Ⓐ select · Ⓧ ' + (cur.xLabel || 'more') + ' · Ⓑ back' : 'Ⓐ select · Ⓑ back')),
+    foot: glyphs((typeof m.footer === 'function' ? m.footer() : m.footer) || (cur?.onX ? 'Ⓐ select · Ⓧ ' + (cur.xLabel || 'more') + ' · Ⓑ back' : 'Ⓐ select · Ⓑ back')),
   };
   if (!its.length) P.items = [`<div class="mi dis">${m.empty || 'Nothing here yet.'}</div>`];
   const prev = root._menu === m ? root._parts : null;

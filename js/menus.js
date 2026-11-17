@@ -19,6 +19,7 @@ import * as brain from './catbrain.js';
 import { isInside, furnitureMenu, surfacesMenu, upgradesMenu, leaveCabin } from './interior.js';
 import { arrive as spiritArrive } from './spirits.js';
 import { DEBUG_WEATHERS } from './weather.js';
+import { inventoryScreen } from './inventory.js';
 
 const pct = v => `${Math.round(v * 100)}%`;
 const bar = (v, max = 1) => `<span class="bar"><span style="width:${Math.round(Math.max(0, Math.min(100, (v / max) * 100)) / 5) * 5}%"></span></span>`;
@@ -38,7 +39,7 @@ export function pauseMenu() {
         { label: 'Cabin rooms', icon: 'in_bed', sub: 'Bigger living room, kitchen, bedroom', onSelect: upgradesMenu },
         { label: 'Go outside', icon: 'in_exit', onSelect: () => { closeAllMenus(); leaveCabin(); } },
       ] : [{ label: 'Back to the garden', icon: 'tool_hand', onSelect: closeAllMenus }]),
-      { label: 'Inventory', icon: 'tool_seeds', sub: 'Crops, seeds and materials', onSelect: inventoryMenu },
+      { label: 'Inventory', icon: 'tool_seeds', sub: 'Your tools and everything in your bag', onSelect: inventoryScreen },
       { label: 'Garden plots', icon: 'tool_hoe', sub: 'Choose what each plot grows', onSelect: plotsMenu },
       { label: 'Seed shop', icon: 'shop', sub: 'Mystery seed packs', onSelect: shopMenu },
       { label: 'Sell crops', icon: 'crate', onSelect: sellMenu },
@@ -53,45 +54,6 @@ export function pauseMenu() {
   });
 }
 
-/* ------------------------------------------------------------ inventory */
-export function inventoryMenu() {
-  openMenu({
-    title: 'Inventory', icon: 'tool_seeds', live: true,
-    subtitle: () => `${iconHTML('item_coin', 'ico sm')} ${G.state.coins} coins`,
-    items: () => {
-      const st = G.state, out = [];
-      const crops = Object.entries(st.inv.crops).filter(([, n]) => n > 0);
-      out.push({ header: true, label: 'Harvest' });
-      if (!crops.length) out.push({ label: 'Nothing harvested yet', disabled: true });
-      for (const [id, n] of crops) { const c = DATA.cropById[id]; out.push({ label: c.name, icon: `item_${id}`, sub: `Sells for ${c.price} each`, right: `×${n}`, onSelect: sellMenu }); }
-      out.push({ header: true, label: 'Seeds (Ⓐ to hold)' });
-      const keys = farm.ownedSeedKeys();
-      if (!keys.length) out.push({ label: 'No seeds - visit the shop!', disabled: true });
-      for (const k of keys) out.push({ label: farm.seedLabel(k), icon: farm.seedIcon(k), right: `×${farm.seedCount(k)}`, sub: st.player.seedKey === k ? 'In your seed bag' : '', onSelect: () => { st.player.seedKey = k; st.player.tool = 0; toast(`Holding ${farm.seedLabel(k)}`, farm.seedIcon(k)); } });
-      const saps = Object.entries(st.inv.saplings || {}).filter(([, n]) => n > 0);
-      out.push({ header: true, label: 'Saplings (Ⓐ to plant)' });
-      if (!saps.length) out.push({ label: 'No saplings. The seed shop sells them', disabled: true });
-      for (const [id, n] of saps) { const t = DATA.treeById[id]; out.push({ label: `${t.name} sapling`, icon: `sapling_${id}`, right: `×${n}`, sub: 'Plant it on grass with two free tiles between trees', onSelect: () => { closeAllMenus(); enterPlant(id); } }); }
-      const bugs = Object.entries(st.inv.bugs || {}).filter(([, n]) => n > 0);
-      if (bugs.length) { out.push({ header: true, label: 'Bugs (fishing bait)' }); for (const [id, n] of bugs) { const b = DATA.bugById[id]; out.push({ label: b?.name || id, icon: `bug_${id}`, sub: `Bait value ${b?.price ?? 1}`, right: `×${n}` }); } }
-      const fruit = Object.entries(st.inv.fruit || {}).filter(([, n]) => n > 0);
-      if (fruit.length) { out.push({ header: true, label: 'Fruit' }); for (const [id, n] of fruit) { const t = DATA.treeById[id]; out.push({ label: t.fruit, icon: `fruit_${id}`, sub: `Sells for ${t.fruitPrice} each`, right: `×${n}`, onSelect: sellMenu }); } }
-      out.push({ header: true, label: `Fish (${Object.keys(st.fishFound || {}).length}/${DATA.fish.length} found)` });
-      for (const f of DATA.fish) {
-        const found = st.fishFound?.[f.id];
-        out.push({ label: found ? f.name : '???', iconHTML: iconHTML(`fish_${f.id}`, 'ico', { silhouette: !found }), sub: found ? `${rarityName(f.rarity)} · sells for ${f.price}` : `${rarityName(f.rarity)} · not caught yet`, right: `×${st.inv.fish?.[f.id] || 0}`, onSelect: found && st.inv.fish?.[f.id] ? sellMenu : undefined });
-      }
-      out.push({ header: true, label: `Shells (${Object.keys(st.shellsFound).length}/${DATA.shells.length} found)` });
-      for (const sh of DATA.shells) {
-        const found = st.shellsFound[sh.id];
-        out.push({ label: found ? sh.name : '???', iconHTML: iconHTML(`shell_${sh.id}`, 'ico', { silhouette: !found }), sub: found ? sh.desc : 'Washes up on the beach now and then', right: `×${st.inv.shells[sh.id] || 0}` });
-      }
-      out.push({ header: true, label: 'Materials' });
-      for (const m of ['wood', 'stone', 'fiber']) out.push({ label: m[0].toUpperCase() + m.slice(1), icon: `item_${m}`, right: `×${st.mats[m] || 0}` });
-      return out;
-    },
-  });
-}
 
 /* ---------------------------------------------------------------- plots */
 export function plotsMenu() {

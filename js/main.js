@@ -8,6 +8,7 @@ import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './rend
 import { updateSpirits, spiritHUD } from './spirits.js';
 import { bugName } from './bugs.js';
 import { initWeather, updateWeather, weatherHUD } from './weather.js';
+import { ensureChest } from './interior.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
 import * as farm from './farm.js';
@@ -40,6 +41,7 @@ async function boot() {
   G.state = loadGame() || newGame();
   G.isNewGame = !G.state.simTime;
   rebuildJobIndex();
+  ensureChest();
   syncCats();
   const p = G.state.player;
   G.camera.x = p.x - G.view.w / 2; G.camera.y = p.y - G.view.h / 2; clampCamera();

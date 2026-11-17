@@ -4,6 +4,7 @@ import { DATA, readLS, writeLS } from './data.js';
 import { DEFAULT_BINDINGS } from './input.js';
 import { homeDefaults, fixHome } from './interior.js';
 import { spiritDefaults, placeStump } from './spirits.js';
+import { emptyStore } from './inventory.js';
 
 export const SAVE_KEY = 'srnmv.save';
 export const SETTINGS_KEY = 'srnmv.settings';
@@ -139,6 +140,7 @@ export function newGame() {
     mats: { wood: 0, stone: 0, fiber: 0 },
     inv: { crops: {}, seeds: {}, unknown, shells: {}, saplings: {}, fruit: {}, fish: {}, bugs: {} },
     bugsFound: {},
+    chest: emptyStore(), // the chest in the cabin (inventory.js)
     fishFound: {},
     trees: {},
     fruitFound: {},
@@ -186,7 +188,8 @@ function validate(s) {
   if (!ok) throw new Error('Save file is damaged');
   s.jobs ||= []; s.plots ||= []; s.crops ||= {}; s.lastCrop ||= {}; s.discovered ||= {}; s.cats ||= {};
   s.inv.crops ||= {}; s.inv.seeds ||= {}; s.inv.unknown ||= {}; s.inv.shells ||= {}; s.shellsFound ||= {};
-  s.inv.saplings ||= {}; s.inv.fruit ||= {}; s.inv.fish ||= {}; s.inv.bugs ||= {}; s.bugsFound ||= {}; s.fishFound ||= {}; s.trees ||= {}; s.fruitFound ||= {};
+  s.inv.saplings ||= {}; s.inv.fruit ||= {}; s.inv.fish ||= {}; s.inv.bugs ||= {}; s.bugsFound ||= {};
+  s.chest = { ...emptyStore(), ...(s.chest || {}) }; s.fishFound ||= {}; s.trees ||= {}; s.fruitFound ||= {};
   for (const [k, t] of Object.entries(s.trees)) { if (t.v == null) t.v = Math.abs((+k * 2654435761) | 0) % 5; delete t.flip; }
   for (const [k, t] of Object.entries(s.trees)) if (!DATA.treeById[t.id]) { delete s.trees[k]; if (s.map.obj[k]?.startsWith('o:')) s.map.obj[k] = null; }
   s.mats ||= { wood: 0, stone: 0, fiber: 0 };
