@@ -12,9 +12,9 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-# pairs on the sheet, in reading order: (young, grown). willow, golden and oak are the
+# pairs on the sheet, in reading order: (young, grown). willow, elm and oak are the
 # decorative (non-fruit) trees in data/trees.json.
-ORDER = ['apple', 'pear', 'willow', 'plum', 'golden', 'lemon', 'peach', 'oak']
+ORDER = ['apple', 'pear', 'willow', 'plum', 'peach', 'lemon', 'elm', 'oak']
 # More fruit trees made by recolouring the leaves of a tree on the sheet (trunks stay as they are):
 # new tree -> (source tree, leaf hue in degrees, saturation x, brightness x)
 RECOLOUR = {

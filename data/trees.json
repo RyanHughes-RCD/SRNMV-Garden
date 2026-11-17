@@ -29,8 +29,8 @@
       "desc": "Big lobed leaves and soft, jammy figs." },
     { "id": "willow", "name": "Weeping Willow", "decorative": true, "shape": "soft", "saplingPrice": 450, "growHours": 40,
       "leaf": "lgreen", "leafDark": "green", "leafHi": "pgreen", "desc": "Long, sweeping branches. No fruit, just shade and a lovely view." },
-    { "id": "golden", "name": "Golden Linden", "decorative": true, "shape": "round", "saplingPrice": 400, "growHours": 34,
-      "leaf": "pgreen", "leafDark": "lgreen", "leafHi": "pyellow", "desc": "A round, glowing yellow-green tree that brightens any corner." },
+    { "id": "elm", "name": "Weeping Elm", "decorative": true, "shape": "soft", "saplingPrice": 400, "growHours": 34,
+      "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "desc": "A dark, drooping canopy, cool and quiet." },
     { "id": "oak", "name": "Ancient Oak", "decorative": true, "shape": "spreading", "saplingPrice": 650, "growHours": 60,
       "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "desc": "Gnarled and grey-green, as if it's stood here for centuries." }
   ]
