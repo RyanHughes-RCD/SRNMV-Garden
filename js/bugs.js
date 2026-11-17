@@ -14,14 +14,15 @@ export function diggable(st, t, plotAt) {
 }
 
 // The dig is done: leave dirt behind and maybe find a bug. Returns { bug, first }.
-export function digUp(tile) {
+export function digUp(tile, luck = 0) {
   const st = G.state, cfg = DATA.bugsCfg;
   st.map.obj[tile] = 'd:dirt';
   st.stats.dug = (st.stats.dug || 0) + 1;
-  if (rand() >= (cfg.findChance ?? 0.75)) return { bug: null };
+  if (rand() >= Math.min(0.95, (cfg.findChance ?? 0.75) + luck * 0.5)) return { bug: null };
   const night = isNight();
   const pool = DATA.bugs.filter(b => !b.time || (b.time === 'night') === night);
-  const bug = pickWeighted(pool.map(b => [b.id, b.weight]));
+  // luck (an upgraded shovel) tips the odds toward the rarer, more valuable bugs
+  const bug = pickWeighted(pool.map(b => [b.id, b.weight * (1 + luck * 4 * Math.log10(Math.max(10, b.price)) / 3)]));
   st.inv.bugs[bug] = (st.inv.bugs[bug] || 0) + 1;
   const first = !st.bugsFound[bug];
   st.bugsFound[bug] = (st.bugsFound[bug] || 0) + 1;

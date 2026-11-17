@@ -166,3 +166,7 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 .inv-detail p { margin: 0.25rem 0; }
 .inv-detail .muted { color: var(--muted); font-size: 0.9rem; }
 .inv-detail .act { color: var(--good); }
+.inventory .mi .pips { position: absolute; top: 0.2rem; right: 0.35rem; font-size: 0.7rem; letter-spacing: -0.05em; }
+.inventory .mi.tool.lv1 .pips { color: #e0915a; }
+.inventory .mi.tool.lv2 .pips { color: #dcd6cf; }
+.inventory .mi.tool.lv3 .pips { color: #f7cd5d; }

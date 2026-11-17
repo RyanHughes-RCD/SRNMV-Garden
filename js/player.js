@@ -13,7 +13,9 @@ import { playerSpot as fishSpot, baitOf, startFishing } from './fishing.js';
 import { emit, poof, burst } from './particles.js';
 import { enterCabin } from './interior.js';
 import { spiritAction } from './spirits.js';
+import { workSpeed, waterAround, bonusHarvest, toolTitle } from './tools.js';
 import { sfx } from './audio.js';
+import { toast } from './ui.js';
 
 export const TOOLS = [
   { id: 'hand', name: 'Hands', icon: 'tool_hand', allow: null },
@@ -22,6 +24,7 @@ export const TOOLS = [
   { id: 'seeds', name: 'Seed bag', icon: 'tool_seeds', allow: ['plant'] },
   { id: 'can', name: 'Watering can', icon: 'tool_can', allow: ['water'] },
   { id: 'shovel', name: 'Shovel', icon: 'tool_shovel', allow: ['dig'] },
+  { id: 'rod', name: 'Fishing rod', icon: 'tool_rod', allow: ['fish'] },
 ];
 const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 export const anim = { moving: false, working: false, t: 0, workSound: 0 };
@@ -81,7 +84,7 @@ export function resolveAction(ignoreCats = false) {
   const spot = fishSpot();
   if (spot) {
     const b = baitOf(spot.anchor);
-    if (b.portions > 0) return { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` };
+    if (b.portions > 0) return tool.id === 'rod' ? { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` } : { kind: 'info', label: `${b.portions} bait in the water · switch to your fishing rod (Ⓧ) to cast` };
     return { kind: 'bait', spot, label: 'Bait the water with crops or bugs' };
   }
   const tree = treeAt(t);
@@ -153,16 +156,18 @@ export function updatePlayer(dt, handlers) {
       case 'shell': gatherShell(act.tile); return;
       case 'fish': startFishing(act.spot); return;
       case 'bait': handlers.bait(act.spot.anchor); return;
-      case 'pickFruit': { const r = harvestTree(act.tile); if (r) sfx('harvest'); return; }
-      case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
+      case 'pickFruit': { const r = harvestTree(act.tile); if (r) { sfx('harvest'); if (bonusHarvest('fruit', r.id)) toast(`+1 ${r.def.fruit.toLowerCase()} (your gloves)`, `fruit_${r.id}`, 1500); } return; }
+      case 'harvest': { const r = farm.harvest(act.tile); if (r && bonusHarvest('crops', r.id)) toast(`+1 ${r.def.name.toLowerCase()} (your gloves)`, `item_${r.id}`, 1500); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
     }
   }
+  const tool = TOOLS[st.player.tool] || TOOLS[0];
   if (act.kind === 'work' && input.down('confirm')) {
     let j = getJob(act.type, act.tile);
     if (!j) j = addJob(act.type, act.tile, act.type === 'plant' ? { seedKey: act.seedKey, manual: true } : {});
     if (!j) return;
     anim.working = true;
-    const done = workJob(j, B.player.workRate * dt, 'player');
+    const done = workJob(j, B.player.workRate * workSpeed(tool, act.type) * dt, 'player');
+    if (done && act.type === 'water') waterAround(act.tile);
     anim.workSound -= dt;
     if (anim.workSound <= 0) { anim.workSound = 0.32; sfx(act.type === 'water' ? 'water' : act.type === 'clear' ? 'chop' : 'dig'); }
     const cx = (act.tile % st.map.w) * TILE + 8, cy = Math.floor(act.tile / st.map.w) * TILE + 8;

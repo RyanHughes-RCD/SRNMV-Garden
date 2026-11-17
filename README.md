@@ -126,6 +126,24 @@ Somewhere in the forest, a few tiles deep, hides the **Great Stump** (2×2 tiles
 
 Tuning is in `data/spirits.json`. The art: `art/great-stump.png`, `art/fox-spirit-sheet.png` and `art/moose-spirit-sheet.png`.
 
+## Tools and upgrades
+
+You have 7 tools. Press **X** to cycle through them, or pick one in *Menu → Inventory*: **hands, clearing tools, hoe, seed bag, watering can, shovel and fishing rod**. You need the fishing rod in hand to cast off the dock (you can bait the water with anything).
+
+**Every tool can be upgraded** from Basic to Copper, Silver and Gold. In the inventory, select a tool and press **X**. Upgrades cost 250 coins, 15 wood and 10 stone (Copper), 1,200 coins, 40 wood and 40 stone (Silver), and 4,000 coins, 80 wood and 120 stone (Gold). They make you better at that job (the cats work at their own pace):
+
+| Tool | Upgrades give you |
+|---|---|
+| Hands (gloves) | A chance of an extra crop or fruit when you harvest (15% / 30% / 50%) |
+| Clearing tools | Up to 3× faster clearing and chopping, and a chance of extra wood or stone |
+| Hoe | Up to 3× faster tilling |
+| Seed bag | A chance to keep the seed when you plant (10% / 20% / 30%) |
+| Watering can | Up to 3× faster, water lasts up to 2× as long, and it waters a row of 3 (Silver) or a 3×3 patch (Gold) |
+| Shovel | Up to 3× faster digging, finds bugs more often, and rarer ones |
+| Fishing rod | Up to 2× as long to pull the fish in, better odds of rare fish, and a chance to keep your bait |
+
+All the numbers are in `data/tools.json`.
+
 ## Inventory and the chest
 
 *Menu → Inventory* shows your **tools in a toolbar** along the top (A equips one) and **everything in your bag in a grid** below, with the selected item's details on the right. A on seeds puts them in your seed bag, and A on a sapling lets you plant it.

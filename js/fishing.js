@@ -1,6 +1,7 @@
 // Fishing from a dock. Bait the water with harvested crops or dug-up bugs (the better the bait, the
 // rarer the fish), cast, wait through a few tugs, and when the big "!" appears press A to reel in.
 // Cats fish off the dock too, using the same bait.
+import { stat } from './tools.js';
 import { G, TILE, rand, randRange, randInt, pickWeighted } from './game.js';
 import { DATA, RARITY_ORDER } from './data.js';
 import { input } from './input.js';
@@ -112,10 +113,10 @@ export const F = { active: false };
 export function startFishing(spot) {
   const M = DATA.fishCfg.minigame, b = baitOf(spot.anchor);
   if (b.portions <= 0) return false;
-  const q = baitQuality(b), fishId = rollFish(q), rarity = DATA.fishById[fishId].rarity;
+  const q = Math.min(1, baitQuality(b) + stat('rod', 'rareBonus')), fishId = rollFish(q), rarity = DATA.fishById[fishId].rarity;
   Object.assign(F, {
     active: true, state: 'cast', t: 0.45, anchor: spot.anchor, water: spot.water, q, fishId,
-    tugs: randInt(M.tugs[0], M.tugs[1]), dip: 0, window: M.biteWindowSec[rarity] ?? 0.9, msg: null,
+    tugs: randInt(M.tugs[0], M.tugs[1]), dip: 0, window: (M.biteWindowSec[rarity] ?? 0.9) * stat('rod', 'window'), msg: null,
   });
   G.mode = 'fishing';
   sfx('cast');
@@ -142,7 +143,7 @@ export function updateFishing(dt) {
       break;
     case 'bite':
       if (input.pressed('confirm')) {
-        if (useBait(F.anchor)) { sfx('reel'); burst(wx, wy, { n: 10, color: '#7fb3d5', g: 140 }); giveFish(F.fishId, 'player'); endFishing(null, true); }
+        if ((rand() < stat('rod', 'saveBait') && baitOf(F.anchor).portions > 0) || useBait(F.anchor)) { sfx('reel'); burst(wx, wy, { n: 10, color: '#7fb3d5', g: 140 }); giveFish(F.fishId, 'player'); endFishing(null, true); }
         else endFishing('Out of bait!', false);
       } else if (F.t <= 0) { sfx('cancel'); endFishing('It got away!', false); }
       break;

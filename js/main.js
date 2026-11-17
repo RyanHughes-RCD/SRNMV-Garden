@@ -7,6 +7,7 @@ import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state
 import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
 import { updateSpirits, spiritHUD } from './spirits.js';
 import { bugName } from './bugs.js';
+import { toolTitle, initToolEffects } from './tools.js';
 import { initWeather, updateWeather, weatherHUD } from './weather.js';
 import { ensureChest } from './interior.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
@@ -159,6 +160,7 @@ function simStep(dt) {
 /* ---------------------------------------------------------------- events */
 let lastGrowBanner = -999;
 function wireEvents() {
+  initToolEffects(); // before the messages below, so they show any upgrade bonuses
   G.on('stage', ({ tile, crop }) => {
     if (G.offline) return;
     const x = tx(tile) * TILE + 8, y = ty(tile) * TILE + 6;
@@ -221,7 +223,7 @@ function wireEvents() {
   G.on('built', ({ id }) => {
     if (DATA.decor[id]?.onWater && !G.state.fishingUnlocked) {
       G.state.fishingUnlocked = true;
-      ui.showCard(`<div class="disc">${iconHTML('fish_perch', 'ico huge')}</div><h2>Fishing unlocked!</h2><p>Stand on the dock facing open water and press Ⓐ to bait it with crops or bugs (dig them up with the shovel), then Ⓐ again to cast.</p><p>Wait through the little tugs. When the big <b>!</b> pops up, press Ⓐ to pull the fish in. Better bait means rarer fish.</p><p class="muted">The cats will fish off the dock too, using the same bait.</p>`, { cls: 'discover' });
+      ui.showCard(`<div class="disc">${iconHTML('fish_perch', 'ico huge')}</div><h2>Fishing unlocked!</h2><p>Stand on the dock facing open water and press Ⓐ to bait it with crops or bugs (dig them up with the shovel). Then switch to your <b>fishing rod</b> (Ⓧ) and press Ⓐ to cast.</p><p>Wait through the little tugs. When the big <b>!</b> pops up, press Ⓐ to pull the fish in. Better bait means rarer fish.</p><p class="muted">The cats will fish off the dock too, using the same bait.</p>`, { cls: 'discover' });
     }
   });
   G.on('shell', r => {
@@ -340,10 +342,10 @@ function globalControls() {
   if (input.pressed('switchPlayer')) switchPlayer();
   if (isInside()) { if (input.pressed('designate')) { furnitureMenu(); return; } hudControls(); return; } // Ⓨ decorates indoors; no tools or seeds
   if (input.pressed('designate')) { enterPlan(); return; }
-  if (input.pressed('tool') && fishSpot()) { menus.baitMenu(fishSpot().anchor); return; }
+  if (input.pressed('tool') && fishSpot() && TOOLS[G.state.player.tool]?.id === 'rod') { menus.baitMenu(fishSpot().anchor); return; }
   if (input.pressed('tool')) {
     const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
-    ui.toast(`Tool: ${TOOLS[p.tool].name}`, TOOLS[p.tool].icon, 1400);
+    ui.toast(`Tool: ${toolTitle(TOOLS[p.tool])}`, TOOLS[p.tool].icon, 1400);
   }
   if (input.pressed('seedPrev') || input.pressed('seedNext')) {
     const k = cycleSeed(input.pressed('seedNext') ? 1 : -1);
@@ -394,7 +396,7 @@ function updateHUD() {
     visible,
     res: `<span>${iconHTML('item_coin')}${st.coins}</span><span>${iconHTML('item_wood')}${st.mats.wood || 0}</span><span>${iconHTML('item_stone')}${st.mats.stone || 0}</span><span>${iconHTML('item_fiber')}${st.mats.fiber || 0}</span>`,
     clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div>${weatherHUD()}<div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
-    tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${tool.name}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
+    tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${toolTitle(tool)}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
     cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join('') + spiritHUD(),
   });
   // tooltip for what Ⓐ will do

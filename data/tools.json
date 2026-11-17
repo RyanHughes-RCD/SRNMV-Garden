@@ -1,0 +1,14 @@
+{
+  "_help": "Your tools and their upgrades (your tools only; the cats work at their own pace). levels: the names of each upgrade. costs[n]: the price of upgrading to level n. Each tool's numbers are listed per level (Basic, Copper, Silver, Gold). speed = how fast you work with it. Upgrade from Menu -> Inventory (pick a tool, press X).",
+  "levels": ["Basic", "Copper", "Silver", "Gold"],
+  "costs": [null, { "coins": 250, "wood": 15, "stone": 10 }, { "coins": 1200, "wood": 40, "stone": 40 }, { "coins": 4000, "wood": 80, "stone": 120 }],
+  "tools": {
+    "hand":   { "extraHarvest": [0, 0.15, 0.3, 0.5] },
+    "axe":    { "speed": [1, 1.5, 2, 3], "bonusDrop": [0, 0.2, 0.35, 0.5] },
+    "hoe":    { "speed": [1, 1.5, 2, 3] },
+    "seeds":  { "saveSeed": [0, 0.1, 0.2, 0.3] },
+    "can":    { "speed": [1, 1.5, 2, 3], "duration": [1, 1.5, 1.5, 2], "area": [1, 1, 3, 9] },
+    "shovel": { "speed": [1, 1.5, 2, 3], "luck": [0, 0.1, 0.2, 0.35] },
+    "rod":    { "window": [1, 1.3, 1.6, 2], "rareBonus": [0, 0.05, 0.1, 0.2], "saveBait": [0, 0.1, 0.2, 0.3] }
+  }
+}

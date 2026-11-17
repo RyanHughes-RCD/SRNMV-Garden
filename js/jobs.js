@@ -5,6 +5,8 @@ import { debrisAt, plotAt, plotTiles, ground, obj, tx, ty, choppable } from './w
 import * as farm from './farm.js';
 import { needsWater } from './orchard.js';
 import { digUp, diggable } from './bugs.js';
+import { stat } from './tools.js';
+const shovelLuck = () => stat('shovel', 'luck');
 
 export const JOB_TYPES = ['clear', 'till', 'plant', 'water', 'dig'];
 export const JOB_VERB = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering', fish: 'Fishing', dig: 'Digging for bugs' };
@@ -92,7 +94,7 @@ function completeJob(j, worker) {
       res.debris = d; res.drops = got;
       break;
     }
-    case 'dig': res.dig = digUp(j.tile); addJob('clear', j.tile, { marked: true }); break; // the dirt gets tidied up next
+    case 'dig': res.dig = digUp(j.tile, worker === 'player' ? shovelLuck() : 0); addJob('clear', j.tile, { marked: true }); break; // the dirt gets tidied up next
     case 'till': st.map.ground[j.tile] = 't'; st.stats.tilled = (st.stats.tilled || 0) + 1; break;
     case 'plant': res.crop = farm.plantTile(j.tile, j.seedKey); break;
     case 'water': { const c = st.crops[j.tile] || st.trees?.[j.tile]; if (c) c.wetUntil = st.simTime + DATA.balance.farm.waterDurationSec; st.stats.watered = (st.stats.watered || 0) + 1; break; }

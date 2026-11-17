@@ -9,6 +9,8 @@ import { sfx } from './audio.js';
 import * as farm from './farm.js';
 import { TOOLS } from './player.js';
 import { enterPlant } from './modes.js';
+import { toolLevel, toolTitle, effectText, upgradeCost, upgradeTool, levelName } from './tools.js';
+import { canAfford, costHTML, costLabel } from './economy.js';
 
 const COLS = 8, MIN_SLOTS = 32;
 export const emptyStore = () => ({ crops: {}, seeds: {}, unknown: {}, saplings: {}, fruit: {}, fish: {}, bugs: {}, shells: {} });
@@ -66,7 +68,17 @@ export function inventoryScreen() {
     title: 'Inventory', icon: 'tool_seeds', cls: 'inventory', columns: COLS, live: true,
     subtitle: () => `${iconHTML('item_coin', 'ico sm')} ${st.coins} · ${iconHTML('item_wood', 'ico sm')} ${st.mats.wood || 0} · ${iconHTML('item_stone', 'ico sm')} ${st.mats.stone || 0} · ${iconHTML('item_fiber', 'ico sm')} ${st.mats.fiber || 0}`,
     items: () => {
-      const out = TOOLS.map((t, i) => ({ label: '', iconHTML: iconHTML(t.icon, 'ico'), cls: 'tool' + (st.player.tool === i ? ' equipped' : ''), tool: t, onSelect: () => { st.player.tool = i; sfx('move'); toast(`Tool: ${t.name}`, t.icon, 1400); } }));
+      const out = TOOLS.map((t, i) => ({
+        label: `<span class="pips">${'◆'.repeat(toolLevel(t.id))}</span>`, iconHTML: iconHTML(t.icon, 'ico'), cls: `tool lv${toolLevel(t.id)}` + (st.player.tool === i ? ' equipped' : ''), tool: t,
+        onSelect: () => { st.player.tool = i; sfx('move'); toast(`Tool: ${toolTitle(t)}`, t.icon, 1400); },
+        onX: () => {
+          const cost = upgradeCost(t.id);
+          if (!cost) { sfx('error'); toast(`Your ${toolTitle(t).toLowerCase()} is fully upgraded`); return; }
+          if (!upgradeTool(t.id)) { sfx('error'); toast(`Need ${costLabel(cost)}`); return; }
+          sfx('build'); toast(`Upgraded to the ${toolTitle(t).toLowerCase()}!`, t.icon, 3500);
+        },
+        xLabel: 'upgrade',
+      }));
       while (out.length % COLS) out.push({ blank: true, cls: 'gap' });
       const list = stacks(st.inv);
       for (const s of list) {
@@ -78,13 +90,17 @@ export function inventoryScreen() {
       return padSlots(out, list.length);
     },
     detail: it => {
-      if (it.tool) return `<div class="inv-detail">${iconHTML(it.tool.icon, 'ico huge')}<h3>${it.tool.name}</h3><p class="muted">${TOOL_HELP[it.tool.id] || ''}</p><p class="act">${it.cls.includes('equipped') ? 'Equipped' : 'Ⓐ equip'}</p></div>`;
+      if (it.tool) {
+        const t = it.tool, lv = toolLevel(t.id), cost = upgradeCost(t.id);
+        const next = cost ? `<p><b>${levelName(t.id, lv + 1)}:</b> ${effectText(t.id, lv + 1)}</p><p>Ⓧ upgrade: ${costHTML(cost)}${canAfford(cost) ? '' : ' <span class="muted">(not enough yet)</span>'}</p>` : '<p class="muted">Fully upgraded!</p>';
+        return `<div class="inv-detail">${iconHTML(t.icon, 'ico huge')}<h3>${toolTitle(t)}</h3><p class="muted">${TOOL_HELP[t.id] || ''}</p><p><b>Now:</b> ${effectText(t.id)}</p>${next}<p class="act">${it.cls.includes('equipped') ? 'Equipped' : 'Ⓐ equip'}</p></div>`;
+      }
       const s = it.stack; if (!s) return '';
       const act = s.kind === 'seeds' ? (st.player.seedKey === s.id ? 'In your seed bag' : 'Ⓐ put in your seed bag') : s.kind === 'saplings' ? 'Ⓐ plant it' : '';
       return stackDetail(s, act ? `<p class="act">${act}</p>` : '');
     },
     empty: 'Your bag is empty.',
-    footer: 'Ⓐ use · Ⓑ close',
+    footer: () => 'Ⓐ use · Ⓧ upgrade a tool · Ⓑ close',
   });
 }
 const TOOL_HELP = {
@@ -94,6 +110,7 @@ const TOOL_HELP = {
   seeds: 'Plant the seeds you\'re holding (LB/RB to change seeds).',
   can: 'Water crops and fruit trees (hold Ⓐ).',
   shovel: 'Dig open grass for bugs, which are fishing bait (hold Ⓐ).',
+  rod: 'Cast your line off the dock once the water is baited.',
 };
 
 /* ---------------------------------------------------------- the chest */

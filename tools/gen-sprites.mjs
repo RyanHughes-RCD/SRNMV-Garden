@@ -1341,6 +1341,11 @@ const clearRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let 
   sh.line(4, 12, 10, 6, C.tan).line(5, 12, 11, 6, C.brown).rect(10, 3, 3, 2, C.tan).line(11, 4, 12, 5, C.brown);
   sh.pts([[2, 12], [3, 11], [4, 13], [3, 14], [2, 13], [3, 12], [4, 12], [3, 13]], C.lgray).pts([[2, 14], [1, 13]], C.gray).set(3, 11, C.vlgray);
   add('tool_shovel', 'ui', sh.outline());
+  // the fishing rod: a bent pole, reel and line with a bobber
+  const rod = new G(16, 16);
+  rod.line(2, 14, 12, 2, C.brown).line(3, 14, 13, 2, C.tan).set(13, 1, C.tan).ellipse(5, 11.5, 1.6, 1.6, C.gray).set(5, 11, C.vlgray);
+  rod.line(13, 2, 14, 6, C.vlgray).line(14, 6, 14, 10, C.vlgray).pts([[14, 11], [13, 12], [15, 12]], C.red).set(14, 12, C.white);
+  add('tool_rod', 'ui', rod.outline());
   // bug icons (bug_<id>), from data/bugs.json
   const BUGS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bugs.json'), 'utf8')).bugs;
   for (const b of BUGS) {
