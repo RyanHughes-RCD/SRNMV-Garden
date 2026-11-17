@@ -185,7 +185,11 @@ export function drawModeOverlay(ctx, t) {
   if (G.mode === 'plant') {
     const ti = idx(M.cx, M.cy), ok = !plantProblem(ti) && G.state.inv.saplings[M.sapling] > 0;
     const b = 0.55 + 0.45 * Math.sin(t * 6);
-    ctx.globalAlpha = 0.7; drawSprite(ctx, `ftree_${M.sapling}`, 0, M.cx * TILE + 8 - 16, (M.cy + 1) * TILE - 1 - 47); ctx.globalAlpha = 1;
+    ctx.globalAlpha = 0.7;
+    const yd = DATA.sprites.sprites[`ftree2_${M.sapling}_young`];
+    if (yd) drawSprite(ctx, `ftree2_${M.sapling}_young`, 0, M.cx * TILE + 8 - yd.ax * 0.55, (M.cy + 1) * TILE - yd.ay * 0.55, { scale: 0.55 });
+    else drawSprite(ctx, `ftree_${M.sapling}`, 0, M.cx * TILE + 8 - 16, (M.cy + 1) * TILE - 1 - 47);
+    ctx.globalAlpha = 1;
     ctx.strokeStyle = ok ? `rgba(140,198,90,${b})` : `rgba(229,115,90,${b})`;
     ctx.strokeRect(M.cx * TILE + 0.5, M.cy * TILE + 0.5, 15, 15);
     return;

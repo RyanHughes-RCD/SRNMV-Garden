@@ -1079,8 +1079,8 @@ function fruitSpots(t) {
   }
   return out;
 }
-function fruitOverlay(t, f) {
-  const g = new G(32, 48), spots = fruitSpots(t);
+function fruitOverlay(t, f, given) {
+  const spots = given || fruitSpots(t), g = new G(given ? 64 : 32, given ? 64 : 48);
   const fc = col(t.fruitColor), fd = col(t.fruitDark), fh = col(t.fruitHi), bl = col(t.blossom);
   for (const [x, y] of spots) {
     if (f === 0) g.pts([[x, y - 1], [x - 1, y], [x + 1, y], [x, y + 1]], bl).set(x, y, C.yellow);
@@ -1357,6 +1357,23 @@ if (fs.existsSync(CUSTOM)) {
   const custom = JSON.parse(fs.readFileSync(CUSTOM, 'utf8'));
   Object.assign(sprites, custom.sprites || {});
   for (const [i, hex] of Object.entries(custom.palette || {})) PALETTE[+i] = hex;
+}
+// Blossom and fruit overlays for imported fruit trees (ftree2_<id>_grown): the fruit sits on the
+// tree's own leaves (well inside the canopy, above the trunk), same size as the tree picture.
+for (const t of TREES) {
+  const tree = sprites[`ftree2_${t.id}_grown`];
+  if (!tree) continue;
+  const rows = tree.frames[0], w = tree.w, h = tree.h, r = rng(t.id.length * 13 + 5);
+  const hex = tree.pal.map(c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)));
+  const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h || rows[y][x] === '.') ? null : hex[CH.indexOf(rows[y][x])];
+  const leafy = (x, y) => { for (let dy = -2; dy <= 2; dy++) for (let dx = -2; dx <= 2; dx++) { const c = at(x + dx, y + dy); if (!c || c[0] + c[1] + c[2] < 90) return false; } return true; };
+  const spots = [];
+  for (let tries = 0; spots.length < 10 && tries < 2000; tries++) {
+    const x = 3 + Math.floor(r() * (w - 6)), y = 3 + Math.floor(r() * (h * 0.62 - 3));
+    if (leafy(x, y) && spots.every(([px, py]) => Math.abs(px - x) + Math.abs(py - y) > 5)) spots.push([x, y]);
+  }
+  const frames = [0, 1, 2, 3].map(f => { const g = new G(w, h), src = fruitOverlay(t, f, spots); g.stamp(src, 0, 0); return g; });
+  add(`ffruit2_${t.id}`, 'trees', frames, 0, { ax: tree.ax, ay: tree.ay });
 }
 const out = { version: 1, tile: 16, palette: PALETTE, swaps, sprites };
 fs.writeFileSync(OUT, JSON.stringify(out));

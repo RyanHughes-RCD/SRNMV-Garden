@@ -92,7 +92,7 @@ Buy saplings at the **seed shop** (bottom section), then open your inventory and
 
 Times are while watered. Everything is tunable in `data/trees.json`.
 
-**How the tree art works:** each tree has a puffy, cloud-like canopy (round, tall, wide or soft, in its own leaf colours) on one of **5 trunk styles** shared by all trees: straight, leaning, forked, knotty and gnarled. Each planted tree keeps its style. In the Workshop: `ftree_<tree>` (sapling and canopy stages), `ftrunk_<shape>_0..4` (trunks) and `ffruit_<tree>` (blossom and fruit overlays).
+**How the tree art works:** each fruit tree uses a picture from `art/fruit-trees-sheet.png`, one young and one full-grown tree each. A tree grows from the young picture (small, medium, full size) into the grown one (80%, then full size), and blossoms and fruit appear on its own leaves once it's grown. To change the art, edit the sheet and run `python3 tools/import_fruit_trees.py` and then `node tools/gen-sprites.mjs`. Which picture belongs to which tree is set in `ORDER` at the top of the importer. The older drawn trees (`ftree_<tree>`, `ftrunk_*`) are still used for any tree without a picture.
 
 ## Cat sprite sheets
 

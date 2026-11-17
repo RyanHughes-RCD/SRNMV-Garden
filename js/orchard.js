@@ -3,7 +3,7 @@
 // After a harvest the tree blossoms again.
 import { G, TILE, randInt } from './game.js';
 import { DATA } from './data.js';
-import { drawSprite } from './sprites.js';
+import { drawSprite, hasSprite } from './sprites.js';
 import { idx, tx, ty, inBounds, ground, obj, plotAt } from './world.js';
 import { growBonusAt } from './decorations.js';
 import { emit } from './particles.js';
@@ -126,9 +126,20 @@ export function treeStatus(t) {
 }
 
 /* -------------------------------------------------------------- render */
+const STAGE_ART = [['young', 0.55], ['young', 0.78], ['young', 1], ['grown', 0.82], ['grown', 1]];
 export function drawTree(ctx, tile, t) {
   const x = tx(tile) * TILE + 8, y = (ty(tile) + 1) * TILE - 1;
   if (isWet(t)) { ctx.fillStyle = 'rgba(43,58,90,0.35)'; ctx.beginPath(); ctx.ellipse(x, y - 1, 6, 2.5, 0, 0, Math.PI * 2); ctx.fill(); }
+  // Imported tree art (art/fruit-trees-sheet.png): a young and a grown picture per tree.
+  // Stages: young at 55%, 78% and full size, then grown at 82% and full size (with the fruit).
+  if (hasSprite(`ftree2_${t.id}_grown`)) {
+    const [name, sc] = STAGE_ART[t.stage] || STAGE_ART[4], spr = `ftree2_${t.id}_${name}`, d = DATA.sprites.sprites[spr];
+    const px = x - d.ax * sc, py = y + 1 - d.ay * sc;
+    drawSprite(ctx, spr, 0, px, py, { scale: sc });
+    if (t.stage === 4 && t.fruit >= 0) drawSprite(ctx, `ffruit2_${t.id}`, t.fruit, px, py);
+    if (t.fruit === 3 && !G.offline && Math.random() < 0.01) emit({ x: x - 12 + Math.random() * 24, y: py + 6 + Math.random() * d.h * 0.5, vy: -6, life: 0.8, sprite: 'fx_sparkle', frameRate: 6, fade: false });
+    return;
+  }
   const shape = treeDef(t.id)?.shape || 'round', trunk = `ftrunk_${shape}_${(t.v ?? 0) % TRUNK_STYLES}`;
   if (t.stage > 0) drawSprite(ctx, trunk, t.stage, x - 16, y - 47);
   drawSprite(ctx, `ftree_${t.id}`, t.stage, x - 16, y - 47);
