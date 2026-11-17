@@ -219,7 +219,7 @@ function wireEvents() {
   G.on('built', ({ id }) => {
     if (DATA.decor[id]?.onWater && !G.state.fishingUnlocked) {
       G.state.fishingUnlocked = true;
-      ui.showCard(`<div class="disc">${iconHTML('fish_perch', 'ico huge')}</div><h2>Fishing unlocked!</h2><p>Stand on the dock facing open water and press Ⓐ to bait it with crops or fruit, then Ⓐ again to cast.</p><p>Wait through the little tugs. When the big <b>!</b> pops up, press Ⓐ to pull the fish in. Better bait means rarer fish.</p><p class="muted">The cats will fish off the dock too, using the same bait.</p>`, { cls: 'discover' });
+      ui.showCard(`<div class="disc">${iconHTML('fish_perch', 'ico huge')}</div><h2>Fishing unlocked!</h2><p>Stand on the dock facing open water and press Ⓐ to bait it with crops or bugs (dig them up with the shovel), then Ⓐ again to cast.</p><p>Wait through the little tugs. When the big <b>!</b> pops up, press Ⓐ to pull the fish in. Better bait means rarer fish.</p><p class="muted">The cats will fish off the dock too, using the same bait.</p>`, { cls: 'discover' });
     }
   });
   G.on('shell', r => {

@@ -1,4 +1,4 @@
-// Fishing from a dock. Bait the water with harvested crops or fruit (the better the bait, the
+// Fishing from a dock. Bait the water with harvested crops or dug-up bugs (the better the bait, the
 // rarer the fish), cast, wait through a few tugs, and when the big "!" appears press A to reel in.
 // Cats fish off the dock too, using the same bait.
 import { G, TILE, rand, randRange, randInt, pickWeighted } from './game.js';
@@ -28,7 +28,7 @@ export function rarityOdds(q) {
   const total = Object.values(w).reduce((a, b) => a + b, 0);
   return Object.fromEntries(Object.entries(w).map(([k, v]) => [k, v / total]));
 }
-// What can be used as bait: harvested crops and fruit, with their sell value.
+// What can be used as bait: harvested crops and dug-up bugs, with their value.
 export function baitItems() {
   const st = G.state, out = [];
   for (const [id, n] of Object.entries(st.inv.crops)) if (n > 0) out.push({ kind: 'crops', id, n, name: DATA.cropById[id]?.name || id, price: DATA.cropById[id]?.price ?? 1, icon: `item_${id}` });

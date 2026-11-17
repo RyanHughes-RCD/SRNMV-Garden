@@ -82,7 +82,7 @@ export function resolveAction(ignoreCats = false) {
   if (spot) {
     const b = baitOf(spot.anchor);
     if (b.portions > 0) return { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` };
-    return { kind: 'bait', spot, label: 'Bait the water with crops or fruit' };
+    return { kind: 'bait', spot, label: 'Bait the water with crops or bugs' };
   }
   const tree = treeAt(t);
   if (tree) {
