@@ -144,7 +144,7 @@ function rollGift(animal) {
   if (g.kind === 'coins') return { kind: 'coins', n: Math.round(randInt(g.min, g.max) * bonus), from: animal };
   if (g.kind === 'mats') return { kind: 'mats', wood: Math.round(randInt(...g.wood) * bonus), stone: Math.round(randInt(...g.stone) * bonus), from: animal };
   if (g.kind === 'seed') { const pool = DATA.crops.filter(c => c.rarity === g.rarity); return { kind: 'seed', rarity: g.rarity, id: pool[randInt(0, pool.length - 1)].id, from: animal }; }
-  const t = DATA.trees[randInt(0, DATA.trees.length - 1)];
+  const t = DATA.trees[randInt(0, DATA.trees.length - 1)]; // any tree, decorative ones included
   return { kind: 'sapling', id: t.id, from: animal };
 }
 function collectGift() {

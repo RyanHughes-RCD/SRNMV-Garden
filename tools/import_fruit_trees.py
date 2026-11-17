@@ -1,4 +1,4 @@
-"""Import the fruit tree sheet (art/fruit-trees-sheet.png): 8 trees, each drawn young and full-grown.
+"""Import the tree sheet (art/fruit-trees-sheet.png): 8 trees, each drawn young and full-grown.
 
     python3 tools/import_fruit_trees.py
 
@@ -12,8 +12,16 @@ from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(__file__), '..')
 CH = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-# pairs on the sheet, in reading order: (young, grown) for each fruit tree
-ORDER = ['apple', 'pear', 'cherry', 'plum', 'orange', 'lemon', 'peach', 'fig']
+# pairs on the sheet, in reading order: (young, grown). willow, golden and oak are the
+# decorative (non-fruit) trees in data/trees.json.
+ORDER = ['apple', 'pear', 'willow', 'plum', 'golden', 'lemon', 'peach', 'oak']
+# More fruit trees made by recolouring the leaves of a tree on the sheet (trunks stay as they are):
+# new tree -> (source tree, leaf hue in degrees, saturation x, brightness x)
+RECOLOUR = {
+    'cherry': ('apple', 150, 1.0, 0.92),   # cooler, deeper green
+    'orange': ('pear', 118, 1.25, 0.82),   # glossy dark citrus green
+    'fig':    ('plum', 82, 0.95, 1.9),     # dusty olive leaves (the plum's are very dark, so brighten them)
+}
 
 def components(im):
     W, H = im.size; px = im.load(); seen = set(); out = []
@@ -62,8 +70,24 @@ def main():
     for k, tree in enumerate(ORDER):
         for j, stage in enumerate(('young', 'grown')):
             data['sprites'][f'ftree2_{tree}_{stage}'] = to_sprite(sheet.crop(boxes[k * 2 + j]))
+    for new, (src, hue, sat, val) in RECOLOUR.items():
+        for stage in ('young', 'grown'):
+            spr = json.loads(json.dumps(data['sprites'][f'ftree2_{src}_{stage}']))
+            spr['pal'] = [recolour(c, hue, sat, val) for c in spr['pal']]
+            data['sprites'][f'ftree2_{new}_{stage}'] = spr
     json.dump(data, open(p, 'w'))
-    print(f'imported {len(ORDER)} fruit trees (young + grown)')
+    print(f'imported {len(ORDER)} trees (young + grown) and recoloured {len(RECOLOUR)} more')
+
+def recolour(hexc, hue, sat, val):
+    """Moves leaf colours (anything that isn't brown bark, grey or near-black) to a new hue."""
+    import colorsys
+    r, g, b = (int(hexc[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    h, s_, v = colorsys.rgb_to_hsv(r, g, b)
+    bark = 0.03 <= h <= 0.14 and s_ > 0.15 and v < 0.75
+    if s_ < 0.12 or v < 0.12 or bark: return hexc
+    nh = (hue / 360 + (h - round(h * 3) / 3) * 0.25) % 1  # keep a little of the original variation
+    r, g, b = colorsys.hsv_to_rgb(nh, min(1, s_ * sat), min(1, v * val))
+    return '#%02x%02x%02x' % (round(r * 255), round(g * 255), round(b * 255))
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,5 @@
 {
-  "_help": "Fruit trees. growHours = sapling to full size (5 stages) while watered; fruitHours = blossom to ripe fruit (4 stages) while watered, repeating after each harvest. yield = fruit per harvest. shape: round | upright | spreading | soft.",
+  "_help": "Fruit trees (and decorative: true trees that never fruit). growHours = sapling to full size (5 stages) while watered; fruitHours = blossom to ripe fruit (4 stages) while watered, repeating after each harvest. yield = fruit per harvest. shape: round | upright | spreading | soft.",
   "stageNames": ["Sapling", "Young tree", "Small tree", "Growing tree", "Full-grown tree"],
   "fruitStageNames": ["Blossoming", "Tiny fruit", "Fruit swelling", "Ripe!"],
   "trees": [
@@ -26,6 +26,12 @@
       "desc": "Sunny lemons and the sweetest-smelling flowers." },
     { "id": "fig",    "name": "Fig Tree",    "fruit": "Fig", "fruitPlural": "Figs",    "shape": "spreading", "saplingPrice": 800, "fruitPrice": 48, "yield": [3, 5], "growHours": 56, "fruitHours": 18,
       "leaf": "green", "leafDark": "green1", "leafHi": "lgreen", "blossom": "lgreen", "fruitColor": "purple", "fruitDark": "plum", "fruitHi": "violet", "item": "fig",
-      "desc": "Big lobed leaves and soft, jammy figs." }
+      "desc": "Big lobed leaves and soft, jammy figs." },
+    { "id": "willow", "name": "Weeping Willow", "decorative": true, "shape": "soft", "saplingPrice": 450, "growHours": 40,
+      "leaf": "lgreen", "leafDark": "green", "leafHi": "pgreen", "desc": "Long, sweeping branches. No fruit, just shade and a lovely view." },
+    { "id": "golden", "name": "Golden Linden", "decorative": true, "shape": "round", "saplingPrice": 400, "growHours": 34,
+      "leaf": "pgreen", "leafDark": "lgreen", "leafHi": "pyellow", "desc": "A round, glowing yellow-green tree that brightens any corner." },
+    { "id": "oak", "name": "Ancient Oak", "decorative": true, "shape": "spreading", "saplingPrice": 650, "growHours": 60,
+      "leaf": "green1", "leafDark": "dgreen", "leafHi": "green", "desc": "Gnarled and grey-green, as if it's stood here for centuries." }
   ]
 }

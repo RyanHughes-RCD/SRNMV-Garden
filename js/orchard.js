@@ -19,7 +19,8 @@ export const isWet = t => t.wetUntil > G.state.simTime;
 export function treeRate(t, tile) { return growBonusAt(tile) * (1 + (isWet(t) ? DATA.balance.farm.waterGrowthBonus : 0)); }
 export const stageSec = t => (treeDef(t.id)?.growHours ?? 36) * 3600 / 4 * wetMult();
 export const fruitSec = t => (treeDef(t.id)?.fruitHours ?? 12) * 3600 / 3 * wetMult();
-export const needsWater = t => (t.stage < 4 || t.fruit < 3) && !isWet(t);
+export const isDecorative = t => !!treeDef(t.id)?.decorative; // never fruits
+export const needsWater = t => (t.stage < 4 || (t.fruit < 3 && !isDecorative(t))) && !isWet(t);
 
 export function updateTrees(dt) {
   const st = G.state;
@@ -30,10 +31,10 @@ export function updateTrees(dt) {
       const ns = Math.min(4, Math.floor(t.g / stageSec(t)));
       if (ns > t.stage) {
         t.stage = ns;
-        if (t.stage === 4) { t.fruit = 0; t.fg = 0; }
+        if (t.stage === 4 && !isDecorative(t)) { t.fruit = 0; t.fg = 0; }
         G.emit('treeGrew', { tile, tree: t, kind: 'stage' });
       }
-    } else if (t.fruit < 3) {
+    } else if (t.fruit < 3 && !isDecorative(t)) {
       t.fg += dt * rate;
       const nf = Math.min(3, Math.floor(t.fg / fruitSec(t)));
       if (nf > t.fruit) { t.fruit = nf; G.emit('treeGrew', { tile, tree: t, kind: 'fruit' }); }
@@ -43,7 +44,7 @@ export function updateTrees(dt) {
 export function timeToNext(t, tile) {
   const rate = treeRate(t, tile);
   if (t.stage < 4) return ((t.stage + 1) * stageSec(t) - t.g) / rate;
-  if (t.fruit < 3) return ((t.fruit + 1) * fruitSec(t) - t.fg) / rate;
+  if (t.fruit < 3 && !isDecorative(t)) return ((t.fruit + 1) * fruitSec(t) - t.fg) / rate;
   return 0;
 }
 
@@ -122,6 +123,7 @@ export function sellFruit(id, n) {
 export function treeStatus(t) {
   const names = DATA.treeStageNames, fnames = DATA.fruitStageNames;
   if (t.stage < 4) return `${names[t.stage]} (${t.stage + 1}/5)`;
+  if (isDecorative(t)) return names[4];
   return `${names[4]} · ${fnames[Math.max(0, t.fruit)]}${t.fruit >= 0 && t.fruit < 3 ? ` (${t.fruit + 1}/4)` : ''}`;
 }
 

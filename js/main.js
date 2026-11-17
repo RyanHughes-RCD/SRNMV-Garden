@@ -190,7 +190,7 @@ function wireEvents() {
     sparkle(x, y, 4);
     if (G.realTime - lastGrowBanner > B().farm.growBannerCooldownSec) {
       lastGrowBanner = G.realTime; G.hudWake = G.realTime; sfx('grow');
-      const msg = kind === 'stage' ? (tr.stage === 4 ? `The ${d.name.toLowerCase()} is full-grown! Blossoms are coming.` : `The ${d.name.toLowerCase()} grew taller.`)
+      const msg = kind === 'stage' ? (tr.stage === 4 ? (d.decorative ? `The ${d.name.toLowerCase()} is full-grown!` : `The ${d.name.toLowerCase()} is full-grown! Blossoms are coming.`) : `The ${d.name.toLowerCase()} grew taller.`)
         : tr.fruit === 0 ? `The ${d.name.toLowerCase()} is blossoming!` : tr.fruit === 3 ? `${d.fruitPlural || d.fruit} are ripe to pick!` : `Little ${(d.fruitPlural || d.fruit).toLowerCase()} ${tr.fruit === 1 ? 'are setting' : 'are swelling'} on the ${d.name.toLowerCase()}.`;
       ui.banner(`${iconHTML(tr.stage === 4 && tr.fruit >= 2 ? `fruit_${tr.id}` : `sapling_${tr.id}`, 'ico big')}<div><b>The orchard grew!</b><small>${msg}</small></div>`);
     }

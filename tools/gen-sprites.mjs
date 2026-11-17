@@ -1112,12 +1112,13 @@ function saplingItem(t) {
   const g = new G(16, 16);
   g.ellipse(8, 12.5, 4.5, 2.6, C.tan).ellipse(8, 12, 3.5, 1.6, C.ltan).line(5, 11, 11, 13, C.brown);
   g.line(8, 11, 8, 4, C.brown).ellipse(6, 5, 2.4, 1.4, col(t.leaf)).ellipse(10.5, 3.5, 2.4, 1.4, col(t.leaf)).ellipse(8.5, 2, 1.4, 1.2, col(t.leafHi));
-  g.rect(11, 8, 3, 3, col(t.fruitColor)).set(11, 8, col(t.fruitHi)).line(10, 9, 9, 9, C.cream);
+  if (!t.decorative) g.rect(11, 8, 3, 3, col(t.fruitColor)).set(11, 8, col(t.fruitHi)).line(10, 9, 9, 9, C.cream);
   return g.outline();
 }
 for (const shape of Object.keys(CANOPY)) for (let v = 0; v < TRUNK_STYLES; v++) add(`ftrunk_${shape}_${v}`, 'trees', [0, 1, 2, 3, 4].map(s => trunk(shape, v, s)), 0, { ax: 16, ay: 47 });
 for (const t of TREES) {
   add(`ftree_${t.id}`, 'trees', [0, 1, 2, 3, 4].map(s => fruitTree(t, s)), 0, { ax: 16, ay: 47 });
+  if (t.decorative) { add(`sapling_${t.id}`, 'items', saplingItem(t)); continue; }
   add(`ffruit_${t.id}`, 'trees', [0, 1, 2, 3].map(f => fruitOverlay(t, f)), 0, { ax: 16, ay: 47 });
   add(`fruit_${t.id}`, 'items', fruitItem(t));
   add(`sapling_${t.id}`, 'items', saplingItem(t));
@@ -1362,7 +1363,7 @@ if (fs.existsSync(CUSTOM)) {
 // tree's own leaves (well inside the canopy, above the trunk), same size as the tree picture.
 for (const t of TREES) {
   const tree = sprites[`ftree2_${t.id}_grown`];
-  if (!tree) continue;
+  if (!tree || t.decorative) continue;
   const rows = tree.frames[0], w = tree.w, h = tree.h, r = rng(t.id.length * 13 + 5);
   const hex = tree.pal.map(c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16)));
   const at = (x, y) => (x < 0 || y < 0 || x >= w || y >= h || rows[y][x] === '.') ? null : hex[CH.indexOf(rows[y][x])];

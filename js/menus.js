@@ -137,13 +137,12 @@ export function shopMenu() {
         onSelect: () => { const res = farm.buyPack(r); if (res) { sfx('coin'); toast(`Got ${res.n} unknown ${rarityName(r)} seeds!`, `seedpack_${r}`); } },
       };
     }),
-    { header: true, label: 'Fruit tree saplings' },
-    ...DATA.trees.map(t => ({
+    ...[['Fruit tree saplings', false], ['Decorative tree saplings', true]].flatMap(([head, deco]) => [{ header: true, label: head }, ...DATA.trees.filter(t => !!t.decorative === deco).map(t => ({
       label: `${t.name} sapling`, icon: `sapling_${t.id}`,
-      sub: `Full-grown in ~${t.growHours}h, then ${t.yield[0]}-${t.yield[1]} ${(t.fruitPlural || t.fruit).toLowerCase()} every ~${t.fruitHours}h · own ${G.state.inv.saplings[t.id] || 0}`,
+      sub: deco ? `${t.desc} Full-grown in ~${t.growHours}h · own ${G.state.inv.saplings[t.id] || 0}` : `Full-grown in ~${t.growHours}h, then ${t.yield[0]}-${t.yield[1]} ${(t.fruitPlural || t.fruit).toLowerCase()} every ~${t.fruitHours}h · own ${G.state.inv.saplings[t.id] || 0}`,
       right: `${iconHTML('item_coin', 'ico sm')}${t.saplingPrice}`, disabled: G.state.coins < t.saplingPrice, why: `Not enough coins (need ${t.saplingPrice})`,
       onSelect: () => { if (buySapling(t.id)) { sfx('coin'); toast(`Bought a ${t.name.toLowerCase()} sapling. Plant it from your inventory`, `sapling_${t.id}`); } },
-    }))],
+    }))])],
   });
 }
 export function sellMenu() {
