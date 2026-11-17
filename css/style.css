@@ -29,6 +29,9 @@ small { display: block; color: var(--muted); font-size: 0.78em; }
 .btn { display: inline-flex; align-items: center; justify-content: center; min-width: 1.35em; height: 1.35em; padding: 0 0.25em; border-radius: 0.7em; font-size: 0.8em; font-weight: 700; margin: 0 0.15em; background: #4d4a52; color: #fff; border: 0.1em solid rgba(0,0,0,0.4); vertical-align: 0.08em; }
 .btn.a { background: #5d9b4f; } .btn.b { background: #b8434a; } .btn.x { background: #4a6fa5; } .btn.y { background: #c79a2c; }
 .btn.key { border-radius: 0.25em; background: #f6e7c8; color: #3b2a3a; }
+/* PlayStation face buttons: dark discs with the coloured symbols */
+.btn.ps { background: #ece8f0; font-family: system-ui, sans-serif; font-weight: 900; font-size: 1.05em; box-shadow: inset 0 -0.12em 0 rgba(0, 0, 0, 0.25); }
+.btn.ps.a { color: #2f63c9; } .btn.ps.b { color: #c8343c; } .btn.ps.x { color: #b23f97; } .btn.ps.y { color: #1e8a5f; }
 
 /* HUD */
 #hud { position: absolute; inset: 0; transition: opacity 1.4s ease; }

@@ -32,7 +32,7 @@ Then open <http://localhost:8000>.
 
 ## Controllers (plug-and-play, no DS4Windows needed)
 
-The game uses the browser's built-in Gamepad API. In **Chrome or Edge on Windows**, an **Xbox controller** or a **PS4 DualShock 4** (USB or Bluetooth) works directly.
+The game uses the browser's built-in Gamepad API. In **Chrome or Edge on Windows**, a **PS5 DualSense**, a PS4 DualShock 4 or an Xbox controller (USB or Bluetooth) works directly. On-screen prompts show **PlayStation buttons** (✕ ○ □ △, L1/R1, Options, Create) by default; switch to Xbox labels in *Settings → Button labels*.
 
 1. Plug the controller in (or pair it over Bluetooth).
 2. Open the game and **press any button on the controller**. Browsers don't reveal a controller until it's pressed once. The title screen confirms when it sees it.
@@ -43,14 +43,14 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 | Action | Controller | Keyboard |
 |---|---|---|
 | Move | Left stick / D-pad | WASD / arrows |
-| Interact, harvest, pet. **Hold** to work (clear, till, plant, water) | A / ✕ | E, Space, Enter |
-| Back / cancel | B / ○ | Q, Backspace |
-| Cycle tool | X / □ | F |
-| Plan mode (clear land, make plots) | Y / △ | Tab |
-| Choose seed (and switch tabs in Plan/Build mode) | LB / RB (L1 / R1) | Z / C |
-| Menu | Start / Options | Esc |
-| Tap: hide HUD · **Hold 1s: switch player** | Back / Share | H (P switches player) |
-| Debug menu | LB + RB + Start | \` or F9 |
+| Interact, harvest, pet. **Hold** to work: the right tool is picked for you (clear, chop, till, plant, water, fish). Digging only happens with the shovel in hand | ✕ (A) | E, Space, Enter |
+| Back / cancel | ○ (B) | Q, Backspace |
+| Cycle tool (mostly for the shovel; at the dock: add bait) | □ (X) | F |
+| Plan mode (clear land, make plots) | △ (Y) | Tab |
+| Choose seed (and switch tabs in Plan/Build mode) | L1 / R1 (LB / RB) | Z / C |
+| Menu (inventory is the second item) | Options (Start) | Esc |
+| Tap: hide HUD · **Hold 1s: switch player** | Create (Back) | H (P switches player) |
+| Debug menu | L1 + R1 + Options | \` or F9 |
 
 ---
 
@@ -170,7 +170,7 @@ At night, lamps, the fireplace and the stove light up the rooms. All the numbers
 
 ## Digging for bugs
 
-Switch to the **shovel** (press **X** to cycle tools), face open grass and **hold A** to dig. Each dig may turn up a **bug** and always leaves a **mound of dirt**, which the cats tidy up for you (or clear it yourself). For the cats to dig, use **Plan mode → Dig for bugs** and mark an area of grass: they dig at their own pace (Vyke loves it), and the dirt joins their cleaning list.
+Switch to the **shovel** (press **□** to cycle tools; digging is the one job that never picks its tool for you), face open grass and **hold ✕** to dig. Each dig may turn up a **bug** and always leaves a **mound of dirt**, which the cats tidy up for you (or clear it yourself). For the cats to dig, use **Plan mode → Dig for bugs** and mark an area of grass: they dig at their own pace (Vyke loves it), and the dirt joins their cleaning list.
 
 There are 9 bugs, from earthworms and grubs to crickets, beetles, ladybugs (daytime only), fuzzy caterpillars, glowworms (night only), stag beetles and the rare **golden scarab**. **Bugs are fishing bait**, along with crops (fruit is no longer used as bait), and rarer bugs give better odds of rare fish. Tuning is in `data/bugs.json`.
 

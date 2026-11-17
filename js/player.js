@@ -63,16 +63,18 @@ export function cycleSeed(d) {
 // What would pressing/holding A do right now?
 export function resolveAction(ignoreCats = false) {
   const st = G.state, tool = TOOLS[st.player.tool] || TOOLS[0];
-  const allow = t => !tool.allow || tool.allow.includes(t);
+  // Gardening, clearing and fishing pick their own tool when you hold Ⓐ; digging only happens with
+  // the shovel in hand (you choose to dig).
+  const allow = t => t !== 'dig' || tool.id === 'shovel';
   const fp = facingPoint();
-  const cat = tool.id === 'hand' && !ignoreCats ? catNear(fp.x, fp.y) : null;
+  const cat = !ignoreCats ? catNear(fp.x, fp.y) : null;
   if (cat) return { kind: 'pet', cat, label: `Pet ${cat.cfg.name}` };
   const t = facingTile();
   const spa = spiritAction(t, fp);
   if (spa) return spa;
   if (t < 0) return null;
   const o = obj(t);
-  if (tool.id === 'hand') {
+  {
     if (o === 'crate') return { kind: 'crate', label: 'Shipping crate: sell crops' };
     if (o === 'shop') return { kind: 'shop', label: 'Seed shop' };
     if (o === 'cabin' && t === idx(st.cabin.x + 1, st.cabin.y + 1) && st.player.dir === 'up') return { kind: 'enter', label: 'Go inside' };
@@ -83,7 +85,7 @@ export function resolveAction(ignoreCats = false) {
   const spot = fishSpot();
   if (spot) {
     const b = baitOf(spot.anchor);
-    if (b.portions > 0) return tool.id === 'rod' ? { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` } : { kind: 'info', label: `${b.portions} bait in the water · switch to your fishing rod (Ⓧ) to cast` };
+    if (b.portions > 0) return { kind: 'fish', spot, label: `Cast your line (${b.portions} bait left) · Ⓧ add bait` };
     return { kind: 'bait', spot, label: 'Bait the water with crops or bugs' };
   }
   const tree = treeAt(t);
@@ -120,6 +122,14 @@ export function resolveAction(ignoreCats = false) {
 
 let lastAction = null;
 export function currentAction() { return lastAction; }
+// Switch to the tool a job needs (quietly, with a short note when it changes).
+const TOOL_FOR = { clear: 'axe', till: 'hoe', plant: 'seeds', water: 'can', dig: 'shovel', fish: 'rod' };
+function equipFor(type) {
+  const p = G.state.player, i = TOOLS.findIndex(t => t.id === TOOL_FOR[type]);
+  if (i < 0 || p.tool === i) return;
+  p.tool = i;
+  G.emit('toolAuto', TOOLS[i]);
+}
 
 export function updatePlayer(dt, handlers) {
   const st = G.state, p = st.player;
@@ -153,7 +163,7 @@ export function updatePlayer(dt, handlers) {
       case 'enter': enterCabin(); return;
       case 'decor': act.run(handlers); return;
       case 'shell': gatherShell(act.tile); return;
-      case 'fish': startFishing(act.spot); return;
+      case 'fish': equipFor('fish'); startFishing(act.spot); return;
       case 'bait': handlers.bait(act.spot.anchor); return;
       case 'pickFruit': { const r = harvestTree(act.tile); if (r) sfx('harvest'); return; }
       case 'harvest': { const r = farm.harvest(act.tile); if (r) { sfx('harvest'); burst((act.tile % st.map.w) * TILE + 8, Math.floor(act.tile / st.map.w) * TILE + 8, { n: 6, sprite: 'fx_leaf' }); } return; }
@@ -161,6 +171,7 @@ export function updatePlayer(dt, handlers) {
   }
   const tool = TOOLS[st.player.tool] || TOOLS[0];
   if (act.kind === 'work' && input.down('confirm')) {
+    equipFor(act.type);
     let j = getJob(act.type, act.tile);
     if (!j) j = addJob(act.type, act.tile, act.type === 'plant' ? { seedKey: act.seedKey, manual: true } : {});
     if (!j) return;

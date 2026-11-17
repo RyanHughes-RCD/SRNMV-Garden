@@ -374,6 +374,7 @@ export function settingsMenu() {
       { label: 'Idle camera drift', sub: 'Slowly pans when idle (prevents burn-in)', ...tog('cameraDrift') },
       { label: 'Fullscreen', onSelect: () => { if (document.fullscreenElement) document.exitFullscreen?.(); else document.documentElement.requestFullscreen?.().catch(() => toast('Fullscreen needs a click or key press')); } },
       { header: true, label: 'Controls' },
+      { label: 'Button labels', sub: 'Which controller the on-screen prompts show', right: S.padStyle === 'xbox' ? 'Xbox (A B X Y)' : 'PlayStation (✕ ○ □ △)', onLeft: () => { S.padStyle = S.padStyle === 'xbox' ? 'playstation' : 'xbox'; saveSettings(); }, onRight: () => { S.padStyle = S.padStyle === 'xbox' ? 'playstation' : 'xbox'; saveSettings(); } },
       { label: 'Rebind controls', onSelect: rebindMenu },
       { label: 'Controller test', ...tog('showControllerOverlay') },
       { header: true, label: 'Save' },

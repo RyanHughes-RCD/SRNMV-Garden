@@ -73,7 +73,7 @@ function titleScreen() {
       <h2>Who's playing?</h2>
       <div class="who">${ps.map((p, i) => `<div class="who-card ${i === whoSel ? 'sel' : ''}">${ui.playerPortrait(p)}<div class="who-name">${ui.esc(p.name)}</div></div>`).join('')}</div>
       <p class="press">${ui.glyphs('◂ ▸ choose · Ⓐ start')}</p>
-      <p class="padstatus">You can swap any time: hold Back/Share, or use the menu.</p>
+      <p class="padstatus">You can swap any time: hold Create (Back on Xbox), or use the menu.</p>
     </div>`;
   }
 }
@@ -160,6 +160,7 @@ function simStep(dt) {
 /* ---------------------------------------------------------------- events */
 let lastGrowBanner = -999;
 function wireEvents() {
+  G.on('toolAuto', t => ui.toast(toolTitle(t), toolIcon(t), 900));
   initToolEffects(); // before the messages below, so they show any upgrade bonuses
   G.on('stage', ({ tile, crop }) => {
     if (G.offline) return;
@@ -342,7 +343,7 @@ function globalControls() {
   if (input.pressed('switchPlayer')) switchPlayer();
   if (isInside()) { if (input.pressed('designate')) { furnitureMenu(); return; } hudControls(); return; } // Ⓨ decorates indoors; no tools or seeds
   if (input.pressed('designate')) { enterPlan(); return; }
-  if (input.pressed('tool') && fishSpot() && TOOLS[G.state.player.tool]?.id === 'rod') { menus.baitMenu(fishSpot().anchor); return; }
+  if (input.pressed('tool') && fishSpot()) { menus.baitMenu(fishSpot().anchor); return; }
   if (input.pressed('tool')) {
     const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
     ui.toast(`Tool: ${toolTitle(TOOLS[p.tool])}`, toolIcon(TOOLS[p.tool]), 1400);

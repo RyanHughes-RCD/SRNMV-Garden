@@ -51,6 +51,7 @@ export function defaultSettings() {
     master: 0.8, ambient: 0.7, sfx: 0.8, quiet: false,
     hudAutoHide: true, cameraDrift: true, showControllerOverlay: false,
     liveWeather: true, // follow the real weather (data/weather.json)
+    padStyle: 'playstation', // button labels: 'playstation' (✕ ○ □ △) or 'xbox' (A B X Y)
     bindings: structuredClone(DEFAULT_BINDINGS),
   };
 }

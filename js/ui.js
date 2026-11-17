@@ -8,11 +8,17 @@ import { iconHTML, slotSwap, frameCanvas } from './sprites.js';
 const $ = id => document.getElementById(id);
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-// Button glyphs: shows pad buttons, or keyboard keys if the keyboard was used last.
-const GLYPH = { 'Ⓐ': ['A', 'E', 'a'], 'Ⓑ': ['B', 'Q', 'b'], 'Ⓧ': ['X', 'F', 'x'], 'Ⓨ': ['Y', 'Tab', 'y'] };
+// Button glyphs: shows pad buttons (PlayStation or Xbox labels, Settings -> Button labels), or
+// keyboard keys if the keyboard was used last. Text uses the Xbox names (Ⓐ Ⓑ Ⓧ Ⓨ, LB/RB, Start,
+// Back/Share); they're translated here.
+const GLYPH = { 'Ⓐ': ['A', '✕', 'E', 'a'], 'Ⓑ': ['B', '○', 'Q', 'b'], 'Ⓧ': ['X', '□', 'F', 'x'], 'Ⓨ': ['Y', '△', 'Tab', 'y'] };
+const ps = () => (G.settings?.padStyle || 'playstation') === 'playstation';
 export function glyphs(html) {
-  return String(html).replace(/[ⒶⒷⓍⓎ]/g, g => { const [p, k, c] = GLYPH[g]; const pad = input.lastWasPad || !input.everKey; return `<span class="btn ${pad ? c : 'key'}">${pad ? p : k}</span>`; })
-    .replace(/\bLB\/RB\b/g, () => (input.lastWasPad || !input.everKey ? '<span class="btn">LB</span>/<span class="btn">RB</span>' : '<span class="btn key">Z</span>/<span class="btn key">C</span>'));
+  const pad = input.lastWasPad || !input.everKey, P = ps();
+  return String(html).replace(/[ⒶⒷⓍⓎ]/g, g => { const [x, s, k, c] = GLYPH[g]; return `<span class="btn ${pad ? (P ? 'ps ' : '') + c : 'key'}">${pad ? (P ? s : x) : k}</span>`; })
+    .replace(/\bLB\/RB\b/g, () => (pad ? `<span class="btn">${P ? 'L1' : 'LB'}</span>/<span class="btn">${P ? 'R1' : 'RB'}</span>` : '<span class="btn key">Z</span>/<span class="btn key">C</span>'))
+    .replace(/>LB</g, () => `>${pad && P ? 'L1' : 'LB'}<`).replace(/>RB</g, () => `>${pad && P ? 'R1' : 'RB'}<`)
+    .replace(/Start ?\/ ?Options/g, () => (P ? 'Options' : 'Start')).replace(/Back ?\/ ?Share/g, () => (P ? 'Create' : 'Back'));
 }
 addEventListener('keydown', () => { input.everKey = true; });
 
@@ -147,7 +153,7 @@ export function renderMenu() {
       const cl = ['mi', i === m.sel ? 'sel' : '', it.disabled ? 'dis' : '', it.cls || ''].join(' ');
       const ico = it.iconHTML || (it.icon ? iconHTML(it.icon, 'ico', it.iconOpts || {}) : '');
       if (cols > 1) return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}</span></div>`;
-      return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}${it.sub ? `<small>${glyphs(it.sub)}</small>` : ''}</span>${it.right != null ? `<span class="right">${it.onLeft ? '◂ ' : ''}${it.right}${it.onRight ? ' ▸' : ''}</span>` : ''}</div>`;
+      return `<div class="${cl}" data-i="${i}">${ico}<span class="lbl">${it.label}${it.sub ? `<small>${glyphs(it.sub)}</small>` : ''}</span>${it.right != null ? `<span class="right">${it.onLeft ? '◂ ' : ''}${glyphs(it.right)}${it.onRight ? ' ▸' : ''}</span>` : ''}</div>`;
     }),
     detail: m.detail && cur ? m.detail(cur) : null,
     foot: glyphs((typeof m.footer === 'function' ? m.footer() : m.footer) || (cur?.onX ? 'Ⓐ select · Ⓧ ' + (cur.xLabel || 'more') + ' · Ⓑ back' : 'Ⓐ select · Ⓑ back')),
