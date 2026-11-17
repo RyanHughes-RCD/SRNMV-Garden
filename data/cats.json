@@ -1,4 +1,6 @@
 {
+  "spritesVersion": 2,
+  "_spritesVersion": "Bump spritesVersion when the cats' default sprite sets change; cats saved in the Workshop then switch to the new spriteSet and spriteScale (names, coats and personalities are kept).",
   "jobTypes": [
     "clear",
     "till",

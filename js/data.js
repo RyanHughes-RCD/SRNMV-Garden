@@ -54,6 +54,18 @@ export function applyOverrides() {
   DATA.weather = b.weather;
   DATA.sprites = mergeSprites(b.sprites, readLS(OVERRIDE_KEYS.sprites));
   const cats = readLS(OVERRIDE_KEYS.cats);
+  if (cats && Array.isArray(cats.cats) && (cats.spritesVersion || 0) < (b.cats.spritesVersion || 0)) {
+    // The cats' default art changed since they were saved in the Workshop: switch them to the new
+    // sprite sets (and sizes), keeping their names, coats and personalities.
+    for (const c of cats.cats) {
+      const def = b.cats.cats.find(q => q.id === c.id);
+      if (!def) continue;
+      c.spriteSet = def.spriteSet;
+      if (def.spriteScale != null) c.spriteScale = def.spriteScale; else delete c.spriteScale;
+    }
+    cats.spritesVersion = b.cats.spritesVersion;
+    writeLS(OVERRIDE_KEYS.cats, cats);
+  }
   DATA.catsConfig = cats && Array.isArray(cats.cats) ? cats : b.cats;
   // cats saved by an older Workshop still learn new job types (e.g. fishing)
   if (cats && Array.isArray(cats.jobTypes)) for (const j of b.cats.jobTypes) if (!cats.jobTypes.includes(j)) cats.jobTypes.push(j);
