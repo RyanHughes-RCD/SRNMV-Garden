@@ -358,7 +358,7 @@ export function drawDecor(push, ctx, t, x0, y0, x1, y1) {
       drawSprite(ctx, spr, frame, px, py, { scale: sc });
       if (a.d.interact === 'mail' && decorState(a.i).letter) drawSprite(ctx, 'icon_exclaim', 0, px + 4, py - 10 + Math.round(Math.sin(t * 4)));
       if (a.d.interact === 'wish' && st.simTime >= (decorState(a.i).next ?? 0)) { if (Math.sin(t * 2 + ax) > 0.95) emit({ x: px + 4 + rand() * 8, y: py + 10, vy: -6, life: 0.8, sprite: 'fx_sparkle', frameRate: 6, fade: false }); }
-    });
+    }, { noShadow: a.d.flat, shadowLift: a.d.shadowLift });
     const b = birds.get(a.i);
     if (b) push(b.y, () => drawSprite(ctx, 'fx_bird', b.hop > 0 ? 1 : 0, b.x - 4, b.y - 7 - (b.hop > 0 ? 2 : 0), { flip: b.dir < 0 }));
   }

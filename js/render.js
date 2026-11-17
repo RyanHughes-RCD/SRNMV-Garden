@@ -80,7 +80,8 @@ function groundSprite(i, x, y) {
 }
 
 const drawList = [];
-function pushDraw(y, fn) { drawList.push({ y, fn }); }
+// opts: noShadow (lies flat on the ground), shadowLift (px: where the shadow starts above the picture's bottom)
+function pushDraw(y, fn, opts) { drawList.push({ y, fn, noShadow: opts?.noShadow, lift: opts?.shadowLift || 0 }); }
 
 export function cabinSwap() { const c = G.state.cabin; return mergeSwaps(optionSwap('roof', c.roof), optionSwap('wall', c.wall)); }
 
@@ -198,7 +199,7 @@ function renderShadows(ox, oy) {
   Object.assign(shadowPass, { ctx: sctx, sx: sun.sx, sy: sun.sy, ox, oy });
   // Anything the drawables paint straight onto the main canvas is clipped away during this pass.
   ctx.save(); ctx.beginPath(); ctx.rect(0, 0, 0, 0); ctx.clip();
-  try { for (const d of drawList) { if (d.noShadow) continue; shadowPass.foot = d.y + 1; d.fn(); } }
+  try { for (const d of drawList) { if (d.noShadow) continue; shadowPass.foot = d.y + 1 - d.lift; d.fn(); } }
   finally { ctx.restore(); shadowPass.ctx = null; }
   sctx.setTransform(1, 0, 0, 1, 0, 0);
   sctx.globalCompositeOperation = 'source-in';

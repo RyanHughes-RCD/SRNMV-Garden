@@ -1,5 +1,5 @@
 {
- "_help": "cat = build-menu section. blocks = can't walk through (default true). ground = replaces the floor tile (paths). overlay = a floor decoration drawn on grass. size = [w, h] in tiles. connect = joins neighbours of the same group. light = night glow radius. cats = what cats do with it. growBonus / catWorkBonus / spawn / interact = gameplay effects (see README). scale = how big the picture is drawn. nightSprite = a different picture at night (a lit fire).",
+ "_help": "cat = build-menu section. blocks = can't walk through (default true). ground = replaces the floor tile (paths). overlay = a floor decoration drawn on grass. size = [w, h] in tiles. connect = joins neighbours of the same group. light = night glow radius. cats = what cats do with it. growBonus / catWorkBonus / spawn / interact = gameplay effects (see README). scale = how big the picture is drawn. nightSprite = a different picture at night (a lit fire). flat = lies on the ground (no shadow). shadowLift = pixels to raise where its shadow starts (for pictures with ground in front).",
  "categories": [
   "Paths & floors",
   "Fences & hedges",
@@ -266,7 +266,8 @@
    },
    "sprite": "decor2_pond",
    "desc": "2×2 · lily pads and sparkles",
-   "scale": 1.0
+   "scale": 1.0,
+   "flat": true
   },
   "lily_pond": {
    "name": "Lily Pond",
@@ -282,7 +283,8 @@
    },
    "sprite": "decor2_lily_pond",
    "scale": 0.78,
-   "desc": "A big pond with lily pads, reeds and stepping stones"
+   "desc": "A big pond with lily pads, reeds and stepping stones",
+   "flat": true
   },
   "wishing_well": {
    "name": "Wishing Well",
@@ -546,7 +548,8 @@
    },
    "sprite": "decor2_greenhouse",
    "desc": "3×2 · crops within 6 tiles grow 25% faster",
-   "scale": 0.6
+   "scale": 0.6,
+   "shadowLift": 9
   },
   "shed": {
    "name": "Garden Shed",
@@ -769,7 +772,8 @@
     "fiber": 20
    },
    "sprite": "decor2_bedrolls",
-   "scale": 0.9
+   "scale": 0.9,
+   "flat": true
   },
   "tool_rack": {
    "name": "Tool Rack",
@@ -903,7 +907,8 @@
     "fiber": 10
    },
    "sprite": "decor2_wild_pond",
-   "scale": 1.0
+   "scale": 1.0,
+   "flat": true
   },
   "bird_fountain": {
    "name": "Bird Fountain",
@@ -1111,7 +1116,8 @@
     "stone": 30
    },
    "sprite": "decor2_glasshouse",
-   "scale": 1.1
+   "scale": 1.1,
+   "shadowLift": 5
   }
  },
  "cabin": {
