@@ -297,11 +297,11 @@ export function updateDecorFx(dt) {
     const x = tx(a.i) * TILE, y = ty(a.i) * TILE;
     if (x < cam.x - 48 || x > cam.x + vw + 48 || y < cam.y - 48 || y > cam.y + vh + 48) continue;
     if (a.d.bees && day && rand() < dt * 3) emit({ x: x + 8 + randRange(-10, 10), y: y + 4 + randRange(-8, 4), vx: randRange(-12, 12), vy: randRange(-8, 8), life: 0.8, color: rand() < 0.5 ? '#f7cd5d' : '#1a1423', size: 1 });
-    if (a.d.fire) {
+    if (a.d.fire && (!a.d.nightSprite || lighting().dark > 0.15)) { // a fire pit is only lit after dark
       if (rand() < dt * 4) emit({ x: x + 8 + randRange(-2, 2), y: y + 4, vx: randRange(-6, 6), vy: -26, g: -4, life: 0.7, color: rand() < 0.5 ? '#f7cd5d' : '#f29b4b', size: 1, layer: 1 });
       if (rand() < dt * 0.8) emit({ x: x + 5, y: y - 6, vx: 4, vy: -10, life: 2.5, sprite: 'fx_smoke' });
     }
-    if (a.id === 'pond' && rand() < dt * 0.6) emit({ x: x + 6 + rand() * 20, y: y + 10 + rand() * 14, vy: -3, life: 0.8, sprite: 'fx_sparkle', frameRate: 6, fade: false });
+    if (/pond$/.test(a.id) && rand() < dt * 0.6) { const [fw, fh] = sizeOf(a.id); emit({ x: x + 6 + rand() * (fw * TILE - 12), y: y + 10 + rand() * (fh * TILE - 18), vy: -3, life: 0.8, sprite: 'fx_sparkle', frameRate: 6, fade: false }); }
     if (a.d.birds && day) {
       seen.add(a.i);
       let b = birds.get(a.i);

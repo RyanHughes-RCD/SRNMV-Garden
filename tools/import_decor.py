@@ -38,12 +38,20 @@ def to_sprite(im):
     rows = [''.join(CH[idx[remap[px[y * w + x][:3]]]] if px[y * w + x][3] >= 128 else '.' for x in range(w)) for y in range(h)]
     return {'w': w, 'h': h, 'cat': 'decor', 'fps': 0, 'pal': ['#%02x%02x%02x' % c for c in pal], 'frames': [rows]}
 
+# Bigger pieces from art/decor-extra.png (a 2x2 grid of 96x96 cells); None = not used.
+EXTRA = [['lily_pond', None], [None, 'greenhouse']]
+BIG = 96
+
 def main():
     sheet = Image.open(os.path.join(ROOT, 'art', 'decor-sheet.png')).convert('RGBA')
     p = os.path.join(ROOT, 'data', 'custom-sprites.json'); data = json.load(open(p))
     for r, row in enumerate(CELLS):
         for c, name in enumerate(row):
             data['sprites'][f'decor2_{name}'] = to_sprite(sheet.crop((c * CELL, r * CELL, c * CELL + CELL, r * CELL + CELL)))
+    extra = Image.open(os.path.join(ROOT, 'art', 'decor-extra.png')).convert('RGBA')
+    for r, row in enumerate(EXTRA):
+        for c, name in enumerate(row):
+            if name: data['sprites'][f'decor2_{name}'] = to_sprite(extra.crop((c * BIG, r * BIG, c * BIG + BIG, r * BIG + BIG)))  # replaces the sheet's own greenhouse
     json.dump(data, open(p, 'w'))
     print(f'imported {sum(len(r) for r in CELLS)} decorations')
 
