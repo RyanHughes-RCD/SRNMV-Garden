@@ -57,7 +57,7 @@ If a button seems wrong, use *Settings → Controller test* to see what the brow
 ## How to play (couch version)
 
 1. **Clear the land.** Hold **A** on twigs, rocks, stumps and bushes, or press **Y** for Plan mode, pick *Clear* and mark a whole area for the cats.
-   - **The land:** your clearing sits in the woods. Below it is a band of forest, then a sandy beach on the lake, which runs to the bottom of the map. A river runs down past the clearing's left side into the lake. Chop through the trees to reach the beach. Water can't be walked on, built on or planted.
+   - **The land:** your clearing sits in the woods. Below it is a band of forest at least 5 trees thick, then a sandy beach on the lake, which runs to the bottom of the map. A river runs down past the clearing's left side into the lake. The beach starts out of reach: chop through the trees to get to it (the river's open banks stop at the forest band, too). Water can't be walked on, built on or planted.
    - **Grow the clearing.** You start in a small clearing deep in the woods. Hold **A** on a tree at the edge to chop it, or use Plan mode's *Chop trees* tab to mark a whole stretch. Each tree gives wood and leaves a stump to clear. Cats can only reach trees on the clearing's edge, so they work outward row by row. The outermost woods always stay.
 2. **Make a plot.** In Plan mode switch to *New plot* (LB/RB), press **A** on one corner and **A** on the other. The cats clear and till it.
 3. **Plant.** Each plot grows the seed chosen for it. New plots start with whatever seed you're holding (your mystery seeds at first). Cats plant, and you can too (hold **A** on tilled soil).

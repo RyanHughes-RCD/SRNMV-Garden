@@ -23,11 +23,11 @@ const MIGRATIONS = [
 // there's always room to build a bridge across. The river is the narrow run of water in each
 // row above the lake; the lake's own rows (and the few just above, where its shore wobbles)
 // are left alone.
-export function clearRiverBanks(map) {
+export function clearRiverBanks(map, stopAt = Infinity) {
   const { w, h, ground, obj } = map;
   let lakeStart = h;
   for (let y = 0; y < h; y++) { let n = 0; for (let x = 0; x < w; x++) if (ground[y * w + x] === 'w') n++; if (n > w / 2) { lakeStart = y; break; } }
-  for (let y = 0; y < lakeStart - 3; y++) {
+  for (let y = 0; y < Math.min(lakeStart - 3, stopAt); y++) {
     for (let x = 0; x < w; x++) {
       if (ground[y * w + x] !== 'w' || (x > 0 && ground[y * w + x - 1] === 'w')) continue;
       let len = 0; while (x + len < w && ground[y * w + x + len] === 'w') len++;
@@ -78,12 +78,14 @@ export function newGame() {
   const L = B.map.lake || {}, Rv = B.map.river || {};
   const Bc = B.map.beach || {}, bMin = Bc.minDepth ?? 2, bMax = Bc.maxDepth ?? 3;
   const lakeTop = Math.floor(my + RY) + (L.forestBelowClearing ?? 2) + bMax + 1;
+  const beachTop = new Array(w).fill(h);
   const shoreAt = x => lakeTop + Math.round(Math.sin(x / 4.3 + seed % 5) * (L.shoreWobble ?? 1.4) + (hash2(Math.floor(x / 3), 9, seed) - 0.5) * 1.6);
   for (let x = 0; x < w; x++) {
     const shore = Math.max(0, shoreAt(x));
     for (let y = shore; y < h; y++) ground[y * w + x] = 'w';
     const depth = bMin + Math.round((Math.sin(x / 5 + seed % 3) * 0.5 + 0.5) * (bMax - bMin) * 0.6 + hash2(Math.floor(x / 2), 21, seed) * (bMax - bMin) * 0.4);
     for (let y = Math.max(0, shore - depth); y < shore; y++) ground[y * w + x] = 's';
+    beachTop[x] = Math.max(0, shore - depth);
   }
   // a river from the top edge, down the left side of the clearing, into the lake
   const rw = Rv.width ?? 2, riverX = Math.floor(mx - RX) - (Rv.gapLeftOfClearing ?? 1) - rw;
@@ -112,7 +114,11 @@ export function newGame() {
     if (Math.abs(x - (cx + 1)) <= R && y >= cy - 1 && y <= cy + R) continue;
     if (Math.random() < B.map.debrisDensity) obj[i] = 'd:' + pickWeighted(weights);
   }
-  clearRiverBanks({ w, h, ground, obj });
+  // the beach starts out of reach: at least minForestToBeach rows of trees above it in every column
+  // (the river keeps flowing through; its open banks stop at the trees, too)
+  const band = L.minForestToBeach ?? 5;
+  for (let x = 0; x < w; x++) for (let y = Math.max(0, beachTop[x] - band); y < beachTop[x]; y++) { const i = y * w + x; if (ground[i] !== 'w') { ground[i] = 'f'; obj[i] = null; } }
+  clearRiverBanks({ w, h, ground, obj }, Math.min(...beachTop) - band);
   const stump = placeStump({ w, h, ground, obj });
   const E = B.economy;
   const unknown = {};

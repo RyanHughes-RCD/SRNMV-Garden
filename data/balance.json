@@ -2,16 +2,17 @@
   "_comment": "Every tuning number lives here. Times are in seconds unless named otherwise.",
   "map": {
     "width": 64,
-    "height": 48,
+    "height": 54,
     "clearingRadiusX": 10,
     "clearingRadiusY": 7.5,
     "edgeWobble": 0.22,
     "debrisDensity": 0.4,
     "clearRadiusAroundCabin": 2,
     "lake": {
-      "_comment": "The lake fills the bottom of the map. Between the clearing and the lake: a band of forest (chop through it), then the beach.",
-      "forestBelowClearing": 2,
-      "shoreWobble": 1.4
+      "_comment": "The lake fills the bottom of the map. Between the clearing and the lake: a band of forest at least minForestToBeach tiles thick everywhere (chop through it to reach the beach), then the beach.",
+      "forestBelowClearing": 7,
+      "shoreWobble": 1.4,
+      "minForestToBeach": 5
     },
     "river": {
       "_comment": "A river runs from the top edge, down the left side of the clearing, into the lake.",
