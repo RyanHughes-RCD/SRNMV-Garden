@@ -1,11 +1,99 @@
 {
   "debris": {
-    "twig":        { "name": "Twigs",       "work": 2,  "blocks": false, "weight": 26, "drops": { "wood":  [1, 2] } },
-    "weeds":       { "name": "Weeds",       "work": 2,  "blocks": false, "weight": 22, "drops": { "fiber": [1, 2] } },
-    "bush":        { "name": "Bush",        "work": 4,  "blocks": true,  "weight": 16, "drops": { "fiber": [2, 3], "wood": [0, 1] } },
-    "rock":        { "name": "Rock",        "work": 5,  "blocks": true,  "weight": 16, "drops": { "stone": [1, 2] } },
-    "stump_small": { "name": "Small Stump", "work": 8,  "blocks": true,  "weight": 10, "drops": { "wood":  [2, 4] } },
-    "stump_big":   { "name": "Big Stump",   "work": 14, "blocks": true,  "weight": 5,  "drops": { "wood":  [5, 7] } },
-    "boulder":     { "name": "Boulder",     "work": 18, "blocks": true,  "weight": 5,  "drops": { "stone": [4, 6] } }
+    "twig": {
+      "name": "Twigs",
+      "work": 2,
+      "blocks": false,
+      "weight": 26,
+      "drops": {
+        "wood": [
+          1,
+          2
+        ]
+      }
+    },
+    "weeds": {
+      "name": "Weeds",
+      "work": 2,
+      "blocks": false,
+      "weight": 22,
+      "drops": {
+        "fiber": [
+          1,
+          2
+        ]
+      }
+    },
+    "bush": {
+      "name": "Bush",
+      "work": 4,
+      "blocks": true,
+      "weight": 16,
+      "drops": {
+        "fiber": [
+          2,
+          3
+        ],
+        "wood": [
+          0,
+          1
+        ]
+      }
+    },
+    "rock": {
+      "name": "Rock",
+      "work": 5,
+      "blocks": true,
+      "weight": 16,
+      "drops": {
+        "stone": [
+          1,
+          2
+        ]
+      }
+    },
+    "stump_small": {
+      "name": "Small Stump",
+      "work": 8,
+      "blocks": true,
+      "weight": 10,
+      "drops": {
+        "wood": [
+          2,
+          4
+        ]
+      }
+    },
+    "stump_big": {
+      "name": "Big Stump",
+      "work": 14,
+      "blocks": true,
+      "weight": 5,
+      "drops": {
+        "wood": [
+          5,
+          7
+        ]
+      }
+    },
+    "boulder": {
+      "name": "Boulder",
+      "work": 18,
+      "blocks": true,
+      "weight": 5,
+      "drops": {
+        "stone": [
+          4,
+          6
+        ]
+      }
+    },
+    "dirt": {
+      "name": "Dug-up dirt",
+      "work": 1.5,
+      "blocks": false,
+      "weight": 0,
+      "drops": {}
+    }
   }
 }

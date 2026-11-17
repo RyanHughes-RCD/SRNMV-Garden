@@ -13,10 +13,12 @@ import { placeProblem as decorProblem, placeDecor, removeDecorAt, sizeOf } from 
 import { treeAt, plantProblem, plantSapling, digUp } from './orchard.js';
 import { canAfford, pay, refund, costLabel } from './economy.js';
 import { selectedSeedKey } from './player.js';
+import { diggable } from './bugs.js';
 
 export const PLAN_TABS = [
   { id: 'clear', name: 'Clear', help: 'Mark debris for clearing. The cats will pick it up.' },
   { id: 'chop', name: 'Chop trees', help: 'Mark trees to chop down and grow the clearing. Each one leaves a stump.' },
+  { id: 'dig', name: 'Dig for bugs', help: 'Mark open grass for the cats to dig up bugs (fishing bait). Each dig leaves dirt that gets tidied up.' },
   { id: 'plot', name: 'New plot', help: 'Choose two corners to make a garden plot.' },
   { id: 'removePlot', name: 'Remove plot', help: 'Pick a plot to remove (crops stay planted).' },
   { id: 'cancel', name: 'Cancel jobs', help: 'Select an area to cancel queued jobs.' },
@@ -90,6 +92,7 @@ export function updatePlan() {
   M.start = null;
   if (tab === 'clear') commitClear(r);
   else if (tab === 'chop') commitClear(r, true);
+  else if (tab === 'dig') commitDig(r);
   else if (tab === 'plot') commitPlot(r);
   else if (tab === 'cancel') commitCancel(r);
   panel();
@@ -107,6 +110,15 @@ function commitClear(r, trees = false) {
   const what = trees ? `tree${n === 1 ? '' : 's'} for chopping` : 'for clearing';
   if (trees && !allMarked && !tiles.some(t => workSpots(t).length)) { sfx('confirm'); toast(`Marked ${n} trees. The cats can only reach trees on the clearing's edge, so chop a path to them.`, 'tool_axe', 6000); return; }
   toast(allMarked ? `Unmarked ${n} ${what}` : `Marked ${n} ${what}`, trees ? 'tool_axe' : 'icon_mark');
+}
+function commitDig(r) {
+  const tiles = tilesIn(r).filter(t => getJob('dig', t) || diggable(G.state, t, plotAt));
+  if (!tiles.length) { sfx('error'); toast('Nothing to dig there: pick open grass (not plots or paths)'); return; }
+  const allMarked = tiles.every(t => getJob('dig', t));
+  let n = 0;
+  for (const t of tiles) { if (allMarked) { removeJob(getJob('dig', t)); n++; } else if (addJob('dig', t, { marked: true })) n++; }
+  sfx('confirm');
+  toast(allMarked ? `Unmarked ${n} spot${n === 1 ? '' : 's'}` : `Marked ${n} spot${n === 1 ? '' : 's'} to dig for bugs`, 'tool_shovel');
 }
 function commitPlot(r) {
   const why = plotProblem(r);
@@ -207,6 +219,7 @@ export function drawModeOverlay(ctx, t) {
     ctx.fillRect(r.x * TILE, r.y * TILE, r.w * TILE, r.h * TILE);
     ctx.strokeStyle = `rgba(${col},${blink})`; ctx.lineWidth = 1;
     ctx.strokeRect(r.x * TILE + 0.5, r.y * TILE + 0.5, r.w * TILE - 1, r.h * TILE - 1);
+    if (tab === 'dig') for (const ti of tilesIn(r)) if (diggable(G.state, ti, plotAt)) { ctx.fillStyle = `rgba(185,131,82,${0.35 * blink})`; ctx.fillRect(tx(ti) * TILE + 2, ty(ti) * TILE + 2, 12, 12); }
     if (tab === 'clear' || tab === 'chop') for (const ti of tilesIn(r)) if (tab === 'chop' ? choppable(ti) : debrisAt(ti)) { ctx.fillStyle = `rgba(247,205,93,${0.35 * blink})`; ctx.fillRect(tx(ti) * TILE + 2, ty(ti) * TILE + 2, 12, 12); }
   } else {
     const d = DATA.decor[M.decor], ti = idx(M.cx, M.cy), [w, h] = sizeOf(M.decor);

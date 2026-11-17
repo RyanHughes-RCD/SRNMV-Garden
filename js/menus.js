@@ -72,6 +72,8 @@ export function inventoryMenu() {
       out.push({ header: true, label: 'Saplings (Ⓐ to plant)' });
       if (!saps.length) out.push({ label: 'No saplings. The seed shop sells them', disabled: true });
       for (const [id, n] of saps) { const t = DATA.treeById[id]; out.push({ label: `${t.name} sapling`, icon: `sapling_${id}`, right: `×${n}`, sub: 'Plant it on grass with two free tiles between trees', onSelect: () => { closeAllMenus(); enterPlant(id); } }); }
+      const bugs = Object.entries(st.inv.bugs || {}).filter(([, n]) => n > 0);
+      if (bugs.length) { out.push({ header: true, label: 'Bugs (fishing bait)' }); for (const [id, n] of bugs) { const b = DATA.bugById[id]; out.push({ label: b?.name || id, icon: `bug_${id}`, sub: `Bait value ${b?.price ?? 1}`, right: `×${n}` }); } }
       const fruit = Object.entries(st.inv.fruit || {}).filter(([, n]) => n > 0);
       if (fruit.length) { out.push({ header: true, label: 'Fruit' }); for (const [id, n] of fruit) { const t = DATA.treeById[id]; out.push({ label: t.fruit, icon: `fruit_${id}`, sub: `Sells for ${t.fruitPrice} each`, right: `×${n}`, onSelect: sellMenu }); } }
       out.push({ header: true, label: `Fish (${Object.keys(st.fishFound || {}).length}/${DATA.fish.length} found)` });
@@ -178,7 +180,7 @@ function fishSellItems() {
   if (!list.length) return [];
   return [{ header: true, label: 'Fish' }, ...list.map(([id, n]) => { const f = DATA.fishById[id]; return { label: f.name, icon: `fish_${id}`, sub: `${f.price} each · Ⓐ sell one · Ⓧ sell all`, right: `×${n}`, xLabel: 'sell all', onSelect: () => { if (sellFish(id, 1)) sfx('coin'); }, onX: () => { const v = sellFish(id, n); if (v) { sfx('coin'); toast(`Sold ${n} ${f.name} for ${v} coins`, `fish_${id}`); } } }; })];
 }
-// Throw harvested crops or fruit into the water. Better bait, rarer fish.
+// Throw harvested crops or dug-up bugs into the water. Better bait, rarer fish.
 export function baitMenu(anchor) {
   openMenu({
     title: 'Bait the water', icon: 'fish_perch', live: true, cls: 'wide',
@@ -187,7 +189,7 @@ export function baitMenu(anchor) {
       const pct = r => `<span class="rar rar-${r}">${rarityName(r)} ${Math.round(odds[r] * 100)}%</span>`;
       return `Bait in the water: <b>${b.portions}/${max}</b>${b.portions ? ` · average value ${Math.round(b.value / b.portions)}` : ''}. Each fish uses one portion.<br>Odds right now: ${RARITY_ORDER.map(pct).join(' ')}`;
     },
-    empty: 'Nothing to use as bait. Harvest some crops or fruit first!',
+    empty: 'Nothing to use as bait. Harvest some crops, or dig up bugs with the shovel!',
     footer: 'Ⓐ throw in one · Ⓧ throw in all of it · Ⓑ done',
     items: () => baitItems().map(it => ({
       label: it.name, icon: it.icon, sub: `worth ${it.price} each`, right: `×${it.n}`, xLabel: 'all',

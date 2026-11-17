@@ -156,6 +156,7 @@ export function renderWorld(t) {
     const x = tx(j.tile) * TILE, y = ty(j.tile) * TILE;
     if (x < ox - 16 || x > ox + vw || y < oy - 16 || y > oy + vh) continue;
     if (j.type === 'clear' && j.marked) drawSprite(ctx, 'icon_mark', 0, x + 10, y - 3);
+    if (j.type === 'dig') drawSprite(ctx, 'tool_shovel', 0, x + 4, y + 2, { scale: 0.5 });
     if (j.progress > 0) {
       const f = Math.min(1, j.progress / j.work);
       ctx.fillStyle = 'rgba(26,20,35,0.75)'; ctx.fillRect(x + 1, y - 2, 14, 3);

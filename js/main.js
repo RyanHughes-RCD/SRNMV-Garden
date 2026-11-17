@@ -6,6 +6,7 @@ import { resetSpriteCache, iconHTML } from './sprites.js';
 import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state.js';
 import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
 import { updateSpirits, spiritHUD } from './spirits.js';
+import { bugName } from './bugs.js';
 import { initWeather, updateWeather, weatherHUD } from './weather.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
 import { rebuildJobIndex, updateJobs, JOB_VERB } from './jobs.js';
@@ -178,6 +179,14 @@ function wireEvents() {
   G.on('harvest', r => { if (!r.first) ui.toast(`+${r.crops} ${r.def.name} · +${r.seeds} seed${r.seeds > 1 ? 's' : ''}${r.seeds > 1 ? '!' : ''}`, `item_${r.id}`, 2600); });
   G.on('jobDone', e => {
     if (G.offline) return;
+    if (e.job.type === 'dig') {
+      const x = tx(e.job.tile) * TILE + 8, y = ty(e.job.tile) * TILE + 8, d = e.dig || {}, b = d.bug && DATA.bugById[d.bug];
+      burst(x, y, { n: 6, sprite: 'fx_dirt' });
+      const who = e.worker === 'player' ? 'You' : G.cats.find(c => c.id === e.worker)?.cfg.name || 'A cat';
+      if (b && d.first) ui.banner(`${iconHTML(`bug_${b.id}`, 'ico big')}<div><b>New bug: ${ui.esc(b.name)}!</b><small>${who} dug it up. Bait value ${b.price}: throw it in at the dock.</small></div>`);
+      else if (b && (e.worker === 'player' || b.price >= 150)) ui.toast(`${who} dug up ${bugName(b.id, true)}!`, `bug_${b.id}`, 2500);
+      else if (!b && e.worker === 'player') ui.toast('Just dirt this time', 'debris_dirt', 1500);
+    }
     if (e.job.type === 'clear') {
       const x = tx(e.job.tile) * TILE + 8, y = ty(e.job.tile) * TILE + 8;
       burst(x, y, { n: 5, sprite: e.debris === 'rock' || e.debris === 'boulder' ? 'fx_dirt' : 'fx_leaf' });

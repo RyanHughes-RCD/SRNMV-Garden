@@ -1,0 +1,15 @@
+{
+  "_help": "Bugs you (or the cats) dig up with the shovel on open grass. Every dig leaves a mound of dirt that has to be cleared. Bugs are fishing bait: price is their bait value (higher = better odds of rare fish, see fish.json bait). weight = how often it turns up; time = 'day' or 'night' for bugs that only come up then. findChance = chance a dig finds anything at all.",
+  "findChance": 0.75,
+  "bugs": [
+    { "id": "worm",    "name": "Earthworm",         "price": 10,  "weight": 40,  "body": "pink",   "dark": "dred",  "hi": "ppink",   "shape": "worm" },
+    { "id": "grub",    "name": "Fat Grub",          "price": 20,  "weight": 24,  "body": "cream",  "dark": "ltan",  "hi": "white",   "shape": "grub" },
+    { "id": "cricket", "name": "Cricket",           "price": 30,  "weight": 16,  "body": "brown",  "dark": "dbrown", "hi": "tan",    "shape": "hopper" },
+    { "id": "beetle",  "name": "Ground Beetle",     "price": 45,  "weight": 13,  "body": "dblue",  "dark": "out",   "hi": "blue",    "shape": "beetle" },
+    { "id": "ladybug", "name": "Ladybug",           "price": 70,  "weight": 8,   "body": "red",    "dark": "out",   "hi": "coral",   "shape": "beetle", "time": "day", "spots": true },
+    { "id": "caterpillar", "name": "Fuzzy Caterpillar", "price": 90, "weight": 6, "body": "green", "dark": "green1", "hi": "lgreen", "shape": "worm", "fuzzy": true },
+    { "id": "glowworm", "name": "Glowworm",         "price": 180, "weight": 4,   "body": "pyellow", "dark": "yellow", "hi": "white",  "shape": "grub", "time": "night", "glow": true },
+    { "id": "stag",    "name": "Stag Beetle",       "price": 350, "weight": 1.5, "body": "dbrown", "dark": "out",   "hi": "brown",   "shape": "stag" },
+    { "id": "scarab",  "name": "Golden Scarab",     "price": 900, "weight": 0.4, "body": "yellow", "dark": "orange", "hi": "pyellow", "shape": "beetle" }
+  ]
+}

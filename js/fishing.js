@@ -32,7 +32,8 @@ export function rarityOdds(q) {
 export function baitItems() {
   const st = G.state, out = [];
   for (const [id, n] of Object.entries(st.inv.crops)) if (n > 0) out.push({ kind: 'crops', id, n, name: DATA.cropById[id]?.name || id, price: DATA.cropById[id]?.price ?? 1, icon: `item_${id}` });
-  for (const [id, n] of Object.entries(st.inv.fruit || {})) if (n > 0) out.push({ kind: 'fruit', id, n, name: DATA.treeById[id]?.fruit || id, price: DATA.treeById[id]?.fruitPrice ?? 1, icon: `fruit_${id}` });
+  // bugs from digging (fruit is for eating, selling and the spirits' offerings)
+  for (const [id, n] of Object.entries(st.inv.bugs || {})) if (n > 0) out.push({ kind: 'bugs', id, n, name: DATA.bugById[id]?.name || id, price: DATA.bugById[id]?.price ?? 1, icon: `bug_${id}` });
   return out.sort((a, b) => a.price - b.price);
 }
 export function addBait(anchor, item, n) {

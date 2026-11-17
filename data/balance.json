@@ -51,7 +51,8 @@
   "work": {
     "till": 3,
     "plant": 1.5,
-    "water": 1.5
+    "water": 1.5,
+    "dig": 2.5
   },
   "farm": {
     "waterGrowthBonus": 0.6,

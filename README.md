@@ -143,11 +143,17 @@ Stand in front of the cabin door, face it and press **A** to go in. Walk out thr
 
 At night, lamps, the fireplace and the stove light up the rooms. All the numbers and furniture are in `data/interior.json`. The art is in the Workshop under the *interior* category.
 
+## Digging for bugs
+
+Switch to the **shovel** (press **X** to cycle tools), face open grass and **hold A** to dig. Each dig may turn up a **bug** and always leaves a **mound of dirt**, which the cats tidy up for you (or clear it yourself). For the cats to dig, use **Plan mode → Dig for bugs** and mark an area of grass: they dig at their own pace (Vyke loves it), and the dirt joins their cleaning list.
+
+There are 9 bugs, from earthworms and grubs to crickets, beetles, ladybugs (daytime only), fuzzy caterpillars, glowworms (night only), stag beetles and the rare **golden scarab**. **Bugs are fishing bait**, along with crops (fruit is no longer used as bait), and rarer bugs give better odds of rare fish. Tuning is in `data/bugs.json`.
+
 ## Fishing
 
 Fishing unlocks when you build a **dock** (*Build & decorate → Paths & floors*). The dock is a big goal: 1,000 coins, 250 wood and 60 stone, usually about two or three weeks in. Most of that wood comes from the cats chopping their way through the forest to the beach.
 
-1. **Bait the water.** Stand on the dock facing open water and press **A**, then throw in harvested crops or fruit. **A** throws in one, **X** throws in all of that kind. The water holds up to 30 portions. **The more valuable the bait, the better the odds of rare fish.** The bait menu shows the odds live. Press **X** on the dock any time to add more.
+1. **Bait the water.** Stand on the dock facing open water and press **A**, then throw in harvested crops or dug-up bugs. **A** throws in one, **X** throws in all of that kind. The water holds up to 30 portions. **The more valuable the bait, the better the odds of rare fish.** The bait menu shows the odds live. Press **X** on the dock any time to add more.
 2. **Cast** with **A**. The bobber tugs a few times. **Wait.** When it tugs hardest, a big **!** pops up over your head: press **A** to pull the fish in. Too early and it swims off, too late and it gets away (rarer fish give you less time). **B** reels in.
 3. Each fish caught uses one portion of bait.
 

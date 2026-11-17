@@ -4,9 +4,10 @@ import { DATA } from './data.js';
 import { debrisAt, plotAt, plotTiles, ground, obj, tx, ty, choppable } from './world.js';
 import * as farm from './farm.js';
 import { needsWater } from './orchard.js';
+import { digUp, diggable } from './bugs.js';
 
-export const JOB_TYPES = ['clear', 'till', 'plant', 'water'];
-export const JOB_VERB = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering', fish: 'Fishing' };
+export const JOB_TYPES = ['clear', 'till', 'plant', 'water', 'dig'];
+export const JOB_VERB = { clear: 'Clearing', till: 'Tilling', plant: 'Planting', water: 'Watering', fish: 'Fishing', dig: 'Digging for bugs' };
 const byKey = new Map();
 const key = (t, i) => t + ':' + i;
 
@@ -35,6 +36,7 @@ export function isJobValid(j) {
       const p = plotAt(j.tile);
       return !!p && farm.plotSeedKeyForTile(p, j.tile) === j.seedKey && farm.seedCount(j.seedKey) > 0;
     }
+    case 'dig': return diggable(st, j.tile, plotAt);
     case 'water': { const t = st.trees?.[j.tile]; if (t) return needsWater(t); const c = st.crops[j.tile]; return !!c && c.stage < 3 && !(c.wetUntil > st.simTime); }
   }
   return false;
@@ -90,6 +92,7 @@ function completeJob(j, worker) {
       res.debris = d; res.drops = got;
       break;
     }
+    case 'dig': res.dig = digUp(j.tile); addJob('clear', j.tile, { marked: true }); break; // the dirt gets tidied up next
     case 'till': st.map.ground[j.tile] = 't'; st.stats.tilled = (st.stats.tilled || 0) + 1; break;
     case 'plant': res.crop = farm.plantTile(j.tile, j.seedKey); break;
     case 'water': { const c = st.crops[j.tile] || st.trees?.[j.tile]; if (c) c.wetUntil = st.simTime + DATA.balance.farm.waterDurationSec; st.stats.watered = (st.stats.watered || 0) + 1; break; }

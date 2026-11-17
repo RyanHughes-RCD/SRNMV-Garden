@@ -21,6 +21,7 @@ export const TOOLS = [
   { id: 'hoe', name: 'Hoe', icon: 'tool_hoe', allow: ['till'] },
   { id: 'seeds', name: 'Seed bag', icon: 'tool_seeds', allow: ['plant'] },
   { id: 'can', name: 'Watering can', icon: 'tool_can', allow: ['water'] },
+  { id: 'shovel', name: 'Shovel', icon: 'tool_shovel', allow: ['dig'] },
 ];
 const DIRV = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 export const anim = { moving: false, working: false, t: 0, workSound: 0 };
@@ -98,6 +99,7 @@ export function resolveAction(ignoreCats = false) {
   if (d && allow('clear')) return { kind: 'work', type: 'clear', tile: t, label: `Clear ${DATA.debris[d]?.name || 'debris'}` };
   if (choppable(t) && allow('clear')) return { kind: 'work', type: 'clear', tile: t, label: 'Chop down tree' };
   const plot = plotAt(t);
+  if (tool.id === 'shovel' && ground(t) === 'g' && !o && !plot && !crop) return { kind: 'work', type: 'dig', tile: t, label: 'Dig for bugs' };
   if (ground(t) === 'g' && !o && allow('till')) {
     if (plot) return { kind: 'work', type: 'till', tile: t, label: 'Till soil' };
     if (tool.id === 'hoe') return { kind: 'info', tile: t, label: 'Make a plot first (plan mode)' };

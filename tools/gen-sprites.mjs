@@ -1322,6 +1322,48 @@ const clearRect = (g, x, y, w, h) => { for (let j = y; j < y + h; j++) for (let 
   add('in_wreath', 'interior', wr.outline());
 }
 
+/* ---------------------------------------------------- digging and bugs */
+{
+  // dug-up dirt: 5 mounds of loose soil (debris_dirt, debris_dirt_1.._4)
+  for (let v = 0; v < 5; v++) {
+    const r = rng(900 + v * 7), g = new G(16, 16);
+    const cx = 7 + r() * 2, cy = 10 + r(), rx = 4.5 + r() * 1.5, ry = 2.6 + r() * 0.8;
+    g.ellipse(cx, cy + 1, rx + 0.8, ry + 0.6, C.dbrown).ellipse(cx, cy, rx, ry, C.brown).ellipse(cx - 0.8, cy - 0.8, rx * 0.6, ry * 0.55, C.tan);
+    for (let k = 0; k < 4; k++) g.set(cx + (r() - 0.5) * rx * 1.6, cy + (r() - 0.5) * ry * 1.4, r() < 0.5 ? C.dbrown : C.ltan);
+    // a few clods thrown to the side, and the odd pebble or root
+    for (let k = 0; k < 2 + v % 3; k++) { const a = r() * Math.PI * 2, d = rx + 1.5 + r() * 2; g.set(cx + Math.cos(a) * d, cy + Math.sin(a) * d * 0.6, C.brown); }
+    if (v % 2) g.set(cx + 2, cy - 1, C.lgray).set(cx + 3, cy - 1, C.gray);
+    if (v === 3) g.line(cx - 3, cy - 2, cx - 5, cy - 4, C.tan);
+    add(v ? `debris_dirt_${v}` : 'debris_dirt', 'debris', g.outline());
+  }
+  // the shovel tool
+  const sh = new G(16, 16);
+  sh.line(4, 12, 10, 6, C.tan).line(5, 12, 11, 6, C.brown).rect(10, 3, 3, 2, C.tan).line(11, 4, 12, 5, C.brown);
+  sh.pts([[2, 12], [3, 11], [4, 13], [3, 14], [2, 13], [3, 12], [4, 12], [3, 13]], C.lgray).pts([[2, 14], [1, 13]], C.gray).set(3, 11, C.vlgray);
+  add('tool_shovel', 'ui', sh.outline());
+  // bug icons (bug_<id>), from data/bugs.json
+  const BUGS = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'bugs.json'), 'utf8')).bugs;
+  for (const b of BUGS) {
+    const g = new G(16, 16), body = col(b.body), dark = col(b.dark), hi = col(b.hi);
+    if (b.shape === 'worm') {
+      for (let k = 0; k < 6; k++) { const x = 3 + k * 2, y = 9 + Math.round(Math.sin(k * 1.1) * 2); g.ellipse(x, y, 1.6, 1.6, k % 2 ? body : hi).set(x, y + 1, dark); if (b.fuzzy) g.set(x, y - 2, dark); }
+      g.set(14, 9 + Math.round(Math.sin(5.5) * 2) - 1, C.out);
+    } else if (b.shape === 'grub') {
+      g.ellipse(8, 9, 5, 3.4, body).ellipse(7, 8, 3.5, 2, hi); for (let x = 5; x <= 11; x += 2) g.line(x, 7, x, 11, dark); g.ellipse(12.5, 8, 1.6, 1.6, C.orange).set(13, 7, C.out);
+      if (b.glow) g.pts([[2, 4], [14, 3], [3, 13]], C.pyellow);
+    } else if (b.shape === 'hopper') {
+      g.ellipse(7, 9, 4.5, 2.2, body).ellipse(6.5, 8, 3, 1.2, hi).ellipse(11.5, 8, 1.8, 1.8, dark).line(4, 9, 1, 13, dark).line(6, 10, 4, 14, dark).line(9, 9, 13, 3, dark).line(12, 7, 15, 5, dark).set(12, 7, C.out);
+    } else {
+      // beetles: a round shell with a seam, little legs, a head (stag beetles get big jaws)
+      g.line(3, 6, 5, 8, C.out).line(13, 6, 11, 8, C.out).line(2, 10, 4, 10, C.out).line(14, 10, 12, 10, C.out).line(3, 14, 5, 12, C.out).line(13, 14, 11, 12, C.out);
+      g.ellipse(8, 10, 4.5, 4, body).ellipse(7, 9, 2.5, 2, hi).line(8, 7, 8, 14, dark).ellipse(8, 5, 2.2, 1.6, dark);
+      if (b.spots) g.pts([[6, 10], [10, 9], [6, 13], [10, 12]], C.out);
+      if (b.shape === 'stag') g.line(6, 4, 4, 1, dark).line(10, 4, 12, 1, dark).set(5, 1, dark).set(11, 1, dark);
+    }
+    add(`bug_${b.id}`, 'items', g.outline());
+  }
+}
+
 /* ---------------------------------------------------------- weather icons */
 {
   const cloud = (g, ox = 0, oy = 0, c = C.vlgray, sh = C.lgray) => { g.ellipse(5 + ox, 7 + oy, 3, 2.4, c).ellipse(8.5 + ox, 5.5 + oy, 3.2, 3, c).ellipse(11 + ox, 7.5 + oy, 2.6, 2, c).rect(3 + ox, 7 + oy, 10, 2, c).line(3 + ox, 9 + oy, 12 + ox, 9 + oy, sh); return g; };
