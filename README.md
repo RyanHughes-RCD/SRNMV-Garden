@@ -143,7 +143,7 @@ You have 7 tools. Press **X** to cycle through them, or pick one in *Menu → In
 
 All the numbers are in `data/tools.json`.
 
-**Tool art:** `art/tools-sheet.png`, one picture per tool and level (the hoe's levels are recoloured). Your character carries the equipped tool, and it moves while you work: axes, hoes and shovels swing, the can tips to pour, the seed bag shakes, and the rod is raised while you fish. To change the art, edit the sheet and run `python3 tools/import_tools.py` and then `node tools/gen-sprites.mjs`. `TOOLS` in the importer picks the pictures and where each one is held.
+**Tool art:** `art/tools-sheet.png`, one picture per tool and level (the hoe's levels are recoloured). To change the art, edit the sheet and run `python3 tools/import_tools.py` and then `node tools/gen-sprites.mjs`. `TOOLS` in the importer picks the pictures.
 
 ## Inventory and the chest
 

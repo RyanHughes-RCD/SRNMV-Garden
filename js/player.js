@@ -2,7 +2,7 @@
 import { G, TILE, randRange } from './game.js';
 import { DATA } from './data.js';
 import { input } from './input.js';
-import { drawSprite, animFrame, slotSwap, hasSprite, frameCanvas } from './sprites.js';
+import { drawSprite, animFrame, slotSwap, hasSprite } from './sprites.js';
 import { idx, inBounds, boxBlocked, debrisAt, plotAt, ground, obj, choppable, shellAt } from './world.js';
 import { addJob, getJob, workJob } from './jobs.js';
 import * as farm from './farm.js';
@@ -13,7 +13,7 @@ import { playerSpot as fishSpot, baitOf, startFishing } from './fishing.js';
 import { emit, poof, burst } from './particles.js';
 import { enterCabin } from './interior.js';
 import { spiritAction } from './spirits.js';
-import { workSpeed, waterAround, toolIcon } from './tools.js';
+import { workSpeed, waterAround } from './tools.js';
 import { sfx } from './audio.js';
 
 export const TOOLS = [
@@ -184,48 +184,16 @@ export function switchPlayer() {
   G.emit('playerSwitched', playerCfg());
 }
 
-// The tool in your hand: where the hand is (from the feet) for each facing, how big the tool is
-// drawn, and how it sits and moves. You stand in the walking pose and the tool does the work.
-const HAND = { down: [-6, -8], up: [6, -8], right: [3, -8], left: [-3, -8] };
-const HELD = {
-  axe: { s: 0.55, rest: 0.25, swing: 'chop' }, hoe: { s: 0.55, rest: 0.25, swing: 'chop' }, shovel: { s: 0.55, rest: 0.25, swing: 'dig' },
-  can: { s: 0.5, rest: 0, swing: 'pour' }, seeds: { s: 0.45, rest: 0, swing: 'shake' }, rod: { s: 0.65, rest: -0.1, swing: 'none' },
-};
-function swingAngle(kind, t) {
-  if (kind === 'chop' || kind === 'dig') { const ph = (t * 1.8) % 1; return ph < 0.3 ? -0.9 + (ph / 0.3) * 2 : 1.1 - ((ph - 0.3) / 0.7) * 2; }
-  if (kind === 'pour') return 0.5 + 0.15 * Math.sin(t * 6);
-  if (kind === 'shake') return 0.18 * Math.sin(t * 16);
-  return 0;
-}
-function drawHeld(ctx, tool, p, bob) {
-  const H = HELD[tool.id], name = toolIcon(tool), d = DATA.sprites.sprites[name];
-  if (!H || !d) return;
-  let ang = H.rest;
-  if (anim.working) ang += swingAngle(H.swing, anim.t);
-  if (G.mode === 'fishing' && tool.id === 'rod') ang = -0.55;
-  // pictures face right unless marked otherwise (shovels are drawn the other way round)
-  const [hx, hy] = HAND[p.dir] || HAND.down, flip = (p.dir === 'down' || p.dir === 'left') !== (d.face === 'left');
-  ctx.save();
-  ctx.translate(p.x + hx, p.y + hy + bob);
-  ctx.scale(flip ? -1 : 1, 1);
-  ctx.rotate(ang);
-  ctx.scale(H.s, H.s);
-  ctx.drawImage(frameCanvas(name, 0), -d.ax, -d.ay);
-  ctx.restore();
-}
 export function drawPlayer(push, ctx, t, p = G.state.player) {
   push(p.y, () => {
     const set = playerCfg()?.spriteSet || 'p1';
     const dir = p.dir === 'left' || p.dir === 'right' ? 'side' : p.dir;
-    const tool = TOOLS[G.state.player.tool] || TOOLS[0], held = tool.id !== 'hand' && HELD[tool.id];
-    let name = `${set}_walk_${dir}`;
-    if (!hasSprite(name)) name = `p1_walk_${dir}`;
-    const f = anim.moving ? animFrame(name, anim.t) : 0;
-    const bob = anim.working ? Math.round(Math.abs(Math.sin(anim.t * 9))) : 0;
+    const kind = anim.working ? 'work' : 'walk';
+    let name = `${set}_${kind}_${dir}`;
+    if (!hasSprite(name)) name = `p1_${kind}_${dir}`;
+    const f = anim.working || anim.moving ? animFrame(name, anim.t) : 0;
     const sw = playerSwap();
     const d = DATA.sprites.sprites[name], ax = d?.ax ?? (d?.w ?? 16) / 2, ay = d?.ay ?? (d?.h ?? 24) - 1;
-    if (held && p.dir === 'up') drawHeld(ctx, tool, p, bob);
-    drawSprite(ctx, name, f, p.x - ax, p.y - ay + bob, { flip: p.dir === 'left', swap: sw.swap, swapKey: sw.key });
-    if (held && p.dir !== 'up') drawHeld(ctx, tool, p, bob);
+    drawSprite(ctx, name, f, p.x - ax, p.y - ay, { flip: p.dir === 'left', swap: sw.swap, swapKey: sw.key });
   });
 }
