@@ -4,6 +4,7 @@ import { G, rand } from './game.js';
 import { DATA } from './data.js';
 import { canAfford, pay } from './economy.js';
 import { toast } from './ui.js';
+import { hasSprite } from './sprites.js';
 
 const T = () => DATA.tools || { levels: ['Basic'], costs: [null], tools: {} };
 export const toolLevel = id => G.state?.player?.toolLevels?.[id] || 0;
@@ -15,14 +16,17 @@ export function stat(id, key, lv = toolLevel(id)) {
 export const levelName = (id, lv = toolLevel(id)) => T().levels[lv] || '';
 // "Copper hoe", "Gold watering can"; a basic tool just goes by its name
 export function toolTitle(t, lv = toolLevel(t.id)) { return lv ? `${T().levels[lv]} ${t.name.toLowerCase()}` : t.name; }
-export const upgradeCost = id => T().costs[toolLevel(id) + 1] || null;
+export const upgradable = id => !!T().tools[id]; // hands don't upgrade
+export const upgradeCost = id => (upgradable(id) ? T().costs[toolLevel(id) + 1] || null : null);
+// The tool's picture for its level (tool_can, tool_can_1, ...)
+export const toolIcon = (t, lv = toolLevel(t.id)) => (lv && hasSprite(`${t.icon}_${lv}`) ? `${t.icon}_${lv}` : t.icon);
 
 const pct = v => `${Math.round(v * 100)}%`, times = v => `${+v.toFixed(1)}×`;
 // What a tool does at a level, in words.
 export function effectText(id, lv = toolLevel(id)) {
   const s = k => stat(id, k, lv);
   switch (id) {
-    case 'hand': return s('extraHarvest') ? `${pct(s('extraHarvest'))} chance of an extra crop or fruit when you harvest` : 'Harvests, picks, pets and opens';
+    case 'hand': return 'Harvests, picks, pets and opens';
     case 'axe': return `Clears and chops ${times(s('speed'))} as fast${s('bonusDrop') ? ` · ${pct(s('bonusDrop'))} chance of extra wood or stone` : ''}`;
     case 'hoe': return `Tills ${times(s('speed'))} as fast`;
     case 'seeds': return s('saveSeed') ? `${pct(s('saveSeed'))} chance to keep the seed when you plant` : 'Plants the seeds you hold';
@@ -53,13 +57,6 @@ export function waterAround(tile) {
     const t = tile + dy * w + dx, c = st.crops[t] || st.trees?.[t];
     if (c && !(c.wetUntil > until)) c.wetUntil = until;
   }
-}
-// Gloves: sometimes a bonus crop or fruit. Returns true if you got one.
-export function bonusHarvest(kind, id) {
-  if (!(rand() < stat('hand', 'extraHarvest'))) return false;
-  const inv = G.state.inv[kind];
-  inv[id] = (inv[id] || 0) + 1;
-  return true;
 }
 // Clearing tools and seed bag bonuses, for jobs you finish yourself.
 export function initToolEffects() {

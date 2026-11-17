@@ -130,11 +130,10 @@ Tuning is in `data/spirits.json`. The art: `art/great-stump.png`, `art/fox-spiri
 
 You have 7 tools. Press **X** to cycle through them, or pick one in *Menu → Inventory*: **hands, clearing tools, hoe, seed bag, watering can, shovel and fishing rod**. You need the fishing rod in hand to cast off the dock (you can bait the water with anything).
 
-**Every tool can be upgraded** from Basic to Copper, Silver and Gold. In the inventory, select a tool and press **X**. Upgrades cost 250 coins, 15 wood and 10 stone (Copper), 1,200 coins, 40 wood and 40 stone (Silver), and 4,000 coins, 80 wood and 120 stone (Gold). They make you better at that job (the cats work at their own pace):
+**Every tool except your hands can be upgraded** from Basic to Copper, Silver and Gold. In the inventory, select a tool and press **X**. Upgrades cost 250 coins, 15 wood and 10 stone (Copper), 1,200 coins, 40 wood and 40 stone (Silver), and 4,000 coins, 80 wood and 120 stone (Gold). They make you better at that job (the cats work at their own pace):
 
 | Tool | Upgrades give you |
 |---|---|
-| Hands (gloves) | A chance of an extra crop or fruit when you harvest (15% / 30% / 50%) |
 | Clearing tools | Up to 3× faster clearing and chopping, and a chance of extra wood or stone |
 | Hoe | Up to 3× faster tilling |
 | Seed bag | A chance to keep the seed when you plant (10% / 20% / 30%) |
@@ -143,6 +142,8 @@ You have 7 tools. Press **X** to cycle through them, or pick one in *Menu → In
 | Fishing rod | Up to 2× as long to pull the fish in, better odds of rare fish, and a chance to keep your bait |
 
 All the numbers are in `data/tools.json`.
+
+**Tool art:** `art/tools-sheet.png`, one picture per tool and level (the hoe's levels are recoloured). Your character carries the equipped tool, and it moves while you work: axes, hoes and shovels swing, the can tips to pour, the seed bag shakes, and the rod is raised while you fish. To change the art, edit the sheet and run `python3 tools/import_tools.py` and then `node tools/gen-sprites.mjs`. `TOOLS` in the importer picks the pictures and where each one is held.
 
 ## Inventory and the chest
 

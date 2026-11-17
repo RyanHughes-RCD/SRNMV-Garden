@@ -7,7 +7,7 @@ import { newGame, loadGame, saveGame, loadSettings, saveSettings } from './state
 import { initRender, renderWorld, clampCamera, getCtx, beginFrame } from './render.js';
 import { updateSpirits, spiritHUD } from './spirits.js';
 import { bugName } from './bugs.js';
-import { toolTitle, initToolEffects } from './tools.js';
+import { toolTitle, toolIcon, initToolEffects } from './tools.js';
 import { initWeather, updateWeather, weatherHUD } from './weather.js';
 import { ensureChest } from './interior.js';
 import { isInside, updateInside, updateDecorate, renderInterior, insideAction, furnitureMenu } from './interior.js';
@@ -345,7 +345,7 @@ function globalControls() {
   if (input.pressed('tool') && fishSpot() && TOOLS[G.state.player.tool]?.id === 'rod') { menus.baitMenu(fishSpot().anchor); return; }
   if (input.pressed('tool')) {
     const p = G.state.player; p.tool = (p.tool + 1) % TOOLS.length; sfx('move');
-    ui.toast(`Tool: ${toolTitle(TOOLS[p.tool])}`, TOOLS[p.tool].icon, 1400);
+    ui.toast(`Tool: ${toolTitle(TOOLS[p.tool])}`, toolIcon(TOOLS[p.tool]), 1400);
   }
   if (input.pressed('seedPrev') || input.pressed('seedNext')) {
     const k = cycleSeed(input.pressed('seedNext') ? 1 : -1);
@@ -396,7 +396,7 @@ function updateHUD() {
     visible,
     res: `<span>${iconHTML('item_coin')}${st.coins}</span><span>${iconHTML('item_wood')}${st.mats.wood || 0}</span><span>${iconHTML('item_stone')}${st.mats.stone || 0}</span><span>${iconHTML('item_fiber')}${st.mats.fiber || 0}</span>`,
     clock: `<div class="clock">${clockLabel(h)}</div><div class="phase">${phaseLabel(h)}${G.timeScale > 1 ? ` · ×${G.timeScale}` : ''}</div>${weatherHUD()}<div class="who-hud">${ui.playerPortrait(playerCfg())}${ui.esc(playerName())}</div>`,
-    tool: `<div class="slot">${iconHTML(tool.icon)}<span>Ⓧ ${toolTitle(tool)}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
+    tool: `<div class="slot">${iconHTML(toolIcon(tool))}<span>Ⓧ ${toolTitle(tool)}</span></div><div class="slot">${iconHTML(farm.seedIcon(sk))}<span>LB/RB ${sk ? `${farm.seedLabel(sk)} ×${farm.seedCount(sk)}` : 'No seeds'}</span></div>`,
     cats: G.cats.map(c => `<div class="cat-row">${ui.catPortrait(c.cfg)}<div><b>${ui.esc(c.cfg.name)}</b><small>${ui.esc(c.activity)}</small></div></div>`).join('') + spiritHUD(),
   });
   // tooltip for what Ⓐ will do
